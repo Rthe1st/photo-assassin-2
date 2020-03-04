@@ -1,4 +1,5 @@
 var app = require('express')();
+const crypto = require('crypto');
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var port = process.env.PORT || 3000;
@@ -14,9 +15,51 @@ function makeTargets(userList){
   }
 }
 
+//todo: handle making and joining games here
+
 app.get('/', function(req, res){
-  res.sendFile(__dirname + '/index.html');
+  res.sendFile(__dirname + '/lobby.html');
 });
+
+var games = {}
+
+function new_game(code){
+  games[code] = {
+    gameStarted: false,
+    targetsMade: false,
+    userList: {},
+  };
+
+}
+
+app.get('/make', function(req, res){
+  var first_part = crypto.randomBytes(2).toString('hex');
+  var second_part = crypto.randomBytes(2).toString('hex');
+  // used number of games as a guarantee prevent collisions
+  // (even though collisions must be unlikely anyway for the code to provide security)
+  var third_part = Object.keys(games).length.toString(16);
+  const code = `${first_part}-${second_part}-${third_part}`;
+  new_game(code);
+  res.redirect(`/game/${code}`);
+});
+
+app.get('/join', function(req, res){
+  if(!'code' in req.query){
+    var code = req.query.code;
+    res.redirect(`/game/${code}`);
+  }else{
+    res.sendFile(__dirname + '/index.html');
+  }
+});
+
+app.get('/game/:code', function(req, res){
+  if(!req.params.code in games){
+    res.redirect(`/make_game`);
+  }else{
+    res.sendFile(__dirname + '/index.html');
+  }
+});
+
 
 var gameStarted = false;
 var startTime;

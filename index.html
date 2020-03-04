@@ -25,14 +25,21 @@
     <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
     <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
     <script>
+      var position = {}
+      function updatePosition(geolocation){
+        position = {"lat": geolocation.coords.latitude, "long": geolocation.coords.long}
+      }
       $(function () {
         var socket = io();
         $('form').submit(function(){
+          //todo: use callbacks properly
+          navigator.geolocation.getCurrentPosition(updatePosition, {"enableHighAccuracy": true})
           var file = document.getElementById('photo').files[0];
           message = {
             "username": $('#username').val(),
             "text": $('#m').val(),
-            "image": file
+            "image": file,
+            "position": position
           }
           socket.emit('chat message', message);
           $('#m').val('');
