@@ -30,16 +30,26 @@
         position = {"lat": geolocation.coords.latitude, "long": geolocation.coords.long}
       }
       $(function () {
-        var socket = io();
+
+        var gameId = document.cookie.replace(/(?:(?:^|.*;\s*)gameId\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+        var userId = document.cookie.replace(/(?:(?:^|.*;\s*)userId\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+
+        const socket = io({
+          query: {
+            "gameId": gameId,
+            "userId": userId,
+          }
+        });
+
         $('form').submit(function(){
           //todo: use callbacks properly
-          navigator.geolocation.getCurrentPosition(updatePosition, {"enableHighAccuracy": true})
+          // navigator.geolocation.getCurrentPosition(updatePosition, {"enableHighAccuracy": true})
           var file = document.getElementById('photo').files[0];
           message = {
             "username": $('#username').val(),
             "text": $('#m').val(),
             "image": file,
-            "position": position
+            //"position": position
           }
           socket.emit('chat message', message);
           $('#m').val('');
