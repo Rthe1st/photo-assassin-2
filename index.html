@@ -19,7 +19,8 @@
     <ul id="messages"></ul>
     <form action="">
       <input id="username" autocomplete="off" />
-      <input id="m" autocomplete="off" /><button>Send</button>
+      <input id="message" autocomplete="off" />
+      <button id="send-message">Send</button>
       <input id="photo" type="file" accept="image/*" capture="camera">
     </form>
     <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
@@ -47,12 +48,12 @@
           var file = document.getElementById('photo').files[0];
           message = {
             "username": $('#username').val(),
-            "text": $('#m').val(),
+            "text": $('#message').val(),
             "image": file,
             //"position": position
           }
           socket.emit('chat message', message);
-          $('#m').val('');
+          $('#message').val('');
           return false;
         });
         function targetDisplay(targets){

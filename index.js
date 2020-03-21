@@ -47,6 +47,7 @@ function maybeRedirectToExistingGame(cookies){
   // till they leave it
   if(cookies["gameId"] in games
     && cookies["userId"] in games.userList){
+      console.log(`Redirect userId ${userId} to gameId ${gameId}`);
       res.redirect(__dirname + '/index.html');
   }
 }
@@ -87,6 +88,7 @@ app.get('/make', function(req, res){
   // (even though collisions must be unlikely anyway for the code to provide security)
   var third_part = Object.keys(games).length.toString(16);
   const code = `${first_part}-${second_part}-${third_part}`;
+  console.log(`making game: ${code}`);
   games[code] = new_game({});
   res.redirect(`/game/${code}`);
 });
@@ -110,6 +112,7 @@ app.get('/game/:code', function(req, res){
   // maybeRedirectToExistingGame(req.cookies);
 
   if(!req.params.code in games){
+    console.log(`Accessing invalid game: ${req.params.code}`)
     res.redirect(`/`);
   }else{
 
@@ -131,9 +134,12 @@ app.get('/game/:code', function(req, res){
       // does signing make horizontal scaling more painful?
       res.cookie("gameId", req.params.code);
       res.cookie("userId", idToken);
+      console.log(`Adding userId ${idToken} to game ${req.params.code}`);
+      res.sendFile(__dirname + '/index.html');
+    }else{
+      console.log(`Adding userId ${req.cookies["userId"]} rejoining game ${req.params.code}`);
+      res.sendFile(__dirname + '/index.html');
     }
-
-    res.sendFile(__dirname + '/index.html');
   }
 });
 
@@ -143,7 +149,7 @@ io.on('connection', function(socket){
   if(gameId in games){
     socket.gameId = gameId;
   }else{
-    console.log("invalid gameid");
+    console.log(`invalid game code ${socket.gameId}`);
     return;
   }
 
@@ -153,19 +159,23 @@ io.on('connection', function(socket){
   if(userId in game.userList){
     socket.userId = userId;
   }else{
-    console.log("invalid userid");
+    console.log(`invalid userId ${socket.userId}`);
     return;
   }
+
+  console.log(`UserId ${userId} connected socket for ${gameId}`);
   
   io.emit('chat message', {'text': 'a user joined'});
   socket.on('chat message', function(msg){
+
+    console.log(`gameId: ${gameId}, userId: ${userId}, username: ${msg.username}, message: ${msg.text}`)
 
     console.log(game.state);
 
     //todo: save this onto users cookie/userId dict
     if(msg.username != '' && game.state == NOT_STARTED){
       game.userList[socket.userId].username = msg.username;
-    }else{
+    }else if(game.userList[socket.userId].username != msg.username){
       console.log("attempted to set username for "  + socket.userId + " to " + msg.username + " but state != NOT_STARTED");
     }
     msg.userList = game.userList;
