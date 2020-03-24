@@ -5,6 +5,23 @@ app.use(cookieParser());
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 
+var winston = require('winston');
+
+const logger = winston.createLogger({
+  level: 'info',
+  format: winston.format.json(),
+  defaultMeta: { service: 'user-service' },
+  transports: [
+    //
+    // - Write to all logs with level `info` and below to `combined.log` 
+    // - Write all logs error (and below) to `error.log`.
+    //
+    new winston.transports.File({ filename: './error.log', level: 'error' }),
+    new winston.transports.File({ filename: './combined.log', level: 'verbose' })
+  ]
+});
+ 
+
 var port = process.env.PORT || 3000;
 
 exports.port = port;
@@ -12,7 +29,7 @@ exports.port = port;
 function makeTargets(game){
   var userList = game.userList;
   var users = Object.keys(userList);
-  console.log("making targets");
+  logger.log("verbose", "making targets");
   for(var i=0; i<users.length;i++){
     game.targets[users[i]] = users[(i+1)%users.length];
   }
@@ -27,12 +44,12 @@ function start(game, msgText){
   }else{
     gameLength = 1000*60*5;//5 min game by default
   }
-  console.log("started");
+  logger.log("verbose", "started");
   game.state = IN_PLAY;
 }
 
 function snipe(game, sniperId){
-  console.log("snipe");
+  logger.log("verbose", "snipe");
   //todo: let people vote on wether this is a valid snipe
   var oldTarget = game.targets[sniperId];
   var newTarget = game.targets[oldTarget];
@@ -50,7 +67,7 @@ function maybeRedirectToExistingGame(cookies){
   // till they leave it
   if(cookies["gameId"] in games
     && cookies["userId"] in games.userList){
-      console.log(`Redirect userId ${userId} to gameId ${gameId}`);
+      logger.log("verbose", `Redirect userId ${userId} to gameId ${gameId}`);
       res.redirect(__dirname + '/index.html');
   }
 }
@@ -91,7 +108,7 @@ app.get('/make', function(req, res){
   // (even though collisions must be unlikely anyway for the code to provide security)
   var third_part = Object.keys(games).length.toString(16);
   const code = `${first_part}-${second_part}-${third_part}`;
-  console.log(`making game: ${code}`);
+  logger.log("verbose", `making game: ${code}`);
   games[code] = new_game({});
   res.redirect(`/game/${code}`);
 });
@@ -115,7 +132,7 @@ app.get('/game/:code', function(req, res){
   // maybeRedirectToExistingGame(req.cookies);
 
   if(!req.params.code in games){
-    console.log(`Accessing invalid game: ${req.params.code}`)
+    logger.log("verbose", `Accessing invalid game: ${req.params.code}`)
     res.redirect(`/`);
   }else{
 
@@ -124,7 +141,7 @@ app.get('/game/:code', function(req, res){
     if(!(req.cookies["userId"] in game.userList)){
 
       if(game.state != NOT_STARTED){
-        console.log("Attempt to join game " + req.params.code + " that has already started");
+        logger.log("verbose", "Attempt to join game " + req.params.code + " that has already started");
         res.redirect(`/`);
       }
 
@@ -137,10 +154,10 @@ app.get('/game/:code', function(req, res){
       // does signing make horizontal scaling more painful?
       res.cookie("gameId", req.params.code);
       res.cookie("userId", idToken);
-      console.log(`Adding userId ${idToken} to game ${req.params.code}`);
+      logger.log("verbose", `Adding userId ${idToken} to game ${req.params.code}`);
       res.sendFile(__dirname + '/index.html');
     }else{
-      console.log(`Adding userId ${req.cookies["userId"]} rejoining game ${req.params.code}`);
+      logger.log("verbose", `Adding userId ${req.cookies["userId"]} rejoining game ${req.params.code}`);
       res.sendFile(__dirname + '/index.html');
     }
   }
@@ -152,7 +169,7 @@ function ioConnect(socket){
   if(gameId in games){
     socket.gameId = gameId;
   }else{
-    console.log(`invalid game code ${socket.gameId}`);
+    logger.log("verbose", `invalid game code ${socket.gameId}`);
     return;
   }
 
@@ -162,27 +179,27 @@ function ioConnect(socket){
   if(userId in game.userList){
     socket.userId = userId;
   }else{
-    console.log(`invalid userId ${socket.userId}`);
+    logger.log("verbose", `invalid userId ${socket.userId}`);
     return;
   }
 
-  console.log(`UserId ${userId} connected socket for ${gameId}`);
+  logger.log("verbose", `UserId ${userId} connected socket for ${gameId}`);
   
   io.emit('chat message', {'text': 'a user joined'});
   socket.on('chat message', function(msg){
 
-    console.log(`gameId: ${gameId}, userId: ${userId}, username: ${msg.username}, message: ${msg.text}`)
+    logger.log("verbose", `gameId: ${gameId}, userId: ${userId}, username: ${msg.username}, message: ${msg.text}`)
 
-    console.log(game.state);
+    logger.log("verbose", game.state);
 
     //todo: save this onto users cookie/userId dict
     if(msg.username != '' && game.state == NOT_STARTED){
       game.userList[socket.userId].username = msg.username;
     }else if(game.userList[socket.userId].username != msg.username){
-      console.log("attempted to set username for "  + socket.userId + " to " + msg.username + " but state != NOT_STARTED");
+      logger.log("verbose", "attempted to set username for "  + socket.userId + " to " + msg.username + " but state != NOT_STARTED");
     }
     msg.userList = game.userList;
-    console.log(msg);
+    logger.log("verbose", msg);
     if(game.state == NOT_STARTED && msg.text == "@maketargets"){
       makeTargets(game);
       msg.targets = game.targets;
@@ -191,7 +208,7 @@ function ioConnect(socket){
     }else if(game.state == IN_PLAY && msg.text == "@snipe"){
       gameOver = snipe(game, socket.userId);
       if(gameOver){
-        console.log("winner");
+        logger.log("verbose", "winner");
         games[gameId] = game = new_game(game.userList);
         msg.winner = socket.userId;
       }
@@ -210,20 +227,20 @@ function ioConnect(socket){
   });
   socket.on('disconnect', function(){
     io.emit('chat message',{'text': 'a user left'});
-    console.log('user disconnected');
+    logger.log("verbose", 'user disconnected');
   });
 }
 
 function startServer(){
   io.on('connection', ioConnect);
   http.listen(port, function(){
-    console.log('listening on *:' + port);
+    logger.log("verbose", 'listening on *:' + port);
   });
 }
 
 function stopServer(){
   http.close(function(){
-    console.log("Stopping server");
+    logger.log("verbose", "Stopping server");
   });
 }
 
