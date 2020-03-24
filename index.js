@@ -4,7 +4,10 @@ const crypto = require('crypto');
 app.use(cookieParser());
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
+
 var port = process.env.PORT || 3000;
+
+exports.port = port;
 
 function makeTargets(game){
   var userList = game.userList;
@@ -143,7 +146,7 @@ app.get('/game/:code', function(req, res){
   }
 });
 
-io.on('connection', function(socket){
+function ioConnect(socket){
 
   let gameId = socket.handshake.query.gameId;
   if(gameId in games){
@@ -209,8 +212,25 @@ io.on('connection', function(socket){
     io.emit('chat message',{'text': 'a user left'});
     console.log('user disconnected');
   });
-});
+}
 
-http.listen(port, function(){
-  console.log('listening on *:' + port);
-});
+function startServer(){
+  io.on('connection', ioConnect);
+  http.listen(port, function(){
+    console.log('listening on *:' + port);
+  });
+}
+
+function stopServer(){
+  http.close(function(){
+    console.log("Stopping server");
+  });
+}
+
+
+if (require.main === module) {
+  startServer();
+}
+
+exports.startServer = startServer;
+exports.stopServer = stopServer;

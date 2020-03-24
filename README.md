@@ -11,7 +11,7 @@ This project is an app to make playing [Photo Assassin](https://github.com/Rthe1
 ## Run locally
 
 ```bash
-node ./index.js
+nodejs ./index.js
 ```
 
 ### Selinium
@@ -24,14 +24,8 @@ tar -xvzf geckodriver*
 mv geckodriver /usr/local/bin/
 ```
 
-To test, first start the sever in one terminal:
+To run test:
 
 ```bash
-node ./index.js
-```
-
-Then test with:
-
-```bash
-node selenium_test.js
+nodejs selenium_test.js
 ```

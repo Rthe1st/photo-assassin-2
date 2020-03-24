@@ -2,13 +2,14 @@
 
 'use strict';
 
+var index = require('./index');
+
 const {Builder, By} = require('selenium-webdriver');
 const {Channel, Options} = require('selenium-webdriver/firefox');
 
 async function testSinglePlayerGame(driver) {
   try {
-    // Start on the base about page.
-    await driver.get('http://localhost:3000')
+    await driver.get(`http://localhost:${index.port}`)
     await driver.findElement(By.id('make-game')).click();
     await driver.findElement(By.id('username')).sendKeys("player1");
     await driver.findElement(By.id('message')).sendKeys("hello");
@@ -31,10 +32,16 @@ function createDriver(channel) {
   return new Builder().forBrowser('firefox').setFirefoxOptions(options).build();
 }
 
+// I think this has a race condition with testSinglePlayerGame
+// but because the function uses `await` when connecting to the server
+// the server always seems to start before calls to the driver fail?
+index.startServer();
+
 Promise.all([
   testSinglePlayerGame(createDriver(Channel.RELEASE)),
 ]).then(_ => {
   console.log('All done!');
+  index.stopServer();
 }, err => {
   console.error('An error occured! ' + err);
   setTimeout(() => {throw err}, 0);
