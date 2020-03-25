@@ -7,17 +7,33 @@ var io = require('socket.io')(http);
 
 var winston = require('winston');
 
+var logs_for_tests = [];
+
+function nextLog(){
+  return logs_for_tests.shift();
+}
+
+exports.nextLog = nextLog;
+
+var Writable = require('stream').Writable;
+var ws = Writable({objectMode: true});
+ws._write = function (chunk, enc, next) {
+    logs_for_tests.push(chunk);
+    next();
+};
+
+process.stdin.pipe(ws);
+
 const logger = winston.createLogger({
   level: 'info',
   format: winston.format.json(),
   defaultMeta: { service: 'user-service' },
   transports: [
-    //
-    // - Write to all logs with level `info` and below to `combined.log` 
-    // - Write all logs error (and below) to `error.log`.
-    //
     new winston.transports.File({ filename: './error.log', level: 'error' }),
-    new winston.transports.File({ filename: './combined.log', level: 'verbose' })
+    new winston.transports.File({ filename: './verbose.log', level: 'verbose' }),
+    new winston.transports.File({ filename: './debug.log', level: 'debug' }),
+    //todo: this is only for tests, put behind flag
+    new winston.transports.Stream({stream: ws, level: 'verbose'})
   ]
 });
  
@@ -29,7 +45,6 @@ exports.port = port;
 function makeTargets(game){
   var userList = game.userList;
   var users = Object.keys(userList);
-  logger.log("verbose", "making targets");
   for(var i=0; i<users.length;i++){
     game.targets[users[i]] = users[(i+1)%users.length];
   }
@@ -44,12 +59,10 @@ function start(game, msgText){
   }else{
     gameLength = 1000*60*5;//5 min game by default
   }
-  logger.log("verbose", "started");
   game.state = IN_PLAY;
 }
 
 function snipe(game, sniperId){
-  logger.log("verbose", "snipe");
   //todo: let people vote on wether this is a valid snipe
   var oldTarget = game.targets[sniperId];
   var newTarget = game.targets[oldTarget];
@@ -86,6 +99,9 @@ var NOT_STARTED = "NOT STARTED";
 var TARGETS_MADE = "TARGETS MADE";
 var IN_PLAY = "IN PLAY";
 
+exports.NOT_STARTED = NOT_STARTED;
+exports.TARGETS_MADE = TARGETS_MADE;
+exports.IN_PLAY = IN_PLAY;
 
 function new_game(userList){
   return {
@@ -108,7 +124,7 @@ app.get('/make', function(req, res){
   // (even though collisions must be unlikely anyway for the code to provide security)
   var third_part = Object.keys(games).length.toString(16);
   const code = `${first_part}-${second_part}-${third_part}`;
-  logger.log("verbose", `making game: ${code}`);
+  logger.log("verbose", "making game", {gameCode: code});
   games[code] = new_game({});
   res.redirect(`/game/${code}`);
 });
@@ -154,7 +170,7 @@ app.get('/game/:code', function(req, res){
       // does signing make horizontal scaling more painful?
       res.cookie("gameId", req.params.code);
       res.cookie("userId", idToken);
-      logger.log("verbose", `Adding userId ${idToken} to game ${req.params.code}`);
+      logger.log("verbose", "Adding user to game", {userId: idToken, gameCode: req.params.code});
       res.sendFile(__dirname + '/index.html');
     }else{
       logger.log("verbose", `Adding userId ${req.cookies["userId"]} rejoining game ${req.params.code}`);
@@ -183,14 +199,11 @@ function ioConnect(socket){
     return;
   }
 
-  logger.log("verbose", `UserId ${userId} connected socket for ${gameId}`);
+  logger.log("verbose", "Socket connected", {userId: userId, gameCode: gameId});
   
   io.emit('chat message', {'text': 'a user joined'});
   socket.on('chat message', function(msg){
-
-    logger.log("verbose", `gameId: ${gameId}, userId: ${userId}, username: ${msg.username}, message: ${msg.text}`)
-
-    logger.log("verbose", game.state);
+    logger.log("verbose", "Chat message", {gameCode: gameId, userId: userId, username: msg.username, chatMessage: msg.text});
 
     //todo: save this onto users cookie/userId dict
     if(msg.username != '' && game.state == NOT_STARTED){
@@ -199,18 +212,20 @@ function ioConnect(socket){
       logger.log("verbose", "attempted to set username for "  + socket.userId + " to " + msg.username + " but state != NOT_STARTED");
     }
     msg.userList = game.userList;
-    logger.log("verbose", msg);
     if(game.state == NOT_STARTED && msg.text == "@maketargets"){
       makeTargets(game);
       msg.targets = game.targets;
+      logger.log("verbose", "Making targets", {gameCode: gameId, gameState: game.state});
     }else if(game.state == TARGETS_MADE && msg.text.startsWith("@start")){
       start(game, msg.text);
+      logger.log("verbose", "Starting", {gameCode: gameId, gameState: game.state});
     }else if(game.state == IN_PLAY && msg.text == "@snipe"){
       gameOver = snipe(game, socket.userId);
+      logger.log("verbose", "Snipe", {gameCode: gameId, gameState: game.state});
       if(gameOver){
-        logger.log("verbose", "winner");
         games[gameId] = game = new_game(game.userList);
         msg.winner = socket.userId;
+        logger.log("verbose", "Winner", {gameCode: gameId, gameState: game.state});
       }
     }
     //todo: don't rely on messages events to check timing
@@ -234,13 +249,13 @@ function ioConnect(socket){
 function startServer(){
   io.on('connection', ioConnect);
   http.listen(port, function(){
-    logger.log("verbose", 'listening on *:' + port);
+    logger.log("debug", 'listening on *:' + port);
   });
 }
 
 function stopServer(){
   http.close(function(){
-    logger.log("verbose", "Stopping server");
+    logger.log("debug", "Stopping server");
   });
 }
 
