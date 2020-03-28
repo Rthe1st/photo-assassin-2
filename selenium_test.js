@@ -17,12 +17,12 @@ function checkLog(message, otherKeys=new Map()){
   return currentLog;
 }
 
-async function sendChatMessage(driver, gameCode, userId, userName, chatMessage){
+async function sendChatMessage(driver, gameCode, publicId, userName, chatMessage){
   await driver.findElement(By.id('message')).sendKeys(chatMessage);
   await driver.findElement(By.id('send-message')).click();
   var log = checkLog("Chat message", new Map([
     ["gameCode", gameCode],
-    ["userId", userId],
+    ["publicId", publicId],
     ["username", userName],
     ["chatMessage", chatMessage],
   ]));
@@ -38,33 +38,33 @@ async function testSinglePlayerGame(driver) {
     var log = checkLog("Adding user to game", new Map([
       ["gameCode", gameCode]
     ]));
-    var userId = log["userId"];
+    var publicId = log["publicId"];
     var log = checkLog("Socket connected", new Map([
       ["gameCode", gameCode],
-      ["userId", userId],
+      ["publicId", publicId],
     ]));
     
     var userName = "player1";
     await driver.findElement(By.id('username')).sendKeys(userName);
     var chatMessage = "hello";
-    await sendChatMessage(driver, gameCode, userId, userName, chatMessage);
+    await sendChatMessage(driver, gameCode, publicId, userName, chatMessage);
     
     chatMessage = "@maketargets"
-    await sendChatMessage(driver, gameCode, userId, userName, chatMessage);
+    await sendChatMessage(driver, gameCode, publicId, userName, chatMessage);
     var log = checkLog("Making targets", new Map([
       ["gameCode", gameCode],
       ["gameState", index.TARGETS_MADE],
     ]));
     
     chatMessage = "@start";
-    await sendChatMessage(driver, gameCode, userId, userName, chatMessage);
+    await sendChatMessage(driver, gameCode, publicId, userName, chatMessage);
     var log = checkLog("Starting", new Map([
       ["gameCode", gameCode],
       ["gameState", index.IN_PLAY],
     ]));
     
     chatMessage = "@snipe";
-    await sendChatMessage(driver, gameCode, userId, userName, chatMessage);
+    await sendChatMessage(driver, gameCode, publicId, userName, chatMessage);
     var log = checkLog("Snipe", new Map([
       ["gameCode", gameCode],
       ["gameState", index.IN_PLAY],
