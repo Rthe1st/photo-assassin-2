@@ -29,9 +29,9 @@ const logger = winston.createLogger({
   format: winston.format.json(),
   defaultMeta: { service: 'user-service' },
   transports: [
-    new winston.transports.File({ filename: './error.log', level: 'error' }),
-    new winston.transports.File({ filename: './verbose.log', level: 'verbose' }),
-    new winston.transports.File({ filename: './debug.log', level: 'debug' }),
+    new winston.transports.File({ filename: './error.log', level: 'error', options: { flags: 'w' } }),
+    new winston.transports.File({ filename: './verbose.log', level: 'verbose', options: { flags: 'w' } }),
+    new winston.transports.File({ filename: './debug.log', level: 'debug', options: { flags: 'w' } }),
     //todo: this is only for tests, put behind flag
     new winston.transports.Stream({stream: ws, level: 'verbose'})
   ]
@@ -246,17 +246,36 @@ function ioConnect(socket){
   });
 }
 
+var connections = {}
+
 function startServer(){
   io.on('connection', ioConnect);
+  
+  http.on('connection', function(conn) {
+    var key = conn.remoteAddress + ':' + conn.remotePort;
+    connections[key] = conn;
+    conn.on('close', function() {
+      console.log("close");
+      delete connections[key];
+    });
+  });
+  
   http.listen(port, function(){
     logger.log("debug", 'listening on *:' + port);
   });
+  
 }
 
 function stopServer(){
   http.close(function(){
     logger.log("debug", "Stopping server");
   });
+  console.dir(connections);
+  for (var key in connections){
+    console.log("destroy");
+    connections[key].destroy();
+  }
+  console.log("done");
 }
 
 
