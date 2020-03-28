@@ -22,9 +22,7 @@ ws._write = function (chunk, enc, next) {
     next();
 };
 
-process.stdin.pipe(ws);
-
-const logger = winston.createLogger({
+var logger = winston.createLogger({
   level: 'info',
   format: winston.format.json(),
   defaultMeta: { service: 'user-service' },
@@ -73,25 +71,31 @@ function snipe(game, sniperId){
   }
 }
 
-function maybeRedirectToExistingGame(cookies){
+function maybeRedirectToExistingGame(cookies, res){
   // you can only be part of one game at a time
   // to if user is already in one, keep redirecting
   // till they leave it
-  if(cookies["gameId"] in games
-    && games.userList.has(cookies["publicId"])){
-      logger.log("verbose", `Redirect publicId ${publicId} to gameId ${gameId}`);
-      res.redirect(__dirname + '/index.html');
+  // todo: instead of redirecting, send them to a page saying
+  // "youre already in game X [link], you must leave it before making a new one"
+  if(games.has(cookies["gameId"])
+    && games.get(cookies["gameId"]).idMapping.has(cookies["privateId"])){
+      logger.log("verbose", 'Redirect to existing game', {publicId: games.get(cookies["gameId"]).idMapping.get(cookies["privateId"]), gameCode: cookies["gameId"]});
+      res.redirect(`/game/${cookies["gameId"]}`);
+      return true;
   }
+  return false;
 }
 
 //todo: handle making and joining games here
 
 app.get('/', function(req, res){
-  maybeRedirectToExistingGame(req.cookies);
+  if(maybeRedirectToExistingGame(req.cookies, res)){
+    return;
+  }
   res.sendFile(__dirname + '/lobby.html');
 });
 
-var games = {}
+var games = new Map();
 
 //game state
 var NOT_STARTED = "NOT STARTED";
@@ -119,21 +123,25 @@ function new_game(idMapping=new Map(), userList=new Map()){
 }
 
 app.get('/make', function(req, res){
-  maybeRedirectToExistingGame(req.cookies);
+  if(maybeRedirectToExistingGame(req.cookies, res)){
+    return;
+  }
 
   var first_part = crypto.randomBytes(2).toString('hex');
   var second_part = crypto.randomBytes(2).toString('hex');
   // used number of games as a guarantee prevent collisions
   // (even though collisions must be unlikely anyway for the code to provide security)
-  var third_part = Object.keys(games).length.toString(16);
+  var third_part = games.size.toString(16);
   const code = `${first_part}-${second_part}-${third_part}`;
   logger.log("verbose", "making game", {gameCode: code});
-  games[code] = new_game();
+  games.set(code, new_game());
   res.redirect(`/game/${code}`);
 });
 
 app.get('/join', function(req, res){
-  maybeRedirectToExistingGame(req.cookies);
+  if(maybeRedirectToExistingGame(req.cookies, res)){
+    return;
+  }
 
   if('code' in req.query){
     var code = req.query.code;
@@ -148,16 +156,16 @@ app.get('/game/:code', function(req, res){
   // don't do this
   // because if user hits/game/:code we should assume they are tyring to
   // leave an old game and join this one
-  // maybeRedirectToExistingGame(req.cookies);
+  // maybeRedirectToExistingGame(req.cookies, res);
 
-  if(!req.params.code in games){
+  if(!games.has(req.params.code)){
     logger.log("verbose", `Accessing invalid game: ${req.params.code}`)
     res.redirect(`/`);
   }else{
 
-    var game = games[req.params.code];
+    var game = games.get(req.params.code);
 
-    if(!(game.idMapping.has(req.cookies["publicId"]))){
+    if(!(game.idMapping.has(req.cookies["privateId"]))){
 
       if(game.state != NOT_STARTED){
         logger.log("verbose", "Attempt to join game " + req.params.code + " that has already started");
@@ -181,7 +189,7 @@ app.get('/game/:code', function(req, res){
       logger.log("verbose", "Adding user to game", {publicId: publicId, gameCode: req.params.code});
       res.sendFile(__dirname + '/index.html');
     }else{
-      logger.log("verbose", `Adding publicId ${req.cookies["publicId"]} rejoining game ${req.params.code}`);
+      logger.log("verbose", 'User rejoining game', {publicId: req.cookies["publicId"], gameCode: req.params.code});
       res.sendFile(__dirname + '/index.html');
     }
   }
@@ -190,12 +198,12 @@ app.get('/game/:code', function(req, res){
 function ioConnect(socket){
 
   let gameId = socket.handshake.query.gameId;
-  if(!(gameId in games)){
+  if(!games.has(gameId)){
     logger.log("verbose", `invalid game code ${gameId}`);
     return;
   }
 
-  var game = games[gameId];
+  var game = games.get(gameId);
 
   let privateId = socket.handshake.query.privateId;
   
@@ -206,7 +214,7 @@ function ioConnect(socket){
     return;
   }
 
-  logger.log("verbose", "Socket connected", {publicId: publicId, gameCode: gameId});
+  logger.log("debug", "Socket connected", {publicId: publicId, gameCode: gameId});
   
   io.emit('chat message', {'text': `user ${publicId} joined`});
   socket.on('chat message', function(msg){
@@ -233,7 +241,8 @@ function ioConnect(socket){
       logger.log("debug", "targets post", {targets: Array.from(game.targets)});
       logger.log("verbose", "Snipe", {gameCode: gameId, gameState: game.state});
       if(gameOver){
-        games[gameId] = game = new_game(game.userList);
+        games.set(gameId,new_game(game.userList));
+        game = games.get(gameId);
         msg.winner = publicId;
         logger.log("verbose", "Winner", {gameCode: gameId, gameState: game.state});
       }
@@ -254,6 +263,11 @@ function ioConnect(socket){
     io.emit('chat message',{'text': 'a user left'});
     logger.log("verbose", 'user disconnected');
   });
+
+}
+
+function checkGameTiming(){
+
 }
 
 var connections = {}
@@ -274,6 +288,9 @@ function startServer(){
     logger.log("debug", 'listening on *:' + port);
   });
   
+  // assuming games last > 10 minutes, 30seconds delay shouldn't matter
+  setInterval(checkGameTiming, 30000)
+
 }
 
 function stopServer(){

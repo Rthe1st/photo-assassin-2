@@ -28,6 +28,38 @@ async function sendChatMessage(driver, gameCode, publicId, userName, chatMessage
   ]));
 }
 
+async function testMakingNewGameWhileInOne(driver) {
+  try {
+    await driver.get(`http://localhost:${index.port}`);
+    
+    await driver.findElement(By.id('make-game')).click();
+    var log = checkLog("making game");
+    var gameCode = log["gameCode"];
+    var log = checkLog("Adding user to game", new Map([
+      ["gameCode", gameCode]
+    ]));
+    var publicId = log["publicId"];
+    
+    await driver.get(`http://localhost:${index.port}`);
+
+    var log = checkLog("Redirect to existing game", new Map([
+      ["gameCode", gameCode],
+      ["publicId", publicId],
+    ]));
+
+    var log = checkLog("User rejoining game", new Map([
+      ["gameCode", gameCode],
+      ["publicId", publicId],
+    ]));
+
+  } catch (ex) {
+    console.log('An error occurred! ' + ex);
+    console.dir(ex);
+  } finally {
+    await driver.quit();
+  }
+}
+
 async function testSinglePlayerGame(driver) {
   try {
     await driver.get(`http://localhost:${index.port}`);
@@ -39,10 +71,6 @@ async function testSinglePlayerGame(driver) {
       ["gameCode", gameCode]
     ]));
     var publicId = log["publicId"];
-    var log = checkLog("Socket connected", new Map([
-      ["gameCode", gameCode],
-      ["publicId", publicId],
-    ]));
     
     var userName = "player1";
     await driver.findElement(By.id('username')).sendKeys(userName);
@@ -93,14 +121,16 @@ function createDriver(channel) {
 index.startServer();
 
 Promise.all([
-  testSinglePlayerGame(createDriver(Channel.RELEASE)),
-]).then(_ => {
-  console.log('All done!');
+  testMakingNewGameWhileInOne(createDriver(Channel.RELEASE))
+]).then(
+  testSinglePlayerGame(createDriver(Channel.RELEASE))
+).then(_ => {
+  console.log('All done');
   // todo: why does stop server hang and not close?
   // process.exit shouldn't be needed
   index.stopServer();
   process.exit()
-}, err => {
-  console.error('An error occured! ' + err);
+}).catch(function(){
+  console.error('An error occurred! ' + err);
   setTimeout(() => {throw err}, 0);
 });
