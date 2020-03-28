@@ -255,7 +255,7 @@ function startServer(){
     var key = conn.remoteAddress + ':' + conn.remotePort;
     connections[key] = conn;
     conn.on('close', function() {
-      console.log("close");
+      logger.log("debug", 'connection close');
       delete connections[key];
     });
   });
@@ -270,12 +270,10 @@ function stopServer(){
   http.close(function(){
     logger.log("debug", "Stopping server");
   });
-  console.dir(connections);
   for (var key in connections){
-    console.log("destroy");
+    logger.log("debug", 'destroying connection');
     connections[key].destroy();
   }
-  console.log("done");
 }
 
 

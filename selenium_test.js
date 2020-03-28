@@ -31,6 +31,7 @@ async function sendChatMessage(driver, gameCode, userId, userName, chatMessage){
 async function testSinglePlayerGame(driver) {
   try {
     await driver.get(`http://localhost:${index.port}`);
+    
     await driver.findElement(By.id('make-game')).click();
     var log = checkLog("making game");
     var gameCode = log["gameCode"];
@@ -42,22 +43,26 @@ async function testSinglePlayerGame(driver) {
       ["gameCode", gameCode],
       ["userId", userId],
     ]));
+    
     var userName = "player1";
     await driver.findElement(By.id('username')).sendKeys(userName);
     var chatMessage = "hello";
     await sendChatMessage(driver, gameCode, userId, userName, chatMessage);
+    
     chatMessage = "@maketargets"
     await sendChatMessage(driver, gameCode, userId, userName, chatMessage);
     var log = checkLog("Making targets", new Map([
       ["gameCode", gameCode],
       ["gameState", index.TARGETS_MADE],
     ]));
+    
     chatMessage = "@start";
     await sendChatMessage(driver, gameCode, userId, userName, chatMessage);
     var log = checkLog("Starting", new Map([
       ["gameCode", gameCode],
       ["gameState", index.IN_PLAY],
     ]));
+    
     chatMessage = "@snipe";
     await sendChatMessage(driver, gameCode, userId, userName, chatMessage);
     var log = checkLog("Snipe", new Map([
@@ -68,6 +73,7 @@ async function testSinglePlayerGame(driver) {
       ["gameCode", gameCode],
       ["gameState", index.NOT_STARTED],
     ]));
+
   } catch (ex) {
     console.log('An error occured! ' + ex);
     console.dir(ex);
@@ -90,7 +96,10 @@ Promise.all([
   testSinglePlayerGame(createDriver(Channel.RELEASE)),
 ]).then(_ => {
   console.log('All done!');
+  // todo: why does stop server hang and not close?
+  // process.exit shouldn't be needed
   index.stopServer();
+  process.exit()
 }, err => {
   console.error('An error occured! ' + err);
   setTimeout(() => {throw err}, 0);
