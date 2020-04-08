@@ -17,10 +17,16 @@ function checkLog(message, otherKeys=new Map()){
   return currentLog;
 }
 
+function sleep(ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
 async function sendChatMessage(driver, gameCode, publicId, userName, chatMessage){
   await driver.findElement(By.id('message')).sendKeys(chatMessage);
   await driver.findElement(By.id('send-message')).click();
-  var log = checkLog("Chat message", new Map([
+  checkLog("Chat message", new Map([
     ["gameCode", gameCode],
     ["publicId", publicId],
     ["username", userName],
@@ -29,6 +35,7 @@ async function sendChatMessage(driver, gameCode, publicId, userName, chatMessage
 }
 
 async function testMakingNewGameWhileInOne(driver) {
+  index.setUpLogging('testMakingNewGameWhileInOne');
   try {
     await driver.get(`http://localhost:${index.port}`);
     
@@ -60,7 +67,58 @@ async function testMakingNewGameWhileInOne(driver) {
   }
 }
 
+async function testGameTimeout(driver) {
+  index.setUpLogging('testGameTimeout');
+  try {
+    await driver.get(`http://localhost:${index.port}`);
+    
+    await driver.findElement(By.id('make-game')).click();
+    var log = checkLog("making game");
+    var gameCode = log["gameCode"];
+    var log = checkLog("Adding user to game", new Map([
+      ["gameCode", gameCode]
+    ]));
+    var publicId = log["publicId"];
+    
+    var userName = "player1";
+    await driver.findElement(By.id('username')).sendKeys(userName);
+    var chatMessage = "hello";
+    await sendChatMessage(driver, gameCode, publicId, userName, chatMessage);
+    
+    chatMessage = "@maketargets"
+    await sendChatMessage(driver, gameCode, publicId, userName, chatMessage);
+    var log = checkLog("Making targets", new Map([
+      ["gameCode", gameCode],
+      ["gameState", index.TARGETS_MADE],
+    ]));
+    
+    chatMessage = "@start 1";
+    await sendChatMessage(driver, gameCode, publicId, userName, chatMessage);
+    var log = checkLog("Starting", new Map([
+      ["gameCode", gameCode],
+      ["gameState", index.IN_PLAY],
+    ]));
+    
+    //todo: mock current time to make this more reliable
+    // / reduce waiting time
+    await sleep(1000);
+
+    var log = checkLog("TimeUp", new Map([
+      ["gameCode", gameCode],
+      ["gameState", index.NOT_STARTED],
+    ]));
+
+
+  } catch (ex) {
+    console.log('An error occured! ' + ex);
+    console.dir(ex);
+  } finally {
+    await driver.quit();
+  }
+}
+
 async function testSinglePlayerGame(driver) {
+  index.setUpLogging('testSinglePlayerGame');
   try {
     await driver.get(`http://localhost:${index.port}`);
     
@@ -103,11 +161,10 @@ async function testSinglePlayerGame(driver) {
     ]));
 
   } catch (ex) {
-    console.log('An error occured! ' + ex);
-    console.dir(ex);
-  } finally {
     await driver.quit();
+    throw ex;
   }
+  await driver.quit();
 }
 
 function createDriver(channel) {
@@ -115,22 +172,26 @@ function createDriver(channel) {
   return new Builder().forBrowser('firefox').setFirefoxOptions(options).build();
 }
 
-// I think this has a race condition with testSinglePlayerGame
-// but because the function uses `await` when connecting to the server
-// the server always seems to start before calls to the driver fail?
-index.startServer();
-
-Promise.all([
-  testMakingNewGameWhileInOne(createDriver(Channel.RELEASE))
-]).then(
-  testSinglePlayerGame(createDriver(Channel.RELEASE))
-).then(_ => {
-  console.log('All done');
+async function runTests(){
+  // I think this has a race condition with testSinglePlayerGame
+  // but because the function uses `await` when connecting to the server
+  // the server always seems to start before calls to the driver fail?
+  //todo: include start server in chain, or make it async and await
+  index.startServer();
+  //todo: make drivers headless / can we reuse a single driver?
+  //todo: make run in parrallel (promise.all), needs loggers to be made not global
+  try{
+    await testMakingNewGameWhileInOne(createDriver(Channel.RELEASE));
+    await testGameTimeout(createDriver(Channel.RELEASE));
+    await testSinglePlayerGame(createDriver(Channel.RELEASE));
+  }catch{
+    console.log('An error occurred! ' + ex);
+    console.dir(ex);
+  }
   // todo: why does stop server hang and not close?
   // process.exit shouldn't be needed
   index.stopServer();
-  process.exit()
-}).catch(function(){
-  console.error('An error occurred! ' + err);
-  setTimeout(() => {throw err}, 0);
-});
+  process.exit();
+}
+
+runTests();

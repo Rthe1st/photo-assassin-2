@@ -6,6 +6,7 @@ var http = require('http').Server(app);
 var io = require('socket.io')(http);
 
 var winston = require('winston');
+var Writable = require('stream').Writable;
 
 var logs_for_tests = [];
 
@@ -15,26 +16,30 @@ function nextLog(){
 
 exports.nextLog = nextLog;
 
-var Writable = require('stream').Writable;
-var ws = Writable({objectMode: true});
-ws._write = function (chunk, enc, next) {
-    logs_for_tests.push(chunk);
-    next();
-};
+var logger;
 
-var logger = winston.createLogger({
-  level: 'info',
-  format: winston.format.json(),
-  defaultMeta: { service: 'user-service' },
-  transports: [
-    new winston.transports.File({ filename: './error.log', level: 'error', options: { flags: 'w' } }),
-    new winston.transports.File({ filename: './verbose.log', level: 'verbose', options: { flags: 'w' } }),
-    new winston.transports.File({ filename: './debug.log', level: 'debug', options: { flags: 'w' } }),
-    //todo: this is only for tests, put behind flag
-    new winston.transports.Stream({stream: ws, level: 'verbose'})
-  ]
-});
- 
+exports.setUpLogging = function(filePrefix){
+  var ws = Writable({objectMode: true});
+  ws._write = function (chunk, enc, next) {
+      logs_for_tests.push(chunk);
+      next();
+  };
+  
+  logger = winston.createLogger({
+    level: 'info',
+    format: winston.format.json(),
+    defaultMeta: { service: 'game logs' },
+    transports: [
+      new winston.transports.File({ filename: `./logs/${filePrefix}_error.log`, level: 'error', options: { flags: 'w' } }),
+      new winston.transports.File({ filename: `./logs/${filePrefix}_verbose.log`, level: 'verbose', options: { flags: 'w' } }),
+      new winston.transports.File({ filename: `./logs/${filePrefix}_debug.log`, level: 'debug', options: { flags: 'w' } }),
+      //todo: this is only for tests, put behind flag
+      new winston.transports.Stream({stream: ws, level: 'verbose'})
+    ]
+  });
+   
+}
+
 
 var port = process.env.PORT || 3000;
 
@@ -52,9 +57,9 @@ function start(game, msgText){
   game.startTime = Date.now();
   textParts = msgText.split(" ")
   if(textParts.length > 1 && !isNaN(parseInt(textParts[1]))){
-    gameLength = 1000*60*parseInt(textParts[1]);
+    game.gameLength = parseInt(textParts[1]);
   }else{
-    gameLength = 1000*60*5;//5 min game by default
+    game.gameLength = 1000*60*5;//5 min game by default
   }
   game.state = IN_PLAY;
 }
@@ -80,7 +85,7 @@ function maybeRedirectToExistingGame(cookies, res){
   if(games.has(cookies["gameId"])
     && games.get(cookies["gameId"]).idMapping.has(cookies["privateId"])){
       logger.log("verbose", 'Redirect to existing game', {publicId: games.get(cookies["gameId"]).idMapping.get(cookies["privateId"]), gameCode: cookies["gameId"]});
-      res.redirect(`/game/${cookies["gameId"]}`);
+      res.redirect(`/game${cookies["gameId"]}`);
       return true;
   }
   return false;
@@ -106,8 +111,9 @@ exports.NOT_STARTED = NOT_STARTED;
 exports.TARGETS_MADE = TARGETS_MADE;
 exports.IN_PLAY = IN_PLAY;
 
-function new_game(idMapping=new Map(), userList=new Map()){
+function newGame(nameSpace, idMapping=new Map(), userList=new Map()){
   return {
+    nameSpace: nameSpace,
     state: NOT_STARTED,
     // this maps the private ID given to a client via a cookie
     // to an ID that is shown to other players
@@ -132,10 +138,12 @@ app.get('/make', function(req, res){
   // used number of games as a guarantee prevent collisions
   // (even though collisions must be unlikely anyway for the code to provide security)
   var third_part = games.size.toString(16);
-  const code = `${first_part}-${second_part}-${third_part}`;
+  const code = `/${first_part}-${second_part}-${third_part}`;
   logger.log("verbose", "making game", {gameCode: code});
-  games.set(code, new_game());
-  res.redirect(`/game/${code}`);
+  var nameSpace = io.of(code);
+  nameSpace.on('connection', ioConnect);
+  games.set(code, newGame(nameSpace));
+  res.redirect(`/game${code}`);
 });
 
 app.get('/join', function(req, res){
@@ -145,7 +153,7 @@ app.get('/join', function(req, res){
 
   if('code' in req.query){
     var code = req.query.code;
-    res.redirect(`/game/${code}`);
+    res.redirect(`/game${code}`);
   }else{
     res.redirect(`/`);
   }
@@ -157,9 +165,10 @@ app.get('/game/:code', function(req, res){
   // because if user hits/game/:code we should assume they are tyring to
   // leave an old game and join this one
   // maybeRedirectToExistingGame(req.cookies, res);
-
+  req.params.code = '/' + req.params.code;
+  logger.log("debug", `Accessing game: ${req.params.code}`);
   if(!games.has(req.params.code)){
-    logger.log("verbose", `Accessing invalid game: ${req.params.code}`)
+    logger.log("verbose", `Accessing invalid game: ${req.params.code}`);
     res.redirect(`/`);
   }else{
 
@@ -179,10 +188,7 @@ app.get('/game/:code', function(req, res){
 
       game.idMapping.set(privateId,publicId);
       game.userList.set(publicId,{});
-      logger.log("debug", "pubid", {pubid: publicId});
-      logger.log("debug", "userlist1", {userList: Array.from(game.userList)});
-      // todo: should we sign these? Not much need really
-      // does signing make horizontal scaling more painful?
+      // todo: set good settings (https only, etc)
       res.cookie("gameId", req.params.code);
       res.cookie("privateId", privateId);
       res.cookie("publicId", publicId);
@@ -197,11 +203,7 @@ app.get('/game/:code', function(req, res){
 
 function ioConnect(socket){
 
-  let gameId = socket.handshake.query.gameId;
-  if(!games.has(gameId)){
-    logger.log("verbose", `invalid game code ${gameId}`);
-    return;
-  }
+  var gameId = socket.nsp.name;
 
   var game = games.get(gameId);
 
@@ -216,7 +218,7 @@ function ioConnect(socket){
 
   logger.log("debug", "Socket connected", {publicId: publicId, gameCode: gameId});
   
-  io.emit('chat message', {'text': `user ${publicId} joined`});
+  socket.nsp.emit('chat message', {'text': `user ${publicId} joined`});
   socket.on('chat message', function(msg){
     logger.log("verbose", "Chat message", {gameCode: gameId, publicId: publicId, username: msg.username, chatMessage: msg.text});
 
@@ -241,40 +243,49 @@ function ioConnect(socket){
       logger.log("debug", "targets post", {targets: Array.from(game.targets)});
       logger.log("verbose", "Snipe", {gameCode: gameId, gameState: game.state});
       if(gameOver){
-        games.set(gameId,new_game(game.userList));
+        games.set(gameId,newGame(game.nameSpace, game.userList));
         game = games.get(gameId);
         msg.winner = publicId;
         logger.log("verbose", "Winner", {gameCode: gameId, gameState: game.state});
       }
     }
-    //todo: don't rely on messages events to check timing
-    if(game.state == IN_PLAY){
-      if(game.startTime + game.gameLength < Date.now()){
-        game.state = NOT_STARTED;
-        msg.winner = "The relentless passage of time";
-      }else{
-        msg.timeLeft =  (game.startTime + game.gameLength) - Date.now();
-      }
-    }
     
-    io.emit('chat message', msg);
+    socket.nsp.emit('chat message', msg);
   });
   socket.on('disconnect', function(){
-    io.emit('chat message',{'text': 'a user left'});
-    logger.log("verbose", 'user disconnected');
+    socket.nsp.emit('chat message',{'text': 'a user left'});
+    //logger.log("verbose", 'user disconnected');
   });
 
 }
 
 function checkGameTiming(){
-
+  for (let [gameId, game] of games.entries()) {
+    let now = Date.now();
+    if (game.state == IN_PLAY
+      && game.startTime + game.gameLength < now){
+      game.state = NOT_STARTED;
+      game.nameSpace.emit({'winner': 'The relentless passage of time'});
+      logger.log("verbose", "TimeUp", {gameCode: gameId, gameState: game.state});
+    }else{
+      logger.log("debug", "timeLeft", 
+        {
+          gameCode: gameId,
+          gameState: game.state,
+          gameStartTime: game.startTime,
+          gameLength: game.gameLength,
+          now: now,
+          timeLeft: (game.startTime + game.gameLength - now)
+        }
+      );
+      game.nameSpace.emit({'timeLeft': (game.startTime + game.gameLength) - now});
+    }
+  };
 }
 
 var connections = {}
 
 function startServer(){
-  io.on('connection', ioConnect);
-  
   http.on('connection', function(conn) {
     var key = conn.remoteAddress + ':' + conn.remotePort;
     connections[key] = conn;
@@ -284,12 +295,9 @@ function startServer(){
     });
   });
   
-  http.listen(port, function(){
-    logger.log("debug", 'listening on *:' + port);
-  });
+  http.listen(port);
   
-  // assuming games last > 10 minutes, 30seconds delay shouldn't matter
-  setInterval(checkGameTiming, 30000)
+  setInterval(checkGameTiming, 1000)
 
 }
 
@@ -305,6 +313,7 @@ function stopServer(){
 
 
 if (require.main === module) {
+  setUpLogging();
   startServer();
 }
 

@@ -32,16 +32,19 @@
       }
       $(function () {
 
-        var gameId = document.cookie.replace(/(?:(?:^|.*;\s*)gameId\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+        // gameId needs to be decoded because it contains a '/'
+        // which gets URI encoded otherwise
+        var gameId = decodeURIComponent(document.cookie.replace(/(?:(?:^|.*;\s*)gameId\s*\=\s*([^;]*).*$)|^.*$/, "$1"));
         var privateId = document.cookie.replace(/(?:(?:^|.*;\s*)privateId\s*\=\s*([^;]*).*$)|^.*$/, "$1");
         var publicId = document.cookie.replace(/(?:(?:^|.*;\s*)publicId\s*\=\s*([^;]*).*$)|^.*$/, "$1");
-
-        const socket = io({
-          query: {
-            "gameId": gameId,
-            "privateId": privateId,
-          }
-        });
+        console.log(gameId);
+        const socket = io(
+          `${gameId}`,
+          {
+            query: {
+              "privateId": privateId,
+            }
+          });
 
         $('form').submit(function(){
           //todo: use callbacks properly
@@ -90,7 +93,7 @@
             console.log(targetDisplay(msg.targets))
           }
           if("winner" in msg){
-            console.log("winner was" + msg.winner);
+            console.log("winner was " + msg.winner);
           }
           if("timeLeft" in msg){
             console.log("time left: " + msg.timeLeft/1000);
