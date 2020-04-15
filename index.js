@@ -18,7 +18,7 @@ exports.nextLog = nextLog;
 
 var logger;
 
-exports.setUpLogging = function(filePrefix){
+function setUpLogging(filePrefix){
   var ws = Writable({objectMode: true});
   ws._write = function (chunk, enc, next) {
       logs_for_tests.push(chunk);
@@ -40,7 +40,7 @@ exports.setUpLogging = function(filePrefix){
    
 }
 
-
+exports.setUpLogging = setUpLogging;
 var port = process.env.PORT || 3000;
 
 exports.port = port;
@@ -112,6 +112,10 @@ exports.TARGETS_MADE = TARGETS_MADE;
 exports.IN_PLAY = IN_PLAY;
 
 function newGame(nameSpace, idMapping=new Map(), userList=new Map()){
+  let positions = new Map();
+  for(let publicId of userList.keys()){
+    positions.set(publicId, [])
+  }
   return {
     nameSpace: nameSpace,
     state: NOT_STARTED,
@@ -119,13 +123,19 @@ function newGame(nameSpace, idMapping=new Map(), userList=new Map()){
     // to an ID that is shown to other players
     // if other players learn your private ID, they can impersonate you
     idMapping: idMapping,
-    // todo: give admin option to remove
     userList: userList,
     targets: {},
+    positions: positions,
     startTime: undefined,
     gameLength: undefined,
   };
 
+}
+
+function addPlayer(game, privateId, publicId){
+  game.idMapping.set(privateId,publicId);
+  game.userList.set(publicId,{});
+  game.positions.set(publicId, []);
 }
 
 app.get('/make', function(req, res){
@@ -186,8 +196,8 @@ app.get('/game/:code', function(req, res){
       // including publicId because its guaranteed to be unique
       var privateId = `${randomness}-${publicId}`;
 
-      game.idMapping.set(privateId,publicId);
-      game.userList.set(publicId,{});
+      addPlayer(game, privateId, publicId);
+
       // todo: set good settings (https only, etc)
       res.cookie("gameId", req.params.code);
       res.cookie("privateId", privateId);
@@ -222,6 +232,17 @@ function ioConnect(socket){
   socket.on('chat message', function(msg){
     logger.log("verbose", "Chat message", {gameCode: gameId, publicId: publicId, username: msg.username, chatMessage: msg.text});
 
+    logger.log("debug", "positionUpdate", {'positionHistory': game.positions.get(publicId), 'position': msg.position});
+
+    if(
+      msg.position.hasOwnProperty('longitude')
+      && msg.position.hasOwnProperty('latitude')
+      && msg.position.longitude != null
+      && msg.position.latitude != null
+    ){
+      game.positions.get(publicId).push(msg.position);
+    }
+
     //todo: save this onto users cookie/publicId dict
     if(msg.username != '' && game.state == NOT_STARTED){
       game.userList.get(publicId).username = msg.username;
@@ -254,7 +275,6 @@ function ioConnect(socket){
   });
   socket.on('disconnect', function(){
     socket.nsp.emit('chat message',{'text': 'a user left'});
-    //logger.log("verbose", 'user disconnected');
   });
 
 }
@@ -267,7 +287,7 @@ function checkGameTiming(){
       game.state = NOT_STARTED;
       game.nameSpace.emit({'winner': 'The relentless passage of time'});
       logger.log("verbose", "TimeUp", {gameCode: gameId, gameState: game.state});
-    }else{
+    }else if(game.state == IN_PLAY){
       logger.log("debug", "timeLeft", 
         {
           gameCode: gameId,

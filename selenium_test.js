@@ -108,7 +108,6 @@ async function testGameTimeout(driver) {
       ["gameState", index.NOT_STARTED],
     ]));
 
-
   } catch (ex) {
     console.log('An error occured! ' + ex);
     console.dir(ex);
@@ -168,7 +167,14 @@ async function testSinglePlayerGame(driver) {
 }
 
 function createDriver(channel) {
-  let options = new Options().setBinary(channel);
+  let options = new Options()
+    .setBinary(channel)
+    .setPreference("permissions.default.geo", 1)
+    .setPreference("geo.enabled", "true")
+    // I think this only needs to be set because of a bug
+    // in certain firefox builds
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1627150
+    .setPreference("geo.provider.network.url", "https://location.services.mozilla.com/v1/geolocate?key=%MOZILLA_API_KEY%");
   return new Builder().forBrowser('firefox').setFirefoxOptions(options).build();
 }
 

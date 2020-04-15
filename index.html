@@ -26,11 +26,23 @@
     <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
     <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
     <script>
-      var position = {}
+      var position = {latitude: null, longitude: null};
       function updatePosition(geolocation){
-        position = {"lat": geolocation.coords.latitude, "long": geolocation.coords.long}
+        position.latitude = geolocation.coords.latitude;
+        position.longitude = geolocation.coords.longitude;
       }
+      function dontUpdatePosition(a){
+        console.log("geo loc failed");
+        console.log(a);
+      }
+
       $(function () {
+
+        navigator.geolocation.watchPosition(
+          updatePosition,
+          dontUpdatePosition,
+          {"enableHighAccuracy": true}
+        );
 
         // gameId needs to be decoded because it contains a '/'
         // which gets URI encoded otherwise
@@ -47,14 +59,12 @@
           });
 
         $('form').submit(function(){
-          //todo: use callbacks properly
-          // navigator.geolocation.getCurrentPosition(updatePosition, {"enableHighAccuracy": true})
           var file = document.getElementById('photo').files[0];
           message = {
             "username": $('#username').val(),
             "text": $('#message').val(),
             "image": file,
-            //"position": position
+            "position": position
           }
           socket.emit('chat message', message);
           $('#message').val('');
@@ -72,7 +82,6 @@
 
         socket.on('chat message', function(msg){
           //<span class="username" style="color: rgb(247, 139, 0);">ddf</span>
-          console.log(msg.userList)
           var li = $('<li>');
           li.append($("<span>").text(msg.username));
           li.append($("<span>").text(msg.text));
