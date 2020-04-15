@@ -191,6 +191,7 @@ async function runTests(){
   // todo: why does stop server hang and not close?
   // process.exit shouldn't be needed
   index.stopServer();
+  console.log("all done");
   process.exit();
 }
 
