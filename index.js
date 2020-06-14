@@ -81,7 +81,7 @@ function maybeRedirectToExistingGame(cookies, res){
   // to if user is already in one, keep redirecting
   // till they leave it
   // todo: instead of redirecting, send them to a page saying
-  // "youre already in game X [link], you must leave it before making a new one"
+  // "you're already in game X [link], you must leave it before making a new one"
   if(games.has(cookies["gameId"])
     && games.get(cookies["gameId"]).idMapping.has(cookies["privateId"])){
       logger.log("verbose", 'Redirect to existing game', {publicId: games.get(cookies["gameId"]).idMapping.get(cookies["privateId"]), gameCode: cookies["gameId"]});
@@ -199,9 +199,9 @@ app.get('/game/:code', function(req, res){
       addPlayer(game, privateId, publicId);
 
       // todo: set good settings (https only, etc)
-      res.cookie("gameId", req.params.code);
-      res.cookie("privateId", privateId);
-      res.cookie("publicId", publicId);
+      res.cookie("gameId", req.params.code, {sameSite: "strict"});
+      res.cookie("privateId", privateId, {sameSite: "strict"});
+      res.cookie("publicId", publicId, {sameSite: "strict"});
       logger.log("verbose", "Adding user to game", {publicId: publicId, gameCode: req.params.code});
       res.sendFile(__dirname + '/index.html');
     }else{
@@ -249,7 +249,7 @@ function ioConnect(socket){
     }else if(game.userList.get(publicId).username != msg.username){
       logger.log("verbose", "attempted to set username for "  + publicId + " to " + msg.username + " but state != NOT_STARTED");
     }
-    msg.userList = game.userList;
+    msg.userList = Array.from(game.userList.keys());
     if(game.state == NOT_STARTED && msg.text == "@maketargets"){
       makeTargets(game);
       logger.log("debug", "targets when made", {targets: Array.from(game.targets)});
@@ -264,7 +264,7 @@ function ioConnect(socket){
       logger.log("debug", "targets post", {targets: Array.from(game.targets)});
       logger.log("verbose", "Snipe", {gameCode: gameId, gameState: game.state});
       if(gameOver){
-        games.set(gameId,newGame(game.nameSpace, game.userList));
+        games.set(gameId,newGame(game.nameSpace, game.idMapping, game.userList));
         game = games.get(gameId);
         msg.winner = publicId;
         logger.log("verbose", "Winner", {gameCode: gameId, gameState: game.state});
@@ -333,7 +333,7 @@ function stopServer(){
 
 
 if (require.main === module) {
-  setUpLogging();
+  setUpLogging('realGame');
   startServer();
 }
 

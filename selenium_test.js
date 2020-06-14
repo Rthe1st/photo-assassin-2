@@ -166,6 +166,59 @@ async function testSinglePlayerGame(driver) {
   await driver.quit();
 }
 
+async function testTwoGamesInARow(driver) {
+  index.setUpLogging('testTwoGamesInARow');
+  try {
+    await driver.get(`http://localhost:${index.port}`);
+    
+    await driver.findElement(By.id('make-game')).click();
+    var log = checkLog("making game");
+    var gameCode = log["gameCode"];
+    var log = checkLog("Adding user to game", new Map([
+      ["gameCode", gameCode]
+    ]));
+    var publicId = log["publicId"];
+    
+    var userName = "player1";
+    await driver.findElement(By.id('username')).sendKeys(userName);
+
+    for(var i=0; i<2; i++){
+      var chatMessage = "hello";
+      await sendChatMessage(driver, gameCode, publicId, userName, chatMessage);
+      
+      chatMessage = "@maketargets"
+      await sendChatMessage(driver, gameCode, publicId, userName, chatMessage);
+      var log = checkLog("Making targets", new Map([
+        ["gameCode", gameCode],
+        ["gameState", index.TARGETS_MADE],
+      ]));
+      
+      chatMessage = "@start";
+      await sendChatMessage(driver, gameCode, publicId, userName, chatMessage);
+      var log = checkLog("Starting", new Map([
+        ["gameCode", gameCode],
+        ["gameState", index.IN_PLAY],
+      ]));
+      
+      chatMessage = "@snipe";
+      await sendChatMessage(driver, gameCode, publicId, userName, chatMessage);
+      var log = checkLog("Snipe", new Map([
+        ["gameCode", gameCode],
+        ["gameState", index.IN_PLAY],
+      ]));
+      var log = checkLog("Winner", new Map([
+        ["gameCode", gameCode],
+        ["gameState", index.NOT_STARTED],
+      ]));
+    }
+
+  } catch (ex) {
+    await driver.quit();
+    throw ex;
+  }
+  await driver.quit();
+}
+
 function createDriver(channel) {
   let options = new Options()
     .setBinary(channel)
@@ -190,6 +243,7 @@ async function runTests(){
     await testMakingNewGameWhileInOne(createDriver(Channel.RELEASE));
     await testGameTimeout(createDriver(Channel.RELEASE));
     await testSinglePlayerGame(createDriver(Channel.RELEASE));
+    await testTwoGamesInARow(createDriver(Channel.RELEASE));
   }catch{
     console.log('An error occurred! ' + ex);
     console.dir(ex);
