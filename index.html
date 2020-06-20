@@ -7,24 +7,21 @@
         font-size: 2em;
       }
       /* * { margin: 0; padding: 0; box-sizing: border-box; } */
-      #header {
-        height: 10vh;
-      }
-      form {
-        background: #4eb7e7;
-        /* position: fixed; */
-        bottom: 0;
-        height: 10vh;
-      }
-      /* label { border: 0; padding: 10px; width: 80%; margin-right: .5%; background: rgb(130, 224, 255);} */
-      /* form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; } */
       #messages {
         list-style-type: none;
         /* margin: 0;
         padding: 0; */
         overflow-y: scroll;
-        height: 70vh;
+        height: 40vh;
         }
+      form {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        background: #4eb7e7;
+        /* position: fixed; */
+        /* bottom: -10vh;
+        height: 10vh; */
+      }
       #messages li:nth-child(odd) { background: #eee; }
       /* #messages { margin-bottom: 1em; } */
       .username {
@@ -33,10 +30,12 @@
       #message {
         width: 100%;
       }
-      label, button {
-      display: table;
-      /* margin: auto; */
-    }
+      /* label, button {
+       display: table;
+      } */
+      button,  input {
+        font-size: larger;
+      }
     </style>
   </head>
   <body>
@@ -55,12 +54,13 @@
       <label>username
         <input id="username" autocomplete="off" />
       </label>
-      <label for="message">message</label>
-          <textarea id="message" placeholder="Type a message"></textarea>
       <label>photo
           <input id="photo" type="file" accept="image/*" capture="camera">
       </label>
-      <button id="send-message">Send</button>
+      <label>message
+        <textarea id="message" placeholder="Type a message"></textarea>
+    </label>
+    <button float="right" id="send-message">Send</button>
     </form>
     <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
     <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
