@@ -2,13 +2,33 @@
 <html>
   <head>
     <title>Photo Assassin</title>
+    <style>
+    body {
+      font-size: 2em;
+    }
+    button, input, label {
+      display: table;
+      margin: auto;
+    }
+    h1, h2, label, input {
+      text-align: center;
+    }
+    button,  input {
+      font-size: larger;
+    }
+    </style>
   </head>
   <body>
+    <h1>Photo-assassin</h1>
     <form action="/make">
-        <button id="make-game">Make</button>
+        <button id="make-game">New game</button>
     </form>
+    <h2>Join game</h2>
     <form action="/join">
-        <input id="code" autocomplete="off" />
+        <label>
+          Game code
+          <input id="code" autocomplete="off" placeholder="XXXX-XXXX-X"/>
+        </label>
         <button id="join-game">Join</button>
     </form>
   </body>
