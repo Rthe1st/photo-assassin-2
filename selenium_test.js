@@ -244,7 +244,7 @@ async function runTests(){
     await testGameTimeout(createDriver(Channel.RELEASE));
     await testSinglePlayerGame(createDriver(Channel.RELEASE));
     await testTwoGamesInARow(createDriver(Channel.RELEASE));
-  }catch{
+  }catch(ex){
     console.log('An error occurred! ' + ex);
     console.dir(ex);
   }

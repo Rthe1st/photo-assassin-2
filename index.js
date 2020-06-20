@@ -157,10 +157,10 @@ app.get('/make', function(req, res){
 });
 
 app.get('/join', function(req, res){
+  logger.log("verbose", "join game redirect");
   if(maybeRedirectToExistingGame(req.cookies, res)){
     return;
   }
-
   if('code' in req.query){
     var code = req.query.code;
     res.redirect(`/game${code}`);
