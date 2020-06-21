@@ -15,10 +15,10 @@
         height: 60vh;
         }
       form {
-        display: grid;
-        grid-template-columns: 1fr;
+        display: table;
         background: #4eb7e7;
-        position: fixed;
+        width: 100%;
+        /* position: fixed; */
         bottom: 0;
       }
       #messages li:nth-child(odd) { background: #eee; }
@@ -31,6 +31,10 @@
 
       button, input, textarea {
         font-size: larger;
+      }
+
+      button, label, textarea {
+        display: block;
       }
 
       img {
@@ -61,8 +65,8 @@
       </label>
       <label>message
         <textarea id="message" placeholder="Type a message"></textarea>
-    </label>
-    <button float="right" id="send-message">Send</button>
+      </label>
+      <button id="send-message">Send</button>
     </form>
     <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
     <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
