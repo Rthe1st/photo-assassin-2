@@ -12,29 +12,32 @@
         /* margin: 0;
         padding: 0; */
         overflow-y: scroll;
-        height: 40vh;
+        height: 60vh;
         }
       form {
         display: grid;
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: 1fr;
         background: #4eb7e7;
-        /* position: fixed; */
-        /* bottom: -10vh;
-        height: 10vh; */
+        position: fixed;
+        bottom: 0;
       }
       #messages li:nth-child(odd) { background: #eee; }
-      /* #messages { margin-bottom: 1em; } */
       .username {
         font-weight: bold;
       }
       #message {
         width: 100%;
       }
-      /* label, button {
-       display: table;
-      } */
-      button,  input {
+
+      button, input, textarea {
         font-size: larger;
+      }
+
+      img {
+        width: 80vw;
+        height: 80vw;
+        object-fit: cover; /* Do not scale the image */
+        object-position: center; /* Center the image within the element */
       }
     </style>
   </head>
@@ -48,7 +51,6 @@
         <li>@snipe</li>
       </ul>  
     </div>
-    <!-- <canvas id="canvas"></canvas> -->
     <ul id="messages"></ul>
     <form action="">
       <label>username
@@ -107,6 +109,7 @@
           }
           socket.emit('chat message', message);
           $('#message').val('');
+          document.getElementById('photo').value = '';
           return false;
         });
         function targetDisplay(targets){
@@ -121,26 +124,20 @@
 
         socket.on('chat message', function(msg){
           console.log(msg);
-          //<span class="username" style="color: rgb(247, 139, 0);">ddf</span>
           var li = $('<li>');
           var username = $("<span>").text(msg.username)
           username.addClass("username")
           li.append(username);
           li.append($("<p>").text(msg.text));
+          $('#messages').append(li);
           if(msg.image){
             var blob = new Blob([msg.image], {type: 'image/png'});
             var url = URL.createObjectURL(blob);
             var img = new Image;
-            var canvas = document.createElement('canvas');//$("<canvas>")
-            li.append(canvas)
-            img.onload = function() {
-                var ctx = canvas.getContext('2d');//document.getElementById("canvas").getContext('2d');
-                ctx.drawImage(this, 0, 0, this.width*0.1, this.height*0.1);
-                URL.revokeObjectURL(url);
-            }
+            var canvas = document.createElement('canvas');
             img.src = url;
+            li.append(img)
           }
-          $('#messages').append(li);
           if("targets" in msg){
             console.log(targetDisplay(msg.targets))
           }
@@ -151,7 +148,11 @@
             console.log("time left: " + msg.timeLeft/1000);
           }
 
-          window.scrollTo(0, document.body.scrollHeight);
+          //if we're scrolled to the bottom of messages, stick to the bottom
+          messages = document.getElementById('messages')
+          // if(messages.scrollTop == (messages.scrollHeight - messages.offsetHeight)){
+            messages.scrollTo(0, messages.scrollHeight)
+          // }
         });
         var photo = document.getElementById('photo');
         photo.addEventListener('change', sendPic, false);
