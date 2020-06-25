@@ -16,7 +16,7 @@ nodejs ./index.js
 
 It'll be running on [localhost](http://localhost:3000/)
 
-### Selinium
+### Selenium
 
 You need [geckodriver](https://github.com/mozilla/geckodriver/releases/)
 

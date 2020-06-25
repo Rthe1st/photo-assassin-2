@@ -138,82 +138,97 @@ function addPlayer(game, privateId, publicId){
   game.positions.set(publicId, []);
 }
 
-app.get('/make', function(req, res){
-  if(maybeRedirectToExistingGame(req.cookies, res)){
-    return;
-  }
+function addUserToGame(code, res){
+    var game = games.get(code);
 
+    var randomness = crypto.randomBytes(256).toString('hex');
+    var publicId = game.idMapping.size;
+    // including publicId because its guaranteed to be unique
+    // todo: is this true even if people leave the game?
+    var privateId = `${randomness}-${publicId}`;
+
+    addPlayer(game, privateId, publicId);
+
+    // todo: set good settings (https only, etc)
+    res.cookie("gameId", code, {sameSite: "strict"});
+    res.cookie("privateId", privateId, {sameSite: "strict"});
+    res.cookie("publicId", publicId, {sameSite: "strict"});
+    logger.log("verbose", "Adding user to game", {publicId: publicId, gameCode: code});
+}
+
+function generateGame(){
   var first_part = crypto.randomBytes(2).toString('hex');
   var second_part = crypto.randomBytes(2).toString('hex');
   // used number of games as a guarantee prevent collisions
   // (even though collisions must be unlikely anyway for the code to provide security)
   var third_part = games.size.toString(16);
-  const code = `/${first_part}-${second_part}-${third_part}`;
-  logger.log("verbose", "making game", {gameCode: code});
-  var nameSpace = io.of(code);
+  const code = `${first_part}-${second_part}-${third_part}`;
+  var nameSpace = io.of('/' + code);
   nameSpace.on('connection', ioConnect);
   games.set(code, newGame(nameSpace));
-  res.redirect(`/game${code}`);
+  logger.log("verbose", "making game", {gameCode: code});
+  return code;
+}
+
+app.get('/make', function(req, res){
+  // if(maybeRedirectToExistingGame(req.cookies, res)){
+  //   return;
+  // }
+  var code = generateGame();
+  addUserToGame(code, res);
+  res.redirect(`/game/${code}`);
 });
 
 app.get('/join', function(req, res){
+  // don't do this
+  // because if user hits/game/:code(and the game exists) we should assume they are trying to
+  // leave an old game and join this one
+  // maybeRedirectToExistingGame(req.cookies, res);
+
   logger.log("verbose", "join game redirect");
-  if(maybeRedirectToExistingGame(req.cookies, res)){
+  //instead of this, we should show them a form to enter username in
+  if(!(req.query.code)){
+    logger.log("debug", 'no code supplied');
+    res.redirect('/');
     return;
   }
-  if('code' in req.query){
-    var code = req.query.code;
-    res.redirect(`/game${code}`);
-  }else{
+  var code = req.query.code;
+  if(!games.has(req.query.code)){
+    logger.log("verbose", `Accessing invalid game: ${req.query.code}`);
     res.redirect(`/`);
+    return;
   }
+  var game = games.get(req.query.code);
+  if(game.state != NOT_STARTED){
+    logger.log("verbose", "Attempt to join game " + req.query.code + " that has already started");
+    res.redirect(`/`);
+    return;
+  }
+  logger.log("debug", 'adding to game');
+  addUserToGame(req.query.code, res);
+  res.redirect(`/game/${code}`);
 });
 
 app.get('/game/:code', function(req, res){
-
-  // don't do this
-  // because if user hits/game/:code we should assume they are tyring to
-  // leave an old game and join this one
-  // maybeRedirectToExistingGame(req.cookies, res);
-  req.params.code = '/' + req.params.code;
   logger.log("debug", `Accessing game: ${req.params.code}`);
   if(!games.has(req.params.code)){
     logger.log("verbose", `Accessing invalid game: ${req.params.code}`);
     res.redirect(`/`);
-  }else{
-
-    var game = games.get(req.params.code);
-
-    if(!(game.idMapping.has(req.cookies["privateId"]))){
-
-      if(game.state != NOT_STARTED){
-        logger.log("verbose", "Attempt to join game " + req.params.code + " that has already started");
-        res.redirect(`/`);
-      }
-
-      var randomness = crypto.randomBytes(256).toString('hex');
-      var publicId = game.idMapping.size;
-      // including publicId because its guaranteed to be unique
-      var privateId = `${randomness}-${publicId}`;
-
-      addPlayer(game, privateId, publicId);
-
-      // todo: set good settings (https only, etc)
-      res.cookie("gameId", req.params.code, {sameSite: "strict"});
-      res.cookie("privateId", privateId, {sameSite: "strict"});
-      res.cookie("publicId", publicId, {sameSite: "strict"});
-      logger.log("verbose", "Adding user to game", {publicId: publicId, gameCode: req.params.code});
-      res.sendFile(__dirname + '/index.html');
-    }else{
-      logger.log("verbose", 'User rejoining game', {publicId: req.cookies["publicId"], gameCode: req.params.code});
-      res.sendFile(__dirname + '/index.html');
-    }
+    return;
   }
+  var game = games.get(req.params.code);
+  if(!(game.idMapping.has(req.cookies["privateId"]))){
+
+    res.redirect(`/join?code=${req.params.code}`);
+    return;
+  }
+  res.sendFile(__dirname + '/index.html');
 });
 
 function ioConnect(socket){
 
-  var gameId = socket.nsp.name;
+  // substr is to remove leading /
+  var gameId = socket.nsp.name.substr(1);
 
   var game = games.get(gameId);
 
@@ -228,7 +243,7 @@ function ioConnect(socket){
 
   logger.log("debug", "Socket connected", {publicId: publicId, gameCode: gameId});
   
-  socket.nsp.emit('chat message', {'text': `user ${publicId} joined`});
+  socket.nsp.emit('New user', {publicId: publicId, userList: Object.fromEntries(game.userList.entries())});
   socket.on('chat message', function(msg){
     logger.log("verbose", "Chat message", {gameCode: gameId, publicId: publicId, username: msg.username, chatMessage: msg.text});
 
@@ -249,7 +264,7 @@ function ioConnect(socket){
     }else if(game.userList.get(publicId).username != msg.username){
       logger.log("verbose", "attempted to set username for "  + publicId + " to " + msg.username + " but state != NOT_STARTED");
     }
-    msg.userList = Array.from(game.userList.keys());
+    msg.userList = game.userList;
     if(game.state == NOT_STARTED && msg.text == "@maketargets"){
       makeTargets(game);
       logger.log("debug", "targets when made", {targets: Array.from(game.targets)});

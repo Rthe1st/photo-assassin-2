@@ -1,35 +1,55 @@
 <!doctype html>
 <html>
-  <head>
-    <title>Photo Assassin</title>
-    <style>
+
+<head>
+  <title>Photo Assassin</title>
+  <style>
     body {
       font-size: 2em;
     }
-    button, input, label {
+
+    button,
+    input,
+    label {
       display: table;
       margin: auto;
     }
-    h1, h2, label, input {
+
+    h1,
+    h2,
+    label,
+    input {
       text-align: center;
     }
-    button,  input {
+
+    button,
+    input {
       font-size: larger;
     }
-    </style>
-  </head>
-  <body>
-    <h1>Photo-assassin</h1>
-    <form action="/make">
-        <button id="make-game">New game</button>
-    </form>
-    <h2>Join game</h2>
-    <form action="/join">
-        <label>
-          Game code
-          <input id="code" autocomplete="off" placeholder="XXXX-XXXX-X"/>
-        </label>
-        <button id="join-game">Join</button>
-    </form>
-  </body>
+  </style>
+</head>
+
+<body>
+  <h1>Photo-assassin</h1>
+  <!-- todo: make these POSTs-->
+  <form action="/make">
+    <label>
+      Name
+      <input name="username" autocomplete="off" placeholder="jimbob326" />
+    </label>
+    <button id="make-game">New game</button>
+  </form>
+  <h2>Join game</h2>
+  <form action="/join" method="GET">
+    <label>
+      Name
+      <input name="username" autocomplete="off" placeholder="jimbob326" />
+    </label>
+    <label>
+      Game code
+      <input name="code" autocomplete="off" placeholder="XXXX-XXXX-X" />
+    </label>
+    <input value="Join game" type="submit"/>
+  </form>
+</body>
 </html>

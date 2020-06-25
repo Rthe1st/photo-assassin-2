@@ -53,7 +53,7 @@
         <li>@maketargets</li>
         <li>@start [time in seconds (5min by default)] </li>
         <li>@snipe</li>
-      </ul>  
+      </ul>
     </div>
     <ul id="messages"></ul>
     <form action="">
@@ -96,7 +96,9 @@
         var publicId = document.cookie.replace(/(?:(?:^|.*;\s*)publicId\s*\=\s*([^;]*).*$)|^.*$/, "$1");
         console.log(gameId);
         const socket = io(
-          `${gameId}`,
+          // leading slash is needed so IO nows we're giving it a path
+          // otherwise it uses it as a domain
+          `/${gameId}`,
           {
             query: {
               "privateId": privateId,
@@ -159,12 +161,7 @@
           // }
         });
         var photo = document.getElementById('photo');
-        photo.addEventListener('change', sendPic, false);
       });
-      function sendPic(){
-        console.log('pic');
-        // var file = document.getElementById('photo').files[0];
-      }
     </script>
   </body>
 </html>

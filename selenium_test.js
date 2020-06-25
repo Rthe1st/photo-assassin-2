@@ -49,15 +49,12 @@ async function testMakingNewGameWhileInOne(driver) {
     
     await driver.get(`http://localhost:${index.port}`);
 
-    var log = checkLog("Redirect to existing game", new Map([
+    checkLog("Redirect to existing game", new Map([
       ["gameCode", gameCode],
       ["publicId", publicId],
     ]));
 
-    var log = checkLog("User rejoining game", new Map([
-      ["gameCode", gameCode],
-      ["publicId", publicId],
-    ]));
+    assert.equal(index.nextLog(), undefined);
 
   } catch (ex) {
     console.log('An error occurred! ' + ex);
@@ -107,6 +104,8 @@ async function testGameTimeout(driver) {
       ["gameCode", gameCode],
       ["gameState", index.NOT_STARTED],
     ]));
+
+    assert.equal(index.nextLog(), undefined);
 
   } catch (ex) {
     console.log('An error occured! ' + ex);
@@ -238,7 +237,7 @@ async function runTests(){
   //todo: include start server in chain, or make it async and await
   index.startServer();
   //todo: make drivers headless / can we reuse a single driver?
-  //todo: make run in parrallel (promise.all), needs loggers to be made not global
+  //todo: make run in parallel (promise.all), needs loggers to be made not global
   try{
     await testMakingNewGameWhileInOne(createDriver(Channel.RELEASE));
     await testGameTimeout(createDriver(Channel.RELEASE));
