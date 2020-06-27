@@ -47,24 +47,27 @@
   </head>
   <body>
     <!--todo: use semantic elements-->
-    <div id="header">
-      <h3>Commands</h3>
-      <ul>
-        <li>@maketargets</li>
-        <li>@start [time in seconds (5min by default)] </li>
-        <li>@snipe</li>
-      </ul>
+    <div id="not-started">
+      <p id="username"></p><button>Make targets</button>
+    </div>
+    <div id="targets-made" hidden>
+        <p id="username"></p><button>Start</button>
+        <ul id="targets"></ul>
+        <input id="game-length">
+    </div>
+    <div id="in-play" hidden>
+        <p id="username"></p>
+        <p id="time-left"></p>
+        <button>Stop</button>
+        <p id="target"></p>
     </div>
     <ul id="messages"></ul>
     <form action="">
-      <label>username
-        <input id="username" autocomplete="off" />
+      <label>message
+        <textarea id="message" placeholder="Type a message"></textarea>
       </label>
       <label>photo
           <input id="photo" type="file" accept="image/*" capture="camera">
-      </label>
-      <label>message
-        <textarea id="message" placeholder="Type a message"></textarea>
       </label>
       <button id="send-message">Send</button>
     </form>
@@ -108,7 +111,6 @@
         $('form').submit(function(){
           var file = document.getElementById('photo').files[0];
           message = {
-            "username": $('#username').val(),
             "text": $('#message').val(),
             "image": file,
             "position": position
@@ -128,11 +130,42 @@
 
         }
 
+        function processGameStateChange(gameState){
+          if(gameState.state == TARGETS_MADE){
+            console.log(targetDisplay(gameState.targets))
+          }
+          if(gameState.state ==  NOT_STARTED && gameState.winner){
+            console.log("winner was " + gameState.winner);
+          }
+          if(gameState.state == IN_PLAY){
+            console.log("time left: " + gameState.timeLeft/1000);
+          }
+        }
+
+        var gameState;
+        var NOT_STARTED = "NOT STARTED";
+        var TARGETS_MADE = "TARGETS MADE";
+        var IN_PLAY = "IN PLAY";
+        socket.on('New user', function(msg){
+          gameState = msg.gameState;
+          document.getElementById('username').innerText = gameState.userList[publicId].username;
+          console.log("new user");
+          console.log(msg);
+          processGameStateChange(gameState);
+        });
+
+        socket.on('timeLeft', function(msg){
+          gameState == msg.gameState;
+          processGameStateChange(gameState);
+        });
+
         socket.on('chat message', function(msg){
           console.log(msg);
           var li = $('<li>');
-          var username = $("<span>").text(msg.username)
-          username.addClass("username")
+          gameState = msg.gameState;
+          sentFrom = gameState.userList[msg.publicId].username;
+          var username = $("<span>").text(sentFrom);
+          username.addClass("username");
           li.append(username);
           li.append($("<p>").text(msg.text));
           $('#messages').append(li);
@@ -144,15 +177,7 @@
             img.src = url;
             li.append(img)
           }
-          if("targets" in msg){
-            console.log(targetDisplay(msg.targets))
-          }
-          if("winner" in msg){
-            console.log("winner was " + msg.winner);
-          }
-          if("timeLeft" in msg){
-            console.log("time left: " + msg.timeLeft/1000);
-          }
+          processGameStateChange(gameState);
 
           //if we're scrolled to the bottom of messages, stick to the bottom
           messages = document.getElementById('messages')

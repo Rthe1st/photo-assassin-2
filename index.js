@@ -111,6 +111,18 @@ exports.NOT_STARTED = NOT_STARTED;
 exports.TARGETS_MADE = TARGETS_MADE;
 exports.IN_PLAY = IN_PLAY;
 
+function gameStateForClient(game){
+  return {
+    userList: Object.fromEntries(game.userList.entries()),
+    targets: game.targets,
+    gameLength: game.gameLength,
+    timeLeft: game.timeLeft,
+    state: game.state,
+    winner: game.winner,
+  }
+}
+
+
 function newGame(nameSpace, idMapping=new Map(), userList=new Map()){
   let positions = new Map();
   for(let publicId of userList.keys()){
@@ -128,17 +140,20 @@ function newGame(nameSpace, idMapping=new Map(), userList=new Map()){
     positions: positions,
     startTime: undefined,
     gameLength: undefined,
+    timeLeft: undefined,
   };
 
 }
 
-function addPlayer(game, privateId, publicId){
+// public ID cannot change, username might be changed by user
+function addPlayer(game, privateId, publicId, username){
   game.idMapping.set(privateId,publicId);
-  game.userList.set(publicId,{});
+  game.userList.set(publicId,{username: username});
   game.positions.set(publicId, []);
+  
 }
 
-function addUserToGame(code, res){
+function addUserToGame(code, res, username){
     var game = games.get(code);
 
     var randomness = crypto.randomBytes(256).toString('hex');
@@ -147,7 +162,7 @@ function addUserToGame(code, res){
     // todo: is this true even if people leave the game?
     var privateId = `${randomness}-${publicId}`;
 
-    addPlayer(game, privateId, publicId);
+    addPlayer(game, privateId, publicId, username);
 
     // todo: set good settings (https only, etc)
     res.cookie("gameId", code, {sameSite: "strict"});
@@ -175,7 +190,7 @@ app.get('/make', function(req, res){
   //   return;
   // }
   var code = generateGame();
-  addUserToGame(code, res);
+  addUserToGame(code, res, req.query.username);
   res.redirect(`/game/${code}`);
 });
 
@@ -205,7 +220,7 @@ app.get('/join', function(req, res){
     return;
   }
   logger.log("debug", 'adding to game');
-  addUserToGame(req.query.code, res);
+  addUserToGame(req.query.code, res, req.query.username);
   res.redirect(`/game/${code}`);
 });
 
@@ -243,9 +258,9 @@ function ioConnect(socket){
 
   logger.log("debug", "Socket connected", {publicId: publicId, gameCode: gameId});
   
-  socket.nsp.emit('New user', {publicId: publicId, userList: Object.fromEntries(game.userList.entries())});
+  socket.nsp.emit('New user', {publicId: publicId, gameState: gameStateForClient(game)});
   socket.on('chat message', function(msg){
-    logger.log("verbose", "Chat message", {gameCode: gameId, publicId: publicId, username: msg.username, chatMessage: msg.text});
+    logger.log("verbose", "Chat message", {gameCode: gameId, publicId: publicId, chatMessage: msg.text});
 
     logger.log("debug", "positionUpdate", {'positionHistory': game.positions.get(publicId), 'position': msg.position});
 
@@ -257,18 +272,13 @@ function ioConnect(socket){
     ){
       game.positions.get(publicId).push(msg.position);
     }
-
-    //todo: save this onto users cookie/publicId dict
-    if(msg.username != '' && game.state == NOT_STARTED){
-      game.userList.get(publicId).username = msg.username;
-    }else if(game.userList.get(publicId).username != msg.username){
-      logger.log("verbose", "attempted to set username for "  + publicId + " to " + msg.username + " but state != NOT_STARTED");
-    }
-    msg.userList = game.userList;
     if(game.state == NOT_STARTED && msg.text == "@maketargets"){
+      if(game.winner){
+        games.set(gameId,newGame(game.nameSpace, game.idMapping, game.userList));
+        game = games.get(gameId);
+      }
       makeTargets(game);
       logger.log("debug", "targets when made", {targets: Array.from(game.targets)});
-      msg.targets = game.targets;
       logger.log("verbose", "Making targets", {gameCode: gameId, gameState: game.state});
     }else if(game.state == TARGETS_MADE && msg.text.startsWith("@start")){
       start(game, msg.text);
@@ -279,14 +289,19 @@ function ioConnect(socket){
       logger.log("debug", "targets post", {targets: Array.from(game.targets)});
       logger.log("verbose", "Snipe", {gameCode: gameId, gameState: game.state});
       if(gameOver){
-        games.set(gameId,newGame(game.nameSpace, game.idMapping, game.userList));
-        game = games.get(gameId);
-        msg.winner = publicId;
+        game.state = NOT_STARTED;
+        game.winner = publicId;
         logger.log("verbose", "Winner", {gameCode: gameId, gameState: game.state});
       }
     }
+
+    var outgoing_msg = {
+      gameState: gameStateForClient(game),
+      publicId: publicId,
+      text: msg.text,
+    }
     
-    socket.nsp.emit('chat message', msg);
+    socket.nsp.emit('chat message', outgoing_msg);
   });
   socket.on('disconnect', function(){
     socket.nsp.emit('chat message',{'text': 'a user left'});
@@ -300,9 +315,11 @@ function checkGameTiming(){
     if (game.state == IN_PLAY
       && game.startTime + game.gameLength < now){
       game.state = NOT_STARTED;
-      game.nameSpace.emit({'winner': 'The relentless passage of time'});
+      game.winner = 'The relentless passage of time';
+      game.nameSpace.emit('timeLeft', {'gameState': gameStateForClient(game)});
       logger.log("verbose", "TimeUp", {gameCode: gameId, gameState: game.state});
     }else if(game.state == IN_PLAY){
+      var timeLeft = game.startTime + game.gameLength - now;
       logger.log("debug", "timeLeft", 
         {
           gameCode: gameId,
@@ -310,10 +327,12 @@ function checkGameTiming(){
           gameStartTime: game.startTime,
           gameLength: game.gameLength,
           now: now,
-          timeLeft: (game.startTime + game.gameLength - now)
+          timeLeft: timeLeft,
         }
       );
-      game.nameSpace.emit({'timeLeft': (game.startTime + game.gameLength) - now});
+
+      game.timeLeft = timeLeft;
+      game.nameSpace.emit('timeLeft', {'gameState': gameStateForClient(game)});
     }
   };
 }
