@@ -53,11 +53,10 @@ function makeTargets(game){
   game.state = TARGETS_MADE;
 }
 
-function start(game, msgText){
+function start(game, gameLength){
   game.startTime = Date.now();
-  textParts = msgText.split(" ")
-  if(textParts.length > 1 && !isNaN(parseInt(textParts[1]))){
-    game.gameLength = parseInt(textParts[1]);
+  if(!isNaN(parseInt(gameLength))){
+    game.gameLength = parseInt(gameLength) * 1000;
   }else{
     game.gameLength = 1000*60*5;//5 min game by default
   }
@@ -259,6 +258,36 @@ function ioConnect(socket){
   logger.log("debug", "Socket connected", {publicId: publicId, gameCode: gameId});
   
   socket.nsp.emit('New user', {publicId: publicId, gameState: gameStateForClient(game)});
+
+  socket.on('make targets', function(msg){
+    if(game.state == NOT_STARTED){
+      if(game.winner){
+        games.set(gameId,newGame(game.nameSpace, game.idMapping, game.userList));
+        game = games.get(gameId);
+      }
+      makeTargets(game);
+      logger.log("debug", "targets when made", {targets: Array.from(game.targets)});
+      logger.log("verbose", "Making targets", {gameCode: gameId, gameState: game.state});
+      socket.nsp.emit('update state', {gameState: gameStateForClient(game)});
+    }
+  });
+
+  socket.on('start game', function(msg){
+    if(game.state == TARGETS_MADE){
+      start(game, msg.gameLength);
+      logger.log("verbose", "Starting", {gameCode: gameId, gameState: game.state});
+      socket.nsp.emit('update state', {gameState: gameStateForClient(game)});
+    }
+  });
+
+  socket.on('stop game', function(msg){
+    if(game.state == IN_PLAY){
+       game.state = NOT_STARTED;
+      logger.log("verbose", "Stopping", {gameCode: gameId, gameState: game.state});
+      socket.nsp.emit('update state', {gameState: gameStateForClient(game)});
+    }
+  });
+
   socket.on('chat message', function(msg){
     logger.log("verbose", "Chat message", {gameCode: gameId, publicId: publicId, chatMessage: msg.text});
 
@@ -272,18 +301,7 @@ function ioConnect(socket){
     ){
       game.positions.get(publicId).push(msg.position);
     }
-    if(game.state == NOT_STARTED && msg.text == "@maketargets"){
-      if(game.winner){
-        games.set(gameId,newGame(game.nameSpace, game.idMapping, game.userList));
-        game = games.get(gameId);
-      }
-      makeTargets(game);
-      logger.log("debug", "targets when made", {targets: Array.from(game.targets)});
-      logger.log("verbose", "Making targets", {gameCode: gameId, gameState: game.state});
-    }else if(game.state == TARGETS_MADE && msg.text.startsWith("@start")){
-      start(game, msg.text);
-      logger.log("verbose", "Starting", {gameCode: gameId, gameState: game.state});
-    }else if(game.state == IN_PLAY && msg.text == "@snipe"){
+    if(game.state == IN_PLAY && msg.text == "@snipe"){
       logger.log("debug", "targets", {targets: Array.from(game.targets)});
       gameOver = snipe(game, publicId);
       logger.log("debug", "targets post", {targets: Array.from(game.targets)});
@@ -332,7 +350,7 @@ function checkGameTiming(){
       );
 
       game.timeLeft = timeLeft;
-      game.nameSpace.emit('timeLeft', {'gameState': gameStateForClient(game)});
+      game.nameSpace.emit('timeLeft', {gameState: gameStateForClient(game)});
     }
   };
 }

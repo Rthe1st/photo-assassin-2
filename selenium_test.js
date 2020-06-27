@@ -79,15 +79,14 @@ async function testGameTimeout(driver) {
     var chatMessage = "hello";
     await sendChatMessage(driver, gameCode, publicId, chatMessage);
     
-    chatMessage = "@maketargets"
-    await sendChatMessage(driver, gameCode, publicId, chatMessage);
+    await driver.findElement(By.id('make-targets')).click();
     var log = checkLog("Making targets", new Map([
       ["gameCode", gameCode],
       ["gameState", index.TARGETS_MADE],
     ]));
     
-    chatMessage = "@start 1";
-    await sendChatMessage(driver, gameCode, publicId, chatMessage);
+    await driver.findElement(By.id('game-length')).sendKeys('1');
+    await driver.findElement(By.id('start-game')).click();
     var log = checkLog("Starting", new Map([
       ["gameCode", gameCode],
       ["gameState", index.IN_PLAY],
@@ -127,16 +126,14 @@ async function testSinglePlayerGame(driver) {
     
     var chatMessage = "hello";
     await sendChatMessage(driver, gameCode, publicId, chatMessage);
-    
-    chatMessage = "@maketargets"
-    await sendChatMessage(driver, gameCode, publicId, chatMessage);
+
+    await driver.findElement(By.id('make-targets')).click();
     var log = checkLog("Making targets", new Map([
       ["gameCode", gameCode],
       ["gameState", index.TARGETS_MADE],
     ]));
     
-    chatMessage = "@start";
-    await sendChatMessage(driver, gameCode, publicId, chatMessage);
+    await driver.findElement(By.id('start-game')).click();
     var log = checkLog("Starting", new Map([
       ["gameCode", gameCode],
       ["gameState", index.IN_PLAY],
@@ -177,15 +174,13 @@ async function testTwoGamesInARow(driver) {
       var chatMessage = "hello";
       await sendChatMessage(driver, gameCode, publicId, chatMessage);
       
-      chatMessage = "@maketargets"
-      await sendChatMessage(driver, gameCode, publicId, chatMessage);
+      await driver.findElement(By.id('make-targets')).click();
       var log = checkLog("Making targets", new Map([
         ["gameCode", gameCode],
         ["gameState", index.TARGETS_MADE],
       ]));
       
-      chatMessage = "@start";
-      await sendChatMessage(driver, gameCode, publicId, chatMessage);
+      await driver.findElement(By.id('start-game')).click();
       var log = checkLog("Starting", new Map([
         ["gameCode", gameCode],
         ["gameState", index.IN_PLAY],

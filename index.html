@@ -48,17 +48,21 @@
   <body>
     <!--todo: use semantic elements-->
     <div id="not-started">
-      <p id="username"></p><button>Make targets</button>
+      <p id="username"></p><button id="make-targets">Make targets</button>
     </div>
     <div id="targets-made" hidden>
-        <p id="username"></p><button>Start</button>
+        <p id="username"></p><button id="start-game">Start</button>
+        <!-- todo: this is has 2 potential uses
+        1) regen target lists people don't like
+        2) include later users in the target list-->
+        <!--<button id="make-targets">Re-make targets</button>-->
         <ul id="targets"></ul>
         <input id="game-length">
     </div>
     <div id="in-play" hidden>
         <p id="username"></p>
         <p id="time-left"></p>
-        <button>Stop</button>
+        <button id="stop-game">Stop</button>
         <p id="target"></p>
     </div>
     <ul id="messages"></ul>
@@ -82,6 +86,15 @@
       function dontUpdatePosition(a){
         console.log("geo loc failed");
         console.log(a);
+      }
+
+      function targetDisplay(targets){
+        users = Object.keys(targets);
+        output = "";
+        for(var i=0; i<users.length;i++){
+          output += users[i] + "-> " + targets[users[i]] + "\n";
+        }
+        return output
       }
 
       $(function () {
@@ -113,31 +126,32 @@
           message = {
             "text": $('#message').val(),
             "image": file,
-            "position": position
+            "position": position,
           }
           socket.emit('chat message', message);
           $('#message').val('');
           document.getElementById('photo').value = '';
           return false;
         });
-        function targetDisplay(targets){
-          users = Object.keys(targets);
-          output = "";
-          for(var i=0; i<users.length;i++){
-            output += users[i] + "-> " + targets[users[i]] + "\n";
-          }
-          return output
-
-        }
 
         function processGameStateChange(gameState){
+          console.log(gameState)
           if(gameState.state == TARGETS_MADE){
+            document.getElementById('targets-made').hidden = false;
+            document.getElementById('not-started').hidden = true;
+            document.getElementById('in-play').hidden = true;
             console.log(targetDisplay(gameState.targets))
           }
-          if(gameState.state ==  NOT_STARTED && gameState.winner){
+          if(gameState.state ==  NOT_STARTED){
+            document.getElementById('targets-made').hidden = true;
+            document.getElementById('not-started').hidden = false;
+            document.getElementById('in-play').hidden = true;
             console.log("winner was " + gameState.winner);
           }
           if(gameState.state == IN_PLAY){
+            document.getElementById('targets-made').hidden = true;
+            document.getElementById('not-started').hidden = true;
+            document.getElementById('in-play').hidden = false;
             console.log("time left: " + gameState.timeLeft/1000);
           }
         }
@@ -146,6 +160,26 @@
         var NOT_STARTED = "NOT STARTED";
         var TARGETS_MADE = "TARGETS MADE";
         var IN_PLAY = "IN PLAY";
+
+        document.getElementById('make-targets').onclick = function(event){
+          socket.emit('make targets');
+        }
+
+        document.getElementById('start-game').onclick = function(event){
+          var gameLength = document.getElementById('game-length').value;
+          socket.emit('start game', { gameLength: gameLength });
+        }
+
+        document.getElementById('stop-game').onclick = function(event){
+          // todo: add confirmation dialogue
+          socket.emit('stop game');
+        }
+
+        socket.on('update state', function(msg){
+          gameState = msg.gameState;
+          processGameStateChange(gameState);
+        });
+
         socket.on('New user', function(msg){
           gameState = msg.gameState;
           document.getElementById('username').innerText = gameState.userList[publicId].username;
@@ -155,7 +189,7 @@
         });
 
         socket.on('timeLeft', function(msg){
-          gameState == msg.gameState;
+          gameState = msg.gameState;
           processGameStateChange(gameState);
         });
 
