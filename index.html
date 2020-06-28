@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
   <head>
-    <title>Socket.IO chat</title>
+    <title>Photo Assassin</title>
     <style>
       body {
         font-size: 2em;
@@ -47,20 +47,21 @@
   </head>
   <body>
     <!--todo: use semantic elements-->
+    <p id="username"></p>
     <div id="not-started">
-      <p id="username"></p><button id="make-targets">Make targets</button>
+      <button id="make-targets">Make targets</button>
     </div>
     <div id="targets-made" hidden>
-        <p id="username"></p><button id="start-game">Start</button>
+        <button id="start-game">Start</button>
         <!-- todo: this is has 2 potential uses
         1) regen target lists people don't like
         2) include later users in the target list-->
         <!--<button id="make-targets">Re-make targets</button>-->
+        <p>Targets</p>
         <ul id="targets"></ul>
-        <input id="game-length">
+        <label>Game Length (in seconds)<input id="game-length"></label>
     </div>
     <div id="in-play" hidden>
-        <p id="username"></p>
         <p id="time-left"></p>
         <button id="stop-game">Stop</button>
         <p id="target"></p>
@@ -72,6 +73,9 @@
       </label>
       <label>photo
           <input id="photo" type="file" accept="image/*" capture="camera">
+      </label>
+      <label>Snipe?
+        <input id="is-snipe" type="checkbox"/>
       </label>
       <button id="send-message">Send</button>
     </form>
@@ -95,6 +99,27 @@
           output += users[i] + "-> " + targets[users[i]] + "\n";
         }
         return output
+      }
+
+      function newMessageEntry(username, message, image){
+        var li = document.createElement('li');
+        var span = document.createElement('span');
+        span.innerText = username;
+        
+        span.classList.add("username");
+        li.appendChild(span);
+        paragraph = document.createElement('p');
+        paragraph.innerText = message;
+        li.appendChild(paragraph);
+        if(image){
+          var blob = new Blob([image], {type: 'image/png'});
+          var url = URL.createObjectURL(blob);
+          var img = new Image;
+          var canvas = document.createElement('canvas');
+          img.src = url;
+          li.appendChild(img);
+        }
+        document.getElementById('messages').appendChild(li);
       }
 
       $(function () {
@@ -127,6 +152,7 @@
             "text": $('#message').val(),
             "image": file,
             "position": position,
+            "isSnipe": document.getElementById('is-snipe').value,
           }
           socket.emit('chat message', message);
           $('#message').val('');
@@ -135,12 +161,23 @@
         });
 
         function processGameStateChange(gameState){
-          console.log(gameState)
+          // this really only needs to be done once when we first recieve game state
+          document.getElementById('username').innerText = gameState.userList[publicId].username;
+          //console.log(gameState);
           if(gameState.state == TARGETS_MADE){
             document.getElementById('targets-made').hidden = false;
             document.getElementById('not-started').hidden = true;
             document.getElementById('in-play').hidden = true;
-            console.log(targetDisplay(gameState.targets))
+            console.log(targetDisplay(gameState.targets));
+
+            var targetsElement = document.getElementById('targets');
+            targetsElement.innerHTML = '';
+            for(var key of Object.keys(gameState.targets)){
+              var element = document.createElement('li');
+              var text = gameState.userList[key].username + "->" + gameState.userList[gameState.targets[key]].username;
+              element.innerText = text;
+              targetsElement.appendChild(element);
+            }
           }
           if(gameState.state ==  NOT_STARTED){
             document.getElementById('targets-made').hidden = true;
@@ -153,6 +190,10 @@
             document.getElementById('not-started').hidden = true;
             document.getElementById('in-play').hidden = false;
             console.log("time left: " + gameState.timeLeft/1000);
+            var targetElement = document.getElementById('target');
+            targetElement.innerText = "Target: " + gameState.userList
+            [gameState.targets[publicId]].username;
+            document.getElementById('time-left').innerText = gameState.timeLeft / 1000;
           }
         }
 
@@ -178,13 +219,16 @@
         socket.on('update state', function(msg){
           gameState = msg.gameState;
           processGameStateChange(gameState);
+          if(msg.botMessage){
+            newMessageEntry('Gamebot3000', msg.botMessage);
+          }
         });
 
         socket.on('New user', function(msg){
           gameState = msg.gameState;
-          document.getElementById('username').innerText = gameState.userList[publicId].username;
-          console.log("new user");
-          console.log(msg);
+          // msg needs to tell us which new user joined
+          newUser = gameState.userList[msg.publicId].username;
+          newMessageEntry('Gamebot3000', 'New user joined: ' + newUser);
           processGameStateChange(gameState);
         });
 
@@ -197,21 +241,13 @@
           console.log(msg);
           var li = $('<li>');
           gameState = msg.gameState;
-          sentFrom = gameState.userList[msg.publicId].username;
-          var username = $("<span>").text(sentFrom);
-          username.addClass("username");
-          li.append(username);
-          li.append($("<p>").text(msg.text));
-          $('#messages').append(li);
-          if(msg.image){
-            var blob = new Blob([msg.image], {type: 'image/png'});
-            var url = URL.createObjectURL(blob);
-            var img = new Image;
-            var canvas = document.createElement('canvas');
-            img.src = url;
-            li.append(img)
-          }
+          username = gameState.userList[msg.publicId].username;
+          newMessageEntry(username, msg.text, msg.image)
           processGameStateChange(gameState);
+
+          if(msg.botMessage){
+            newMessageEntry('Gamebot3000', msg.botMessage);
+          }
 
           //if we're scrolled to the bottom of messages, stick to the bottom
           messages = document.getElementById('messages')

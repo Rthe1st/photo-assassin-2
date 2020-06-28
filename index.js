@@ -268,7 +268,8 @@ function ioConnect(socket){
       makeTargets(game);
       logger.log("debug", "targets when made", {targets: Array.from(game.targets)});
       logger.log("verbose", "Making targets", {gameCode: gameId, gameState: game.state});
-      socket.nsp.emit('update state', {gameState: gameStateForClient(game)});
+      // todo: say who made the targets
+      socket.nsp.emit('update state', {botMessage: 'targetsMade', gameState: gameStateForClient(game)});
     }
   });
 
@@ -276,7 +277,8 @@ function ioConnect(socket){
     if(game.state == TARGETS_MADE){
       start(game, msg.gameLength);
       logger.log("verbose", "Starting", {gameCode: gameId, gameState: game.state});
-      socket.nsp.emit('update state', {gameState: gameStateForClient(game)});
+      // todo: say who started it
+      socket.nsp.emit('update state', {botMessage: 'game started', gameState: gameStateForClient(game)});
     }
   });
 
@@ -284,7 +286,8 @@ function ioConnect(socket){
     if(game.state == IN_PLAY){
        game.state = NOT_STARTED;
       logger.log("verbose", "Stopping", {gameCode: gameId, gameState: game.state});
-      socket.nsp.emit('update state', {gameState: gameStateForClient(game)});
+      // todo: say who stopped it
+      socket.nsp.emit('update state', {botMessage: 'game stopped', gameState: gameStateForClient(game)});
     }
   });
 
@@ -301,15 +304,25 @@ function ioConnect(socket){
     ){
       game.positions.get(publicId).push(msg.position);
     }
-    if(game.state == IN_PLAY && msg.text == "@snipe"){
+    var botMessage;
+
+    // snipes must contain an image
+    // but not all images have to be snipes
+    // for example, to send a selfie
+    if(game.state == IN_PLAY && msg.isSnipe && msg.image){
       logger.log("debug", "targets", {targets: Array.from(game.targets)});
       gameOver = snipe(game, publicId);
       logger.log("debug", "targets post", {targets: Array.from(game.targets)});
       logger.log("verbose", "Snipe", {gameCode: gameId, gameState: game.state});
+      var usernameWhoDidSniping = game.userList.get(publicId).username;
+      var usernameThatGotSniped = game.userList.get(game.targets[publicId]).username;
+      botMessage = usernameWhoDidSniping + " sniped " + usernameThatGotSniped;
+
       if(gameOver){
         game.state = NOT_STARTED;
         game.winner = publicId;
         logger.log("verbose", "Winner", {gameCode: gameId, gameState: game.state});
+        botMessage += ", game over, winner: " + game.userList.get(publicId).username;
       }
     }
 
@@ -317,6 +330,8 @@ function ioConnect(socket){
       gameState: gameStateForClient(game),
       publicId: publicId,
       text: msg.text,
+      image: msg.image,
+      botMessage: botMessage,
     }
     
     socket.nsp.emit('chat message', outgoing_msg);
