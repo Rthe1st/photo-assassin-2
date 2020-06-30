@@ -311,13 +311,13 @@ function ioConnect(socket){
     // for example, to send a selfie
     if(game.state == IN_PLAY && msg.isSnipe && msg.image){
       logger.log("debug", "targets", {targets: Array.from(game.targets)});
-      gameOver = snipe(game, publicId);
-      logger.log("debug", "targets post", {targets: Array.from(game.targets)});
-      logger.log("verbose", "Snipe", {gameCode: gameId, gameState: game.state});
       var usernameWhoDidSniping = game.userList.get(publicId).username;
       var usernameThatGotSniped = game.userList.get(game.targets[publicId]).username;
       botMessage = usernameWhoDidSniping + " sniped " + usernameThatGotSniped;
 
+      gameOver = snipe(game, publicId);
+      logger.log("debug", "targets post", {targets: Array.from(game.targets)});
+      logger.log("verbose", "Snipe", {gameCode: gameId, gameState: game.state});
       if(gameOver){
         game.state = NOT_STARTED;
         game.winner = publicId;
