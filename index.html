@@ -101,7 +101,7 @@
         return output
       }
 
-      function newMessageEntry(username, message, image){
+      function createChatElement(username, message, image){
         var li = document.createElement('li');
         var span = document.createElement('span');
         span.innerText = username;
@@ -122,6 +122,34 @@
         document.getElementById('messages').appendChild(li);
       }
 
+      function loadChatHistory(gameId){
+        var gameChatStorage = window.localStorage.getItem(gameId);
+        gameChatStorage = JSON.parse(gameChatStorage);
+        console.log(gameChatStorage);
+        if(gameChatStorage){
+          for(var i=0; i<gameChatStorage.length; i++){
+            createChatElement(gameChatStorage[i]["username"], gameChatStorage[i]["message"]);
+          }
+        }
+      }
+
+      function newMessageEntry(gameId, username, message, image){
+        createChatElement(username, message, image);
+
+        //todo: save server side as well
+        //todo: work out how to deal with images better
+        // without blowing storage limit
+        //todo: when we're close to limit, kick out old messages
+        var gameChatStorage = window.localStorage.getItem(gameId);
+        if(gameChatStorage == null){
+          gameChatStorage = [];
+        }else{
+          gameChatStorage = JSON.parse(gameChatStorage);
+        }
+        gameChatStorage.push({"username": username, "message": message});
+        window.localStorage.setItem(gameId, JSON.stringify(gameChatStorage));
+      }
+
       $(function () {
 
         navigator.geolocation.watchPosition(
@@ -136,6 +164,9 @@
         var privateId = document.cookie.replace(/(?:(?:^|.*;\s*)privateId\s*\=\s*([^;]*).*$)|^.*$/, "$1");
         var publicId = document.cookie.replace(/(?:(?:^|.*;\s*)publicId\s*\=\s*([^;]*).*$)|^.*$/, "$1");
         console.log(gameId);
+
+        loadChatHistory(gameId);
+
         const socket = io(
           // leading slash is needed so IO nows we're giving it a path
           // otherwise it uses it as a domain
@@ -144,7 +175,8 @@
             query: {
               "privateId": privateId,
             }
-          });
+          }
+        );
 
         $('form').submit(function(){
           var file = document.getElementById('photo').files[0];
@@ -221,7 +253,7 @@
           gameState = msg.gameState;
           processGameStateChange(gameState);
           if(msg.botMessage){
-            newMessageEntry('Gamebot3000', msg.botMessage);
+            newMessageEntry(gameId, 'Gamebot3000', msg.botMessage);
           }
         });
 
@@ -229,7 +261,7 @@
           gameState = msg.gameState;
           // msg needs to tell us which new user joined
           newUser = gameState.userList[msg.publicId].username;
-          newMessageEntry('Gamebot3000', 'New user joined: ' + newUser);
+          newMessageEntry(gameId, 'Gamebot3000', 'New user joined: ' + newUser);
           processGameStateChange(gameState);
         });
 
@@ -240,14 +272,13 @@
 
         socket.on('chat message', function(msg){
           console.log(msg);
-          var li = $('<li>');
           gameState = msg.gameState;
           username = gameState.userList[msg.publicId].username;
-          newMessageEntry(username, msg.text, msg.image)
+          newMessageEntry(gameId, username, msg.text, msg.image)
           processGameStateChange(gameState);
 
           if(msg.botMessage){
-            newMessageEntry('Gamebot3000', msg.botMessage);
+            newMessageEntry(gameId, 'Gamebot3000', msg.botMessage);
           }
 
           //if we're scrolled to the bottom of messages, stick to the bottom
