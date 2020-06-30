@@ -50,6 +50,12 @@
       input[type=checkbox] {
         transform: scale(3);
       }
+
+      #send-message-form {
+        display:flex;
+        flex-direction:row;
+      }
+
     </style>
   </head>
   <body>
@@ -74,16 +80,17 @@
         <p id="target"></p>
     </div>
     <ul id="messages"></ul>
-    <form action="">
+    <form id="send-message-form" action="">
       <textarea id="message" placeholder="Type a message"></textarea>
-      <label>photo
-          <input id="photo" type="file" accept="image/*" capture="camera">
-      </label>
       <label>Snipe?
         <input id="is-snipe" type="checkbox"/>
       </label>
       <button id="send-message">Send</button>
+      <label>photo
+          <input id="photo" type="file" accept="image/*" capture="capture">
+      </label>
     </form>
+    <!--</div>-->
     <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
     <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
     <script>
