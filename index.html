@@ -149,14 +149,15 @@
         $('form').submit(function(){
           var file = document.getElementById('photo').files[0];
           message = {
-            "text": $('#message').val(),
+            "text": document.getElementById('message').value,
             "image": file,
             "position": position,
-            "isSnipe": document.getElementById('is-snipe').value,
+            "isSnipe": document.getElementById('is-snipe').checked,
           }
           socket.emit('chat message', message);
-          $('#message').val('');
+          document.getElementById('message').value = '';
           document.getElementById('photo').value = '';
+          document.getElementById('is-snipe').checked = false;
           return false;
         });
 
@@ -189,7 +190,7 @@
             document.getElementById('targets-made').hidden = true;
             document.getElementById('not-started').hidden = true;
             document.getElementById('in-play').hidden = false;
-            console.log("time left: " + gameState.timeLeft/1000);
+            // console.log("time left: " + gameState.timeLeft/1000);
             var targetElement = document.getElementById('target');
             targetElement.innerText = "Target: " + gameState.userList
             [gameState.targets[publicId]].username;

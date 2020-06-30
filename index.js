@@ -84,7 +84,7 @@ function maybeRedirectToExistingGame(cookies, res){
   if(games.has(cookies["gameId"])
     && games.get(cookies["gameId"]).idMapping.has(cookies["privateId"])){
       logger.log("verbose", 'Redirect to existing game', {publicId: games.get(cookies["gameId"]).idMapping.get(cookies["privateId"]), gameCode: cookies["gameId"]});
-      res.redirect(`/game${cookies["gameId"]}`);
+      res.redirect(`/game/${cookies["gameId"]}`);
       return true;
   }
   return false;
@@ -93,9 +93,9 @@ function maybeRedirectToExistingGame(cookies, res){
 //todo: handle making and joining games here
 
 app.get('/', function(req, res){
-  if(maybeRedirectToExistingGame(req.cookies, res)){
-    return;
-  }
+  // if(maybeRedirectToExistingGame(req.cookies, res)){
+  //   return;
+  // }
   res.sendFile(__dirname + '/lobby.html');
 });
 
@@ -233,7 +233,7 @@ app.get('/game/:code', function(req, res){
   var game = games.get(req.params.code);
   if(!(game.idMapping.has(req.cookies["privateId"]))){
 
-    res.redirect(`/join?code=${req.params.code}`);
+    res.redirect(`/?code=${req.params.code}`);
     return;
   }
   res.sendFile(__dirname + '/index.html');

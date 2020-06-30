@@ -27,12 +27,31 @@
       font-size: larger;
     }
   </style>
+  <script>
+    window.onload = function(){
+      urlParameters = {}
+      location.search
+        .substr(1)
+        .split("&")
+        .forEach(function (item) {
+          tmp = item.split("=");
+          urlParameters[tmp[0]] = decodeURIComponent(tmp[1]);
+        });
+        if(urlParameters["code"]){
+          var makeForm = document.getElementById('make-form');
+          makeForm.hidden = true;
+          var joinForm = document.getElementById('join-form');
+          var codeInput = joinForm.querySelector('input[name="code"]');
+          codeInput.value = urlParameters["code"]
+        }
+    }
+  </script>
 </head>
 
 <body>
   <h1>Photo-assassin</h1>
   <!-- todo: make these POSTs-->
-  <form action="/make">
+  <form id="make-form" action="/make">
     <label>
       Name
       <input name="username" autocomplete="off" placeholder="jimbob326" />
@@ -40,7 +59,7 @@
     <button id="make-game">New game</button>
   </form>
   <h2>Join game</h2>
-  <form action="/join" method="GET">
+  <form id="join-form" action="/join" method="GET">
     <label>
       Name
       <input name="username" autocomplete="off" placeholder="jimbob326" />
