@@ -3,6 +3,14 @@
   <head>
     <title>Photo Assassin</title>
     <style>
+      
+      /*
+      flexbox doesn't play well with hidden 
+      https://stackoverflow.com/a/48936804 */
+      [hidden] {
+        display: none !important;
+      }
+      
       body {
         font-size: 2em;
         height: 100%;
@@ -11,19 +19,34 @@
         display:flex;
         flex-direction:column;
       }
+
+      .top {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
       .middle {
         list-style-type: none;
         overflow-y: auto;
         width:100%;
         height: 100%;
         flex:1;
-        }
+      }
       #photo-preview {
-        position: relative
+        position: relative;
       }
-      #delete-preview {
+
+      #preview-buttons {
         position:absolute;right:0;bottom:0;
+        display:flex;
+        flex-direction:row;
       }
+
+      #preview {
+        width: 100%;
+        object-fit: contain;
+      }
+
       form {
         /* display: table; */
         background: #4eb7e7;
@@ -47,11 +70,9 @@
         display: block;
       }
 
-      img {
-        width: 80vw;
-        height: 80vw;
-        object-fit: cover; /* Do not scale the image */
-        object-position: center; /* Center the image within the element */
+      .message-image {
+        width: 100%;
+        object-fit: contain;
       }
       input[type=checkbox] {
         transform: scale(3);
@@ -63,40 +84,44 @@
       }
 
     </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
   </head>
   <body>
     <!--todo: use semantic elements-->
-    <p id="username"></p>
-    <div id="not-started">
-      <button id="make-targets">Make targets</button>
+    <div id="not-started" class="top">
+        <p class="username" style="grid-column: 1;grid-row: 1;"></p>
+      <button id="make-targets" style="grid-column: 3;grid-row: 1;">Make targets</button>
     </div>
-    <div id="targets-made" hidden>
-        <button id="start-game">Start</button>
+    <div id="targets-made" hidden class="top">
+        <p class="username" style="grid-column: 1;grid-row: 1;"></p>
+        <button id="start-game"  style="grid-column: 3;grid-row: 1;">Start</button>
         <!-- todo: this is has 2 potential uses
         1) regen target lists people don't like
         2) include later users in the target list-->
         <!--<button id="make-targets">Re-make targets</button>-->
-        <p>Targets</p>
-        <ul id="targets"></ul>
-        <label>Game Length (in seconds)<input id="game-length"></label>
+        <p  style="grid-column: 1;grid-row: 2;">Targets</p>
+        <ul id="targets" style="grid-column: 2;grid-row: 2/3;"></ul>
+        <label  style="grid-column: 3;grid-row: 2;">Game Length (in seconds)<input id="game-length"></label>
     </div>
-    <div id="in-play" hidden>
-        <p id="time-left"></p>
-        <button id="stop-game">Stop</button>
+    <div id="in-play" hidden class="top">
+        <p class="username" style="grid-column: 1;grid-row: 1;"></p>
+        <p id="time-left"  style="grid-column: 2;grid-row: 1;"></p>
+        <button id="stop-game"  style="grid-column: 3;grid-row: 1;">Stop</button>
         <p id="target"></p>
     </div>
     <div id="photo-preview" hidden class="middle">
         <img id="preview" >
-        <button id="delete-preview">Delete</button>
+        <div id="preview-buttons">
+          <button id="mark-snipe">Snipe?</button>
+          <button id="delete-preview">Delete</button>
+        </div>
     </div>
     <ul id="messages" class="middle"></ul>
     <form id="send-message-form" action="">
       <textarea id="message" placeholder="Type a message"></textarea>
-      <label>Snipe?
-        <input id="is-snipe" type="checkbox"/>
-      </label>
+      <input id="is-snipe" type="checkbox" hidden/>
       <button id="send-message">Send</button>
-      <button id="camera-button">Camera</button>
+      <button id="camera-button" class="fa">&#xf030;</button>
       <input hidden id="photo-input" type="file" accept="image/*" capture="environment">
     </form>
     <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
@@ -134,7 +159,7 @@
           var blob = new Blob([image], {type: 'image/png'});
           var url = URL.createObjectURL(blob);
           var img = new Image;
-          var canvas = document.createElement('canvas');
+          img.classList.add('message-image');
           img.src = url;
           li.appendChild(img);
         }
@@ -171,10 +196,16 @@
 
       window.onload = function () {
 
+        document.getElementById("mark-snipe").addEventListener('click', function(ev){
+          document.getElementById('is-snipe').checked = true;
+          ev.preventDefault();
+        });
+
         document.getElementById("delete-preview").addEventListener('click', function(ev){
           document.getElementById('photo-preview').hidden = true;
           document.getElementById('messages').hidden = false;
           document.getElementById('photo-input').value = '';
+          document.getElementById('is-snipe').checked = false;
           ev.preventDefault();
         });
 
@@ -239,7 +270,9 @@
 
         function processGameStateChange(gameState){
           // this really only needs to be done once when we first recieve game state
-          document.getElementById('username').innerText = gameState.userList[publicId].username;
+          for(var element of document.getElementsByClassName('username')){
+            element.innerText = gameState.userList[publicId].username;
+          }
           //console.log(gameState);
           if(gameState.state == TARGETS_MADE){
             document.getElementById('targets-made').hidden = false;
@@ -263,6 +296,7 @@
             console.log("winner was " + gameState.winner);
           }
           if(gameState.state == IN_PLAY){
+            document.getElementById('mark-snipe').hidden = false;
             document.getElementById('targets-made').hidden = true;
             document.getElementById('not-started').hidden = true;
             document.getElementById('in-play').hidden = false;
@@ -271,6 +305,8 @@
             targetElement.innerText = "Target: " + gameState.userList
             [gameState.targets[publicId]].username;
             document.getElementById('time-left').innerText = gameState.timeLeft / 1000;
+          }else{
+            document.getElementById('mark-snipe').hidden = true;
           }
         }
 
