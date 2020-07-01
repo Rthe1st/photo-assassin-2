@@ -11,13 +11,19 @@
         display:flex;
         flex-direction:column;
       }
-      #messages {
+      .middle {
         list-style-type: none;
         overflow-y: auto;
         width:100%;
         height: 100%;
         flex:1;
         }
+      #photo-preview {
+        position: relative
+      }
+      #delete-preview {
+        position:absolute;right:0;bottom:0;
+      }
       form {
         /* display: table; */
         background: #4eb7e7;
@@ -79,7 +85,11 @@
         <button id="stop-game">Stop</button>
         <p id="target"></p>
     </div>
-    <ul id="messages"></ul>
+    <div id="photo-preview" hidden class="middle">
+        <img id="preview" >
+        <button id="delete-preview">Delete</button>
+    </div>
+    <ul id="messages" class="middle"></ul>
     <form id="send-message-form" action="">
       <textarea id="message" placeholder="Type a message"></textarea>
       <label>Snipe?
@@ -87,10 +97,9 @@
       </label>
       <button id="send-message">Send</button>
       <button id="camera-button">Camera</button>
-      <input hidden id="photo" type="file" accept="image/*" capture="capture">
+      <input hidden id="photo-input" type="file" accept="image/*" capture="environment">
     </form>
     <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
-    <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
     <script>
       var position = {latitude: null, longitude: null};
       function updatePosition(geolocation){
@@ -162,9 +171,23 @@
 
       window.onload = function () {
 
-        document.getElementById("camera-button").addEventListener('click', function(ev){
-          document.getElementById('photo').click();
+        document.getElementById("delete-preview").addEventListener('click', function(ev){
+          document.getElementById('photo-preview').hidden = true;
+          document.getElementById('messages').hidden = false;
+          document.getElementById('photo-input').value = '';
           ev.preventDefault();
+        });
+
+        document.getElementById("camera-button").addEventListener('click', function(ev){
+          document.getElementById('photo-input').click();
+          ev.preventDefault();
+        });
+
+        document.getElementById('photo-input').addEventListener('change', function(event){
+          var img = document.getElementById('preview');
+          img.src = URL.createObjectURL(event.target.files[0]);
+          document.getElementById('photo-preview').hidden = false;
+          document.getElementById('messages').hidden = true;
         });
 
         navigator.geolocation.watchPosition(
@@ -192,9 +215,12 @@
             }
           }
         );
-
-        document.getElementById('send-message-form').addEventListener('submit', function(){
-          var file = document.getElementById('photo').files[0];
+        document.getElementById('send-message-form').addEventListener('submit', function(ev){
+          ev.preventDefault();
+          return false;
+        });
+        document.getElementById('send-message').addEventListener('click', function(ev){
+          var file = document.getElementById('photo-input').files[0];
           message = {
             "text": document.getElementById('message').value,
             "image": file,
@@ -203,8 +229,11 @@
           }
           socket.emit('chat message', message);
           document.getElementById('message').value = '';
-          document.getElementById('photo').value = '';
+          document.getElementById('photo-input').value = '';
           document.getElementById('is-snipe').checked = false;
+          document.getElementById('photo-preview').hidden = true;
+          document.getElementById('messages').hidden = false;
+          ev.preventDefault();
           return false;
         });
 
@@ -302,7 +331,7 @@
             messages.scrollTo(0, messages.scrollHeight)
           // }
         });
-        var photo = document.getElementById('photo');
+        // var photo = document.getElementById('photo');
       };
     </script>
   </body>
