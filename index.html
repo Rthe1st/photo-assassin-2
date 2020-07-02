@@ -311,6 +311,7 @@
             document.getElementById('send-message-form').hidden = true;
             document.getElementById('messages').hidden = true;
             document.getElementById('user-list').hidden = false;
+            document.getElementById('photo-preview').hidden = true;
             console.log("winner was " + gameState.winner);
           }
           if(gameState.state == IN_PLAY){
@@ -318,9 +319,11 @@
             document.getElementById('targets-made').hidden = true;
             document.getElementById('not-started').hidden = true;
             document.getElementById('in-play').hidden = false;
-            document.getElementById('send-message-form').hidden = false;
-            document.getElementById('messages').hidden = false;
-            document.getElementById('user-list').hidden = true;
+            if(document.getElementById('photo-preview').hidden){
+              document.getElementById('messages').hidden = false;
+              document.getElementById('user-list').hidden = true;
+              document.getElementById('send-message-form').hidden = false;
+            }
             // console.log("time left: " + gameState.timeLeft/1000);
             var targetElement = document.getElementById('target');
             targetElement.innerText = "Target: " + gameState.userList
@@ -347,6 +350,7 @@
 
         document.getElementById('stop-game').onclick = function(event){
           // todo: add confirmation dialogue
+          document.getElementById('photo-input').value = '';
           socket.emit('stop game');
         }
 
