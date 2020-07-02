@@ -121,6 +121,7 @@
           <button id="delete-preview">Delete</button>
         </div>
     </div>
+    <ul id="user-list" class="middle" hidden></ul>
     <ul id="messages" class="middle"></ul>
     <form id="send-message-form" action="">
       <textarea id="message" placeholder="Type a message"></textarea>
@@ -289,6 +290,9 @@
             document.getElementById('targets-made').hidden = false;
             document.getElementById('not-started').hidden = true;
             document.getElementById('in-play').hidden = true;
+            document.getElementById('send-message-form').hidden = true;
+            document.getElementById('messages').hidden = true;
+            document.getElementById('user-list').hidden = false;
             console.log(targetDisplay(gameState.targets));
 
             var targetsElement = document.getElementById('targets');
@@ -304,6 +308,9 @@
             document.getElementById('targets-made').hidden = true;
             document.getElementById('not-started').hidden = false;
             document.getElementById('in-play').hidden = true;
+            document.getElementById('send-message-form').hidden = true;
+            document.getElementById('messages').hidden = true;
+            document.getElementById('user-list').hidden = false;
             console.log("winner was " + gameState.winner);
           }
           if(gameState.state == IN_PLAY){
@@ -311,6 +318,9 @@
             document.getElementById('targets-made').hidden = true;
             document.getElementById('not-started').hidden = true;
             document.getElementById('in-play').hidden = false;
+            document.getElementById('send-message-form').hidden = false;
+            document.getElementById('messages').hidden = false;
+            document.getElementById('user-list').hidden = true;
             // console.log("time left: " + gameState.timeLeft/1000);
             var targetElement = document.getElementById('target');
             targetElement.innerText = "Target: " + gameState.userList
@@ -352,8 +362,18 @@
           gameState = msg.gameState;
           // msg needs to tell us which new user joined
           newUser = gameState.userList[msg.publicId].username;
-          newMessageEntry(gameId, 'Gamebot3000', 'New user joined: ' + newUser);
+          // newMessageEntry(gameId, 'Gamebot3000', 'New user joined: ' + newUser);
           processGameStateChange(gameState);
+          var userList = document.getElementById('user-list');
+          userList.innerHTML = '';
+          var li = document.createElement('li');
+          li.innerText = "Players:";
+          userList.append(li);
+          for (const [index, user] of Object.entries(gameState.userList)) {
+            var li = document.createElement('li');
+            li.innerText = user.username;
+            userList.append(li);
+          }
         });
 
         socket.on('timeLeft', function(msg){
