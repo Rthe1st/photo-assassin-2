@@ -102,6 +102,7 @@ app.get('/', function(req, res){
 var games = new Map();
 
 //game state
+var FINISHED = "FINISHED";
 var NOT_STARTED = "NOT STARTED";
 var TARGETS_MADE = "TARGETS MADE";
 var IN_PLAY = "IN PLAY";
@@ -283,7 +284,7 @@ function ioConnect(socket){
   });
 
   socket.on('stop game', function(msg){
-    if(game.state == IN_PLAY){
+    if(game.state == IN_PLAY || game.state == FINISHED){
        game.state = NOT_STARTED;
       logger.log("verbose", "Stopping", {gameCode: gameId, gameState: game.state});
       // todo: say who stopped it
@@ -319,7 +320,7 @@ function ioConnect(socket){
       logger.log("debug", "targets post", {targets: Array.from(game.targets)});
       logger.log("verbose", "Snipe", {gameCode: gameId, gameState: game.state});
       if(gameOver){
-        game.state = NOT_STARTED;
+        game.state = FINISHED;
         game.winner = publicId;
         logger.log("verbose", "Winner", {gameCode: gameId, gameState: game.state});
         botMessage += ", game over, winner: " + game.userList.get(publicId).username;
@@ -347,7 +348,7 @@ function checkGameTiming(){
     let now = Date.now();
     if (game.state == IN_PLAY
       && game.startTime + game.gameLength < now){
-      game.state = NOT_STARTED;
+      game.state = FINISHED;
       game.winner = 'The relentless passage of time';
       game.nameSpace.emit('timeLeft', {'gameState': gameStateForClient(game)});
       logger.log("verbose", "TimeUp", {gameCode: gameId, gameState: game.state});
