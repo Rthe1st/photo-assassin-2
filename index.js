@@ -269,7 +269,7 @@ function ioConnect(socket){
       logger.log("debug", "targets when made", {targets: Array.from(game.targets)});
       logger.log("verbose", "Making targets", {gameCode: gameId, gameState: game.state});
       // todo: say who made the targets
-      socket.nsp.emit('update state', {botMessage: 'targetsMade', gameState: gameStateForClient(game)});
+      socket.nsp.emit('update state', {gameState: gameStateForClient(game)});
     }
   });
 
@@ -278,7 +278,7 @@ function ioConnect(socket){
       start(game, msg.gameLength);
       logger.log("verbose", "Starting", {gameCode: gameId, gameState: game.state});
       // todo: say who started it
-      socket.nsp.emit('update state', {botMessage: 'game started', gameState: gameStateForClient(game)});
+      socket.nsp.emit('update state', {gameState: gameStateForClient(game)});
     }
   });
 
@@ -287,7 +287,7 @@ function ioConnect(socket){
        game.state = NOT_STARTED;
       logger.log("verbose", "Stopping", {gameCode: gameId, gameState: game.state});
       // todo: say who stopped it
-      socket.nsp.emit('update state', {botMessage: 'game stopped', gameState: gameStateForClient(game)});
+      socket.nsp.emit('update state', {gameState: gameStateForClient(game)});
     }
   });
 

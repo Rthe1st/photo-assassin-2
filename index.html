@@ -104,8 +104,6 @@
         1) regen target lists people don't like
         2) include later users in the target list-->
         <!--<button id="make-targets">Re-make targets</button>-->
-        <p  style="grid-column: 1;grid-row: 2;">Targets</p>
-        <ul id="targets" style="grid-column: 2;grid-row: 2/3;"></ul>
         <label  style="grid-column: 3;grid-row: 2;">Game Length (in seconds)<input id="game-length"></label>
     </div>
     <div id="in-play" hidden class="top">
@@ -295,7 +293,7 @@
             document.getElementById('user-list').hidden = false;
             console.log(targetDisplay(gameState.targets));
 
-            var targetsElement = document.getElementById('targets');
+            var targetsElement = document.getElementById('user-list');
             targetsElement.innerHTML = '';
             for(var key of Object.keys(gameState.targets)){
               var element = document.createElement('li');
