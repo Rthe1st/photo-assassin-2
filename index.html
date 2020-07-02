@@ -47,12 +47,17 @@
         object-fit: contain;
       }
 
+      #camera-button {
+        font-size: 2em;
+        margin: 0.25em;
+      }
+
+      #send-message {
+        margin: 0.25em;
+      }
+
       form {
-        /* display: table; */
         background: #4eb7e7;
-        /*width: 100%;*/
-        /* position: fixed; */
-        /*bottom: 0;*/
       }
       #messages li:nth-child(odd) { background: #eee; }
       .username {
@@ -198,6 +203,8 @@
 
         document.getElementById("mark-snipe").addEventListener('click', function(ev){
           document.getElementById('is-snipe').checked = true;
+          document.getElementById("mark-snipe").innerText = "Sniped ✓"
+          document.getElementById("mark-snipe").setAttribute("disabled", "");
           ev.preventDefault();
         });
 
@@ -206,6 +213,8 @@
           document.getElementById('messages').hidden = false;
           document.getElementById('photo-input').value = '';
           document.getElementById('is-snipe').checked = false;
+          document.getElementById("mark-snipe").innerText = "Snipe?"
+          document.getElementById("mark-snipe").removeAttribute("disabled");
           ev.preventDefault();
         });
 
@@ -262,6 +271,8 @@
           document.getElementById('message').value = '';
           document.getElementById('photo-input').value = '';
           document.getElementById('is-snipe').checked = false;
+          document.getElementById("mark-snipe").innerText = "Snipe?"
+          document.getElementById("mark-snipe").removeAttribute("disabled");
           document.getElementById('photo-preview').hidden = true;
           document.getElementById('messages').hidden = false;
           ev.preventDefault();
