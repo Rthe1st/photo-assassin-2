@@ -104,13 +104,18 @@
         1) regen target lists people don't like
         2) include later users in the target list-->
         <!--<button id="make-targets">Re-make targets</button>-->
-        <label  style="grid-column: 3;grid-row: 2;">Game Length (in seconds)<input id="game-length"></label>
+        <label  style="grid-column: 1;grid-row: 2;">Game Length (in seconds)<input id="game-length"></label>
     </div>
     <div id="in-play" hidden class="top">
         <p class="username" style="grid-column: 1;grid-row: 1;"></p>
         <p id="time-left"  style="grid-column: 2;grid-row: 1;"></p>
         <button id="stop-game"  style="grid-column: 3;grid-row: 1;">Stop</button>
         <p id="target"></p>
+    </div>
+    <div id="finished" class="top" hidden>
+        <p class="username" style="grid-column: 1;grid-row: 1;"></p>
+        <p id="game-result" style="grid-column: 2;grid-row: 2;"></p>
+        <a id="next-game-link" style="grid-column: 3;grid-row: 1;">Next game</a>
     </div>
     <div id="photo-preview" hidden class="middle">
         <img id="preview" >
@@ -351,6 +356,21 @@
           document.getElementById('photo-input').value = '';
           socket.emit('stop game');
         }
+
+        socket.on('game finished', function(msg){
+          // todo: set the username to current one
+          document.getElementById('next-game-link').setAttribute('href', `/game/${msg.nextGameCode}`);
+          document.getElementById('game-result').innerText = msg.winner;
+          document.getElementById('finished').hidden = false;
+          document.getElementById('targets-made').hidden = true;
+          document.getElementById('not-started').hidden = true;
+          document.getElementById('in-play').hidden = true;
+          document.getElementById('send-message-form').hidden = true;
+          document.getElementById('messages').hidden = true;
+          document.getElementById('user-list').hidden = true;
+          document.getElementById('photo-preview').hidden = true;
+
+        });
 
         socket.on('update state', function(msg){
           gameState = msg.gameState;

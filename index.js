@@ -185,6 +185,22 @@ function generateGame(){
   return code;
 }
 
+/*
+when a game ends this function should be responsible for
+1) Generating the next game, and messagine the code back to placers
+  (so they can join it easily)
+2) saving the data from the game into a form you can use to review it
+  (this should then be sent back to players / accessible from a link)
+
+winner can be the winning players publicId, 'time' if the clock ran out, or undefined if game was stopped manually
+  */
+function finishGame(game, winner){
+  game.state = FINISHED;
+  game.nameSpace.emit('game finished', {nextGameCode: generateGame(), winner: winner});
+  game.winner = winner;
+  // logger.log("verbose", "Winner", {gameCode: gameId, gameState: game.state});
+}
+
 app.get('/make', function(req, res){
   // if(maybeRedirectToExistingGame(req.cookies, res)){
   //   return;
@@ -284,15 +300,20 @@ function ioConnect(socket){
   });
 
   socket.on('stop game', function(msg){
-    if(game.state == IN_PLAY || game.state == FINISHED){
-       game.state = NOT_STARTED;
+    if(game.state == IN_PLAY){
+      finishGame(game);
       logger.log("verbose", "Stopping", {gameCode: gameId, gameState: game.state});
       // todo: say who stopped it
-      socket.nsp.emit('update state', {gameState: gameStateForClient(game)});
+      // socket.nsp.emit('update state', {gameState: gameStateForClient(game)});
     }
   });
 
   socket.on('chat message', function(msg){
+    if(game.state == FINISHED){
+      logger.log("debug", "chat message while game over");
+      return;
+    }
+
     logger.log("verbose", "Chat message", {gameCode: gameId, publicId: publicId, chatMessage: msg.text});
 
     logger.log("debug", "positionUpdate", {'positionHistory': game.positions.get(publicId), 'position': msg.position});
@@ -320,10 +341,7 @@ function ioConnect(socket){
       logger.log("debug", "targets post", {targets: Array.from(game.targets)});
       logger.log("verbose", "Snipe", {gameCode: gameId, gameState: game.state});
       if(gameOver){
-        game.state = FINISHED;
-        game.winner = publicId;
-        logger.log("verbose", "Winner", {gameCode: gameId, gameState: game.state});
-        botMessage += ", game over, winner: " + game.userList.get(publicId).username;
+        finishGame(game, publicId);
       }
     }
 
@@ -348,9 +366,7 @@ function checkGameTiming(){
     let now = Date.now();
     if (game.state == IN_PLAY
       && game.startTime + game.gameLength < now){
-      game.state = FINISHED;
-      game.winner = 'The relentless passage of time';
-      game.nameSpace.emit('timeLeft', {'gameState': gameStateForClient(game)});
+      finishGame(game, 'time')
       logger.log("verbose", "TimeUp", {gameCode: gameId, gameState: game.state});
     }else if(game.state == IN_PLAY){
       var timeLeft = game.startTime + game.gameLength - now;
