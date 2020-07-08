@@ -6,7 +6,7 @@ https://stackoverflow.com/a/48936804 */
     display: none !important;
 }
 
-body {
+.container {
     font-size: 2em;
     height: 100%;
     width: 100%;

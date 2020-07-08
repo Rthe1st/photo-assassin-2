@@ -147,7 +147,7 @@ window.onload = function () {
     });
 
     function processGameStateChange(gameState) {
-        // this really only needs to be done once when we first recieve game state
+        // this really only needs to be done once when we first receive game state
         for (var element of document.getElementsByClassName('username')) {
             element.innerText = gameState.userList[publicId].username;
         }
@@ -155,10 +155,6 @@ window.onload = function () {
         if (gameState.state == TARGETS_MADE) {
             document.getElementById('targets-made').hidden = false;
             document.getElementById('not-started').hidden = true;
-            document.getElementById('in-play').hidden = true;
-            document.getElementById('send-message-form').hidden = true;
-            document.getElementById('messages').hidden = true;
-            document.getElementById('user-list').hidden = false;
             console.log(targetDisplay(gameState.targets));
 
             var targetsElement = document.getElementById('user-list');
@@ -170,20 +166,8 @@ window.onload = function () {
                 targetsElement.appendChild(element);
             }
         }
-        if (gameState.state == NOT_STARTED) {
-            document.getElementById('targets-made').hidden = true;
-            document.getElementById('not-started').hidden = false;
-            document.getElementById('in-play').hidden = true;
-            document.getElementById('send-message-form').hidden = true;
-            document.getElementById('messages').hidden = true;
-            document.getElementById('user-list').hidden = false;
-            document.getElementById('photo-preview').hidden = true;
-            console.log("winner was " + gameState.winner);
-        }
         if (gameState.state == IN_PLAY) {
-            document.getElementById('mark-snipe').hidden = false;
             document.getElementById('targets-made').hidden = true;
-            document.getElementById('not-started').hidden = true;
             document.getElementById('in-play').hidden = false;
             if (document.getElementById('photo-preview').hidden) {
                 document.getElementById('messages').hidden = false;
@@ -195,8 +179,6 @@ window.onload = function () {
             targetElement.innerText = "Target: " + gameState.userList
             [gameState.targets[publicId]].username;
             document.getElementById('time-left').innerText = gameState.timeLeft / 1000;
-        } else {
-            document.getElementById('mark-snipe').hidden = true;
         }
     }
 
@@ -225,13 +207,7 @@ window.onload = function () {
         document.getElementById('next-game-link').setAttribute('href', `/game/${msg.nextGameCode}`);
         document.getElementById('game-result').innerText = msg.winner;
         document.getElementById('finished').hidden = false;
-        document.getElementById('targets-made').hidden = true;
-        document.getElementById('not-started').hidden = true;
         document.getElementById('in-play').hidden = true;
-        document.getElementById('send-message-form').hidden = true;
-        document.getElementById('messages').hidden = true;
-        document.getElementById('user-list').hidden = true;
-        document.getElementById('photo-preview').hidden = true;
 
     });
 

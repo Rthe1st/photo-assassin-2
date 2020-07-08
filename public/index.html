@@ -12,46 +12,54 @@
 
 <body>
   <!--todo: use semantic elements-->
-  <div id="not-started" class="top">
-    <p class="username" style="grid-column: 1;grid-row: 1;"></p>
-    <button id="make-targets" style="grid-column: 3;grid-row: 1;">Make targets</button>
+  <div class="container" id="not-started">
+    <div>
+      <p class="username" style="grid-column: 1;grid-row: 1;"></p>
+      <button id="make-targets" style="grid-column: 3;grid-row: 1;">Make targets</button>
+    </div>
+    <ul id="user-list" class="middle"></ul>
   </div>
-  <div id="targets-made" hidden class="top">
-    <p class="username" style="grid-column: 1;grid-row: 1;"></p>
-    <button id="start-game" style="grid-column: 3;grid-row: 1;">Start</button>
-    <!-- todo: this is has 2 potential uses
-        1) regen target lists people don't like
-        2) include later users in the target list-->
-    <!--<button id="make-targets">Re-make targets</button>-->
-    <label style="grid-column: 1;grid-row: 2;">Game Length (in seconds)<input id="game-length"></label>
-  </div>
-  <div id="in-play" hidden class="top">
-    <p class="username" style="grid-column: 1;grid-row: 1;"></p>
-    <p id="time-left" style="grid-column: 2;grid-row: 1;"></p>
-    <button id="stop-game" style="grid-column: 3;grid-row: 1;">Stop</button>
-    <p id="target"></p>
-  </div>
-  <div id="finished" class="top" hidden>
-    <p class="username" style="grid-column: 1;grid-row: 1;"></p>
-    <p id="game-result" style="grid-column: 2;grid-row: 2;"></p>
-    <a id="next-game-link" style="grid-column: 3;grid-row: 1;">Next game</a>
-  </div>
-  <div id="photo-preview" hidden class="middle">
-    <img id="preview">
-    <div id="preview-buttons">
-      <button id="mark-snipe">Snipe?</button>
-      <button id="delete-preview">Delete</button>
+  <div class="container" id="targets-made" hidden>
+    <div class="top">
+      <p class="username" style="grid-column: 1;grid-row: 1;"></p>
+      <button id="start-game" style="grid-column: 3;grid-row: 1;">Start</button>
+      <!-- todo: this is has 2 potential uses
+          1) regen target lists people don't like
+          2) include later users in the target list-->
+      <!--<button id="make-targets">Re-make targets</button>-->
+      <label style="grid-column: 1;grid-row: 2;">Game Length (in seconds)<input id="game-length"></label>
     </div>
   </div>
-  <ul id="user-list" class="middle" hidden></ul>
-  <ul id="messages" class="middle"></ul>
-  <form id="send-message-form" action="">
-    <textarea id="message" placeholder="Type a message"></textarea>
-    <input id="is-snipe" type="checkbox" hidden />
-    <button id="send-message">Send</button>
-    <button id="camera-button" class="fa">&#xf030;</button>
-    <input hidden id="photo-input" type="file" accept="image/*" capture="environment">
-  </form>
+  <div id="in-play" hidden class="container">
+    <div class="top">
+      <p class="username" style="grid-column: 1;grid-row: 1;"></p>
+      <p id="time-left" style="grid-column: 2;grid-row: 1;"></p>
+      <button id="stop-game" style="grid-column: 3;grid-row: 1;">Stop</button>
+      <p id="target"></p>
+    </div>
+    <div id="photo-preview" hidden class="middle">
+      <img id="preview">
+      <div id="preview-buttons">
+        <button id="mark-snipe">Snipe?</button>
+        <button id="delete-preview">Delete</button>
+      </div>
+    </div>
+    <ul id="messages" class="middle"></ul>
+    <form id="send-message-form" action="">
+      <textarea id="message" placeholder="Type a message"></textarea>
+      <input id="is-snipe" type="checkbox" hidden />
+      <button id="send-message">Send</button>
+      <button id="camera-button" class="fa">&#xf030;</button>
+      <input hidden id="photo-input" type="file" accept="image/*" capture="environment">
+    </form>
+  </div>
+  <div id="finished" hidden class="container">
+    <div class="top">
+      <p class="username" style="grid-column: 1;grid-row: 1;"></p>
+      <p id="game-result" style="grid-column: 2;grid-row: 2;"></p>
+      <a id="next-game-link" style="grid-column: 3;grid-row: 1;">Next game</a>
+    </div>
+  </div>
 </body>
 
 </html>
