@@ -9,7 +9,7 @@
     "winston": "^3.2.1"
   },
   "scripts": {
-    "start": "node index.js"
+    "start": "node server.js"
   },
   "devDependencies": {
     "selenium-webdriver": "^4.0.0-alpha.7"

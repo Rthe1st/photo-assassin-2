@@ -11,7 +11,7 @@ This project is an app to make playing [Photo Assassin](https://github.com/Rthe1
 ## Run locally
 
 ```bash
-nodejs ./index.js
+nodejs ./server.js
 ```
 
 It'll be running on [localhost](http://localhost:3000/)
