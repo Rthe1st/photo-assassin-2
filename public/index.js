@@ -188,12 +188,12 @@ window.onload = function () {
     var IN_PLAY = "IN PLAY";
 
     document.getElementById('make-targets').onclick = function (event) {
-        socket.emit('make targets');
+        var gameLength = document.getElementById('game-length').value;
+        socket.emit('make targets', { gameLength: gameLength });
     }
 
     document.getElementById('start-game').onclick = function (event) {
-        var gameLength = document.getElementById('game-length').value;
-        socket.emit('start game', { gameLength: gameLength });
+        socket.emit('start game');
     }
 
     document.getElementById('stop-game').onclick = function (event) {
