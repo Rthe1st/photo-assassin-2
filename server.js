@@ -108,29 +108,6 @@ function gameStateForClient(game){
   }
 }
 
-
-function newGame(nameSpace, idMapping=new Map(), userList=new Map()){
-  let positions = new Map();
-  for(let publicId of userList.keys()){
-    positions.set(publicId, [])
-  }
-  return {
-    nameSpace: nameSpace,
-    state: NOT_STARTED,
-    // this maps the private ID given to a client via a cookie
-    // to an ID that is shown to other players
-    // if other players learn your private ID, they can impersonate you
-    idMapping: idMapping,
-    userList: userList,
-    targets: {},
-    positions: positions,
-    startTime: undefined,
-    gameLength: undefined,
-    timeLeft: undefined,
-  };
-
-}
-
 // public ID cannot change, username might be changed by user
 function addPlayer(game, privateId, publicId, username){
   game.idMapping.set(privateId,publicId);
@@ -150,11 +127,31 @@ function addUserToGame(code, res, username){
 
     addPlayer(game, privateId, publicId, username);
 
+    game.nameSpace.emit('New user', {publicId: publicId, gameState: gameStateForClient(game)});
+
     // todo: set good settings (https only, etc)
     res.cookie("gameId", code, {sameSite: "strict"});
     res.cookie("privateId", privateId, {sameSite: "strict"});
     res.cookie("publicId", publicId, {sameSite: "strict"});
     logger.log("verbose", "Adding user to game", {publicId: publicId, gameCode: code});
+}
+
+function newGame(nameSpace){
+  return {
+    nameSpace: nameSpace,
+    state: NOT_STARTED,
+    // this maps the private ID given to a client via a cookie
+    // to an ID that is shown to other players
+    // if other players learn your private ID, they can impersonate you
+    idMapping: new Map(),
+    userList: new Map(),
+    targets: {},
+    positions: new Map(),
+    startTime: undefined,
+    gameLength: undefined,
+    timeLeft: undefined,
+  };
+
 }
 
 function generateGame(){
@@ -251,6 +248,7 @@ function ioConnect(socket){
 
   let privateId = socket.handshake.query.privateId;
   
+  //todo: allow sockets to connect in "view only" mode if they're not players
   if(game.idMapping.has(privateId)){
     var publicId = game.idMapping.get(privateId);
   }else{
@@ -260,7 +258,7 @@ function ioConnect(socket){
 
   logger.log("debug", "Socket connected", {publicId: publicId, gameCode: gameId});
   
-  socket.nsp.emit('New user', {publicId: publicId, gameState: gameStateForClient(game)});
+  socket.emit('initialization', {gameState: gameStateForClient(game)});
 
   socket.on('make targets', function(msg){
     if(game.state != NOT_STARTED){
@@ -270,7 +268,7 @@ function ioConnect(socket){
     logger.log("debug", "targets when made", {targets: Array.from(game.targets)});
     logger.log("verbose", "Making targets", {gameCode: gameId, gameState: game.state});
     // todo: say who made the targets
-    socket.nsp.emit('update state', {gameState: gameStateForClient(game)});
+    socket.nsp.emit('make targets', {gameState: gameStateForClient(game)});
   });
 
   socket.on('start game', function(msg){
@@ -280,7 +278,7 @@ function ioConnect(socket){
     start(game);
     logger.log("verbose", "Starting", {gameCode: gameId, gameState: game.state});
     // todo: say who started it
-    socket.nsp.emit('update state', {gameState: gameStateForClient(game)});
+    socket.nsp.emit('start', {gameState: gameStateForClient(game)});
   });
 
   socket.on('stop game', function(msg){
@@ -288,13 +286,12 @@ function ioConnect(socket){
       finishGame(game);
       logger.log("verbose", "Stopping", {gameCode: gameId, gameState: game.state});
       // todo: say who stopped it
-      // socket.nsp.emit('update state', {gameState: gameStateForClient(game)});
     }
   });
 
   socket.on('chat message', function(msg){
-    if(game.state == FINISHED){
-      logger.log("debug", "chat message while game over");
+    if(game.state != IN_PLAY){
+      logger.log("debug", "chat message while not IN_PLAY");
       return;
     }
 
@@ -315,7 +312,7 @@ function ioConnect(socket){
     // snipes must contain an image
     // but not all images have to be snipes
     // for example, to send a selfie
-    if(game.state == IN_PLAY && msg.isSnipe && msg.image){
+    if(msg.isSnipe && msg.image){
       logger.log("debug", "targets", {targets: Array.from(game.targets)});
       var usernameWhoDidSniping = game.userList.get(publicId).username;
       var usernameThatGotSniped = game.userList.get(game.targets[publicId]).username;
@@ -326,6 +323,7 @@ function ioConnect(socket){
       logger.log("verbose", "Snipe", {gameCode: gameId, gameState: game.state});
       if(gameOver){
         finishGame(game, publicId);
+        return;
       }
     }
 
@@ -340,7 +338,7 @@ function ioConnect(socket){
     socket.nsp.emit('chat message', outgoing_msg);
   });
   socket.on('disconnect', function(){
-    socket.nsp.emit('chat message',{'text': 'a user left'});
+    logger.log('debug','socket disconnected', { 'player': publicId});
   });
 
 }

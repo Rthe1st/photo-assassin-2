@@ -66,36 +66,89 @@ function newMessageEntry(gameId, username, message, image) {
     window.localStorage.setItem(gameId, JSON.stringify(gameChatStorage));
 }
 
+function markSnipe(event){
+    document.getElementById('is-snipe').checked = true;
+    document.getElementById("mark-snipe").innerText = "Sniped ✓"
+    document.getElementById("mark-snipe").setAttribute("disabled", "");
+}
+
+function deletePreview(){
+    document.getElementById('photo-preview').hidden = true;
+    document.getElementById('messages').hidden = false;
+    document.getElementById('photo-input').value = '';
+    document.getElementById('is-snipe').checked = false;
+    document.getElementById("mark-snipe").innerText = "Snipe?"
+    document.getElementById("mark-snipe").removeAttribute("disabled");
+}
+
+function cameraButton(event){
+    document.getElementById('photo-input').click();
+    event.preventDefault();
+}
+
+function photoInput(event){
+    var img = document.getElementById('preview');
+    img.src = URL.createObjectURL(event.target.files[0]);
+    document.getElementById('photo-preview').hidden = false;
+    document.getElementById('messages').hidden = true;
+}
+
+function sendMessage(ev){
+    var file = document.getElementById('photo-input').files[0];
+    message = {
+        "text": document.getElementById('message').value,
+        "image": file,
+        "position": position,
+        "isSnipe": document.getElementById('is-snipe').checked,
+    }
+    socket.emit('chat message', message);
+    document.getElementById('message').value = '';
+    document.getElementById('photo-input').value = '';
+    document.getElementById('is-snipe').checked = false;
+    document.getElementById("mark-snipe").innerText = "Snipe?"
+    document.getElementById("mark-snipe").removeAttribute("disabled");
+    document.getElementById('photo-preview').hidden = true;
+    document.getElementById('messages').hidden = false;
+    ev.preventDefault();
+    return false;
+}
+
+var gameState;
+const NOT_STARTED = "NOT STARTED";
+const TARGETS_MADE = "TARGETS MADE";
+const IN_PLAY = "IN PLAY";
+
+function updateTimeLeft(){
+    document.getElementById('time-left').innerText = gameState.timeLeft / 1000;
+}
+
+// gameId needs to be decoded because it contains a '/'
+// which gets URI encoded otherwise
+const gameId = decodeURIComponent(document.cookie.replace(/(?:(?:^|.*;\s*)gameId\s*\=\s*([^;]*).*$)|^.*$/, "$1"));
+console.log(gameId);
+const privateId = document.cookie.replace(/(?:(?:^|.*;\s*)privateId\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+const publicId = document.cookie.replace(/(?:(?:^|.*;\s*)publicId\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+
+const socket = io(
+    // leading slash is needed so IO nows we're giving it a path
+    // otherwise it uses it as a domain
+    `/${gameId}`,
+    {
+        query: {
+            "privateId": privateId,
+        }
+    }
+);
+
 window.onload = function () {
 
-    document.getElementById("mark-snipe").addEventListener('click', function (ev) {
-        document.getElementById('is-snipe').checked = true;
-        document.getElementById("mark-snipe").innerText = "Sniped ✓"
-        document.getElementById("mark-snipe").setAttribute("disabled", "");
-        ev.preventDefault();
-    });
+    document.getElementById("mark-snipe").addEventListener('click', markSnipe);
 
-    document.getElementById("delete-preview").addEventListener('click', function (ev) {
-        document.getElementById('photo-preview').hidden = true;
-        document.getElementById('messages').hidden = false;
-        document.getElementById('photo-input').value = '';
-        document.getElementById('is-snipe').checked = false;
-        document.getElementById("mark-snipe").innerText = "Snipe?"
-        document.getElementById("mark-snipe").removeAttribute("disabled");
-        ev.preventDefault();
-    });
+    document.getElementById("delete-preview").addEventListener('click', deletePreview);
 
-    document.getElementById("camera-button").addEventListener('click', function (ev) {
-        document.getElementById('photo-input').click();
-        ev.preventDefault();
-    });
+    document.getElementById("camera-button").addEventListener('click', cameraButton);
 
-    document.getElementById('photo-input').addEventListener('change', function (event) {
-        var img = document.getElementById('preview');
-        img.src = URL.createObjectURL(event.target.files[0]);
-        document.getElementById('photo-preview').hidden = false;
-        document.getElementById('messages').hidden = true;
-    });
+    document.getElementById('photo-input').addEventListener('change', photoInput);
 
     navigator.geolocation.watchPosition(
         updatePosition,
@@ -103,89 +156,13 @@ window.onload = function () {
         { "enableHighAccuracy": true }
     );
 
-    // gameId needs to be decoded because it contains a '/'
-    // which gets URI encoded otherwise
-    var gameId = decodeURIComponent(document.cookie.replace(/(?:(?:^|.*;\s*)gameId\s*\=\s*([^;]*).*$)|^.*$/, "$1"));
-    var privateId = document.cookie.replace(/(?:(?:^|.*;\s*)privateId\s*\=\s*([^;]*).*$)|^.*$/, "$1");
-    var publicId = document.cookie.replace(/(?:(?:^|.*;\s*)publicId\s*\=\s*([^;]*).*$)|^.*$/, "$1");
-    console.log(gameId);
-
     loadChatHistory(gameId);
 
-    const socket = io(
-        // leading slash is needed so IO nows we're giving it a path
-        // otherwise it uses it as a domain
-        `/${gameId}`,
-        {
-            query: {
-                "privateId": privateId,
-            }
-        }
-    );
     document.getElementById('send-message-form').addEventListener('submit', function (ev) {
         ev.preventDefault();
         return false;
     });
-    document.getElementById('send-message').addEventListener('click', function (ev) {
-        var file = document.getElementById('photo-input').files[0];
-        message = {
-            "text": document.getElementById('message').value,
-            "image": file,
-            "position": position,
-            "isSnipe": document.getElementById('is-snipe').checked,
-        }
-        socket.emit('chat message', message);
-        document.getElementById('message').value = '';
-        document.getElementById('photo-input').value = '';
-        document.getElementById('is-snipe').checked = false;
-        document.getElementById("mark-snipe").innerText = "Snipe?"
-        document.getElementById("mark-snipe").removeAttribute("disabled");
-        document.getElementById('photo-preview').hidden = true;
-        document.getElementById('messages').hidden = false;
-        ev.preventDefault();
-        return false;
-    });
-
-    function processGameStateChange(gameState) {
-        // this really only needs to be done once when we first receive game state
-        for (var element of document.getElementsByClassName('username')) {
-            element.innerText = gameState.userList[publicId].username;
-        }
-        //console.log(gameState);
-        if (gameState.state == TARGETS_MADE) {
-            document.getElementById('targets-made').hidden = false;
-            document.getElementById('not-started').hidden = true;
-            console.log(targetDisplay(gameState.targets));
-
-            var targetsElement = document.getElementById('user-list');
-            targetsElement.innerHTML = '';
-            for (var key of Object.keys(gameState.targets)) {
-                var element = document.createElement('li');
-                var text = gameState.userList[key].username + "->" + gameState.userList[gameState.targets[key]].username;
-                element.innerText = text;
-                targetsElement.appendChild(element);
-            }
-        }
-        if (gameState.state == IN_PLAY) {
-            document.getElementById('targets-made').hidden = true;
-            document.getElementById('in-play').hidden = false;
-            if (document.getElementById('photo-preview').hidden) {
-                document.getElementById('messages').hidden = false;
-                document.getElementById('user-list').hidden = true;
-                document.getElementById('send-message-form').hidden = false;
-            }
-            // console.log("time left: " + gameState.timeLeft/1000);
-            var targetElement = document.getElementById('target');
-            targetElement.innerText = "Target: " + gameState.userList
-            [gameState.targets[publicId]].username;
-            document.getElementById('time-left').innerText = gameState.timeLeft / 1000;
-        }
-    }
-
-    var gameState;
-    var NOT_STARTED = "NOT STARTED";
-    var TARGETS_MADE = "TARGETS MADE";
-    var IN_PLAY = "IN PLAY";
+    document.getElementById('send-message').addEventListener('click', sendMessage);
 
     document.getElementById('make-targets').onclick = function (event) {
         var gameLength = document.getElementById('game-length').value;
@@ -198,24 +175,14 @@ window.onload = function () {
 
     document.getElementById('stop-game').onclick = function (event) {
         // todo: add confirmation dialogue
-        document.getElementById('photo-input').value = '';
+        // document.getElementById('photo-input').value = '';
         socket.emit('stop game');
     }
 
-    socket.on('game finished', function (msg) {
-        // todo: set the username to current one
-        document.getElementById('next-game-link').setAttribute('href', `/game/${msg.nextGameCode}`);
-        document.getElementById('game-result').innerText = msg.winner;
-        document.getElementById('finished').hidden = false;
-        document.getElementById('in-play').hidden = true;
-
-    });
-
-    socket.on('update state', function (msg) {
+    socket.on('initialization', function(msg){
         gameState = msg.gameState;
-        processGameStateChange(gameState);
-        if (msg.botMessage) {
-            newMessageEntry(gameId, 'Gamebot3000', msg.botMessage);
+        for (var element of document.getElementsByClassName('username')) {
+            element.innerText = gameState.userList[publicId].username;
         }
     });
 
@@ -223,8 +190,6 @@ window.onload = function () {
         gameState = msg.gameState;
         // msg needs to tell us which new user joined
         newUser = gameState.userList[msg.publicId].username;
-        // newMessageEntry(gameId, 'Gamebot3000', 'New user joined: ' + newUser);
-        processGameStateChange(gameState);
         var userList = document.getElementById('user-list');
         userList.innerHTML = '';
         var li = document.createElement('li');
@@ -237,9 +202,46 @@ window.onload = function () {
         }
     });
 
+    socket.on('make targets', function (msg) {
+        gameState = msg.gameState;
+        if (gameState.state == TARGETS_MADE) {
+            document.getElementById('targets-made').hidden = false;
+            document.getElementById('not-started').hidden = true;
+            console.log(targetDisplay(gameState.targets));
+
+            var targetsElement = document.getElementById('target-list');
+            targetsElement.innerHTML = '';
+            for (var key of Object.keys(gameState.targets)) {
+                var element = document.createElement('li');
+                var text = gameState.userList[key].username + "->" + gameState.userList[gameState.targets[key]].username;
+                element.innerText = text;
+                targetsElement.appendChild(element);
+            }
+        }
+    });
+
+    socket.on('start', function (msg) {
+        gameState = msg.gameState;
+        updateTimeLeft();
+        document.getElementById('targets-made').hidden = true;
+        document.getElementById('in-play').hidden = false;
+        var targetElement = document.getElementById('target');
+        targetElement.innerText = "Target: " + gameState.userList[gameState.targets[publicId]].username;
+        document.getElementById('time-left').innerText = gameState.timeLeft / 1000;
+    });
+
+    socket.on('game finished', function (msg) {
+        // todo: set the username to current one
+        document.getElementById('next-game-link').setAttribute('href', `/game/${msg.nextGameCode}`);
+        document.getElementById('game-result').innerText = msg.winner;
+        document.getElementById('finished').hidden = false;
+        document.getElementById('in-play').hidden = true;
+
+    });
+
     socket.on('timeLeft', function (msg) {
         gameState = msg.gameState;
-        processGameStateChange(gameState);
+        updateTimeLeft();
     });
 
     socket.on('chat message', function (msg) {
@@ -247,7 +249,9 @@ window.onload = function () {
         gameState = msg.gameState;
         username = gameState.userList[msg.publicId].username;
         newMessageEntry(gameId, username, msg.text, msg.image)
-        processGameStateChange(gameState);
+
+        var targetElement = document.getElementById('target');
+        targetElement.innerText = "Target: " + gameState.userList[gameState.targets[publicId]].username;
 
         if (msg.botMessage) {
             newMessageEntry(gameId, 'Gamebot3000', msg.botMessage);
@@ -259,5 +263,4 @@ window.onload = function () {
         messages.scrollTo(0, messages.scrollHeight)
         // }
     });
-    // var photo = document.getElementById('photo');
 };
