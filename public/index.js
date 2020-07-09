@@ -184,12 +184,6 @@ window.onload = function () {
         for (var element of document.getElementsByClassName('username')) {
             element.innerText = gameState.userList[publicId].username;
         }
-    });
-
-    socket.on('New user', function (msg) {
-        gameState = msg.gameState;
-        // msg needs to tell us which new user joined
-        newUser = gameState.userList[msg.publicId].username;
         var userList = document.getElementById('user-list');
         userList.innerHTML = '';
         var li = document.createElement('li');
@@ -202,22 +196,35 @@ window.onload = function () {
         }
     });
 
+    socket.on('New user', function (msg) {
+        gameState = msg.gameState;
+        // msg needs to tell us which new user joined
+        newUser = gameState.userList[msg.publicId].username;
+        var userList = document.getElementById('user-list');
+        var li = document.createElement('li');
+        li.innerText = newUser;
+        userList.append(li);
+    });
+
     socket.on('make targets', function (msg) {
         gameState = msg.gameState;
-        if (gameState.state == TARGETS_MADE) {
-            document.getElementById('targets-made').hidden = false;
-            document.getElementById('not-started').hidden = true;
-            console.log(targetDisplay(gameState.targets));
+        document.getElementById('targets-made').hidden = false;
+        document.getElementById('not-started').hidden = true;
+        console.log(targetDisplay(gameState.targets));
 
-            var targetsElement = document.getElementById('target-list');
-            targetsElement.innerHTML = '';
-            for (var key of Object.keys(gameState.targets)) {
-                var element = document.createElement('li');
-                var text = gameState.userList[key].username + "->" + gameState.userList[gameState.targets[key]].username;
-                element.innerText = text;
-                targetsElement.appendChild(element);
-            }
+        var targetsElement = document.getElementById('target-list');
+        targetsElement.innerHTML = '';
+        var li = document.createElement('li');
+        li.innerText = "Targets:";
+        targetsElement.append(li);
+        for (var key of Object.keys(gameState.targets)) {
+            var element = document.createElement('li');
+            var text = gameState.userList[key].username + "->" + gameState.userList[gameState.targets[key]].username;
+            element.innerText = text;
+            targetsElement.appendChild(element);
         }
+        document.getElementById('game-length-ro').value = gameState.gameLength;
+
     });
 
     socket.on('start', function (msg) {
@@ -231,12 +238,15 @@ window.onload = function () {
     });
 
     socket.on('game finished', function (msg) {
-        // todo: set the username to current one
-        document.getElementById('next-game-link').setAttribute('href', `/game/${msg.nextGameCode}`);
+        if(gameState.userList[msg.winner]){
+            msg.winner = gameState.userList[msg.winner].username;
+        }
         document.getElementById('game-result').innerText = msg.winner;
         document.getElementById('finished').hidden = false;
         document.getElementById('in-play').hidden = true;
 
+        var username = gameState.userList[publicId].username;
+        document.getElementById('next-game-link').setAttribute('href', `/?code=${msg.nextGameCode}&username=${username}`);
     });
 
     socket.on('timeLeft', function (msg) {

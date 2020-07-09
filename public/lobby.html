@@ -42,7 +42,11 @@
           makeForm.hidden = true;
           var joinForm = document.getElementById('join-form');
           var codeInput = joinForm.querySelector('input[name="code"]');
-          codeInput.value = urlParameters["code"]
+          codeInput.value = urlParameters["code"];
+        }
+        if(urlParameters["username"]){
+          var usernameInput = joinForm.querySelector('input[name="username"]');
+          usernameInput.value = urlParameters["username"];
         }
     }
   </script>

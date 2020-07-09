@@ -283,7 +283,7 @@ function ioConnect(socket){
 
   socket.on('stop game', function(msg){
     if(game.state == IN_PLAY){
-      finishGame(game);
+      finishGame(game, 'game stopped');
       logger.log("verbose", "Stopping", {gameCode: gameId, gameState: game.state});
       // todo: say who stopped it
     }

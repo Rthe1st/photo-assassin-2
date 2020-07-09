@@ -13,12 +13,19 @@
 <body>
   <!--todo: use semantic elements-->
   <div class="container" id="not-started">
-    <div>
+    <div class="top">
       <p class="username" style="grid-column: 1;grid-row: 1;"></p>
       <button id="make-targets" style="grid-column: 3;grid-row: 1;">Make targets</button>
-      <label style="grid-column: 1;grid-row: 2;">Game Length (in seconds)<input id="game-length"></label>
     </div>
-    <ul id="user-list" class="middle"></ul>
+    <div class="middle-2">
+        <ul id="user-list" class="left"></ul>
+        <div class="right">
+            <!--https://stackoverflow.com/questions/29661058/how-do-i-add-text-based-units-like-lbs-floated-to-right-inside-of-an-input-ele-->
+            <label>Game Length (sec)<input id="game-length"></label>
+            <!--todo: time people have to hide before game starts-->
+            <!-- <label>Countdown (sec)<input id="count-down"></label> -->
+        </div>
+    </div>
   </div>
   <div class="container" id="targets-made" hidden>
     <div class="top">
@@ -29,10 +36,15 @@
           2) include later users in the target list-->
       <!--<button id="make-targets">Re-make targets</button>-->
     </div>
-    <div class="middle">
-        <ul id="target-list" class="middle">
-          <li>placeholder -> placeholder</li>
-        </ul>
+    <div class="middle-2">
+        <ul id="target-list" class="left"></ul>
+        <!--todo: can we reuse the div between targets-made and not-started-->
+        <div class="right">
+            <!--https://stackoverflow.com/questions/29661058/how-do-i-add-text-based-units-like-lbs-floated-to-right-inside-of-an-input-ele-->
+            <label>Game Length (sec)<input id="game-length-ro" readonly></label>
+            <!--todo: time people have to hide before game starts-->
+            <!-- <label>Countdown (sec)<input id="count-down"></label> -->
+        </div>
     </div>
   </div>
   <div id="in-play" hidden class="container">
@@ -61,8 +73,11 @@
   <div id="finished" hidden class="container">
     <div class="top">
       <p class="username" style="grid-column: 1;grid-row: 1;"></p>
-      <p id="game-result" style="grid-column: 2;grid-row: 2;"></p>
       <a id="next-game-link" style="grid-column: 3;grid-row: 1;">Next game</a>
+    </div>
+    <div class="middle">
+      <h2>Winner</h2>
+      <p id="game-result"></p>
     </div>
   </div>
 </body>
