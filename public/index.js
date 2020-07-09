@@ -223,7 +223,7 @@ window.onload = function () {
             element.innerText = text;
             targetsElement.appendChild(element);
         }
-        document.getElementById('game-length-ro').value = gameState.gameLength;
+        document.getElementById('game-length-ro').value = gameState.gameLength / 1000;
 
     });
 

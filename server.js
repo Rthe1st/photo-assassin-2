@@ -4,7 +4,7 @@ var app = express();
 const crypto = require('crypto');
 app.use(cookieParser());
 var http = require('http').Server(app);
-var io = require('socket.io')(http);
+var io = require('socket.io')(http, { cookie: false });
 
 var winston = require('winston');
 var Writable = require('stream').Writable;
