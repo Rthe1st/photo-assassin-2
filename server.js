@@ -4,6 +4,8 @@ var app = express();
 const crypto = require('crypto');
 app.use(cookieParser());
 var http = require('http').Server(app);
+// https://github.com/socketio/socket.io/issues/2276
+// (would probably be solved if we bumped socket io version)
 var io = require('socket.io')(http, { cookie: false });
 
 var winston = require('winston');

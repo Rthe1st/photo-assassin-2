@@ -117,6 +117,7 @@ var gameState;
 const NOT_STARTED = "NOT STARTED";
 const TARGETS_MADE = "TARGETS MADE";
 const IN_PLAY = "IN PLAY";
+const FINISHED = "FINISHED";
 
 function updateTimeLeft(){
     document.getElementById('time-left').innerText = gameState.timeLeft / 1000;
@@ -170,44 +171,27 @@ window.onload = function () {
     }
 
     document.getElementById('start-game').onclick = function (event) {
-        socket.emit('start game');
+        if(confirm('Start the game?')){
+            socket.emit('start game');
+        }
     }
 
     document.getElementById('stop-game').onclick = function (event) {
-        // todo: add confirmation dialogue
-        // document.getElementById('photo-input').value = '';
-        socket.emit('stop game');
+        if(confirm('Finish the game?')){
+            socket.emit('stop game');
+        }
     }
 
-    socket.on('initialization', function(msg){
-        gameState = msg.gameState;
-        for (var element of document.getElementsByClassName('username')) {
-            element.innerText = gameState.userList[publicId].username;
-        }
-        var userList = document.getElementById('user-list');
-        userList.innerHTML = '';
-        var li = document.createElement('li');
-        li.innerText = "Players:";
-        userList.append(li);
-        for (const [index, user] of Object.entries(gameState.userList)) {
-            var li = document.createElement('li');
-            li.innerText = user.username;
-            userList.append(li);
-        }
-    });
+    function inPlayView(){
+        updateTimeLeft();
+        document.getElementById('targets-made').hidden = true;
+        document.getElementById('in-play').hidden = false;
+        var targetElement = document.getElementById('target');
+        targetElement.innerText = "Target: " + gameState.userList[gameState.targets[publicId]].username;
+        document.getElementById('time-left').innerText = gameState.timeLeft / 1000;
+    }
 
-    socket.on('New user', function (msg) {
-        gameState = msg.gameState;
-        // msg needs to tell us which new user joined
-        newUser = gameState.userList[msg.publicId].username;
-        var userList = document.getElementById('user-list');
-        var li = document.createElement('li');
-        li.innerText = newUser;
-        userList.append(li);
-    });
-
-    socket.on('make targets', function (msg) {
-        gameState = msg.gameState;
+    function targetsMadeView(){
         document.getElementById('targets-made').hidden = false;
         document.getElementById('not-started').hidden = true;
         console.log(targetDisplay(gameState.targets));
@@ -224,27 +208,71 @@ window.onload = function () {
             targetsElement.appendChild(element);
         }
         document.getElementById('game-length-ro').value = gameState.gameLength / 1000;
+    }
 
+    function finishedView(winner){
+        if(gameState.userList[winner]){
+            document.getElementById('game-result').innerText = gameState.userList[winner].username;
+        }else{
+            document.getElementById('game-result').innerText = winner;
+        }
+        document.getElementById('finished').hidden = false;
+        document.getElementById('in-play').hidden = true;
+    }
+
+    socket.on('initialization', function(msg){
+        console.log('initilized');
+        gameState = msg.gameState;
+        console.log(gameState.state);
+        for (var element of document.getElementsByClassName('username')) {
+            element.innerText = gameState.userList[publicId].username;
+        }
+        if(gameState.state == IN_PLAY){
+            inPlayView();
+        }else if(gameState.state == NOT_STARTED){
+            document.getElementById('not-started').hidden = false;
+            var userList = document.getElementById('user-list');
+            userList.innerHTML = '';
+            var li = document.createElement('li');
+            li.innerText = "Players:";
+            userList.append(li);
+            for (const [index, user] of Object.entries(gameState.userList)) {
+                var li = document.createElement('li');
+                li.innerText = user.username;
+                userList.append(li);
+            }
+        }else if(gameState.state == TARGETS_MADE){
+            targetsMadeView();
+        }else if(gameState.state == FINISHED){
+            finishedView(gameState.winner);
+        }
+    });
+
+    socket.on('New user', function (msg) {
+        gameState = msg.gameState;
+        // msg needs to tell us which new user joined
+        newUser = gameState.userList[msg.publicId].username;
+        var userList = document.getElementById('user-list');
+        var li = document.createElement('li');
+        li.innerText = newUser;
+        userList.append(li);
+    });
+
+    socket.on('make targets', function (msg) {
+        gameState = msg.gameState;
+        targetsMadeView();
     });
 
     socket.on('start', function (msg) {
         gameState = msg.gameState;
-        updateTimeLeft();
-        document.getElementById('targets-made').hidden = true;
-        document.getElementById('in-play').hidden = false;
-        var targetElement = document.getElementById('target');
-        targetElement.innerText = "Target: " + gameState.userList[gameState.targets[publicId]].username;
-        document.getElementById('time-left').innerText = gameState.timeLeft / 1000;
+        inPlayView();
     });
 
     socket.on('game finished', function (msg) {
-        if(gameState.userList[msg.winner]){
-            msg.winner = gameState.userList[msg.winner].username;
-        }
-        document.getElementById('game-result').innerText = msg.winner;
-        document.getElementById('finished').hidden = false;
-        document.getElementById('in-play').hidden = true;
+        finishedView(msg.winner);
 
+        //todo: we need to save this to local storage or game state
+        // so that it's not lost if user refreshs the page
         var username = gameState.userList[publicId].username;
         document.getElementById('next-game-link').setAttribute('href', `/?code=${msg.nextGameCode}&username=${username}`);
     });
