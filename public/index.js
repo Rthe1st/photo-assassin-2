@@ -17,7 +17,8 @@ function targetDisplay(targets) {
     return output
 }
 
-function createChatElement(username, message, image) {
+function createChatElement(publicId, message, image) {
+    var username = gameState.userList[publicId].username;
     var li = document.createElement('li');
     var span = document.createElement('span');
     span.innerText = username;
@@ -38,32 +39,19 @@ function createChatElement(username, message, image) {
     document.getElementById('messages').appendChild(li);
 }
 
-function loadChatHistory(gameId) {
-    var gameChatStorage = window.localStorage.getItem(gameId);
-    gameChatStorage = JSON.parse(gameChatStorage);
-    console.log(gameChatStorage);
-    if (gameChatStorage) {
-        for (var i = 0; i < gameChatStorage.length; i++) {
-            createChatElement(gameChatStorage[i]["username"], gameChatStorage[i]["message"]);
-        }
+function loadChatHistory(chatHistory) {
+    //todo: save to indexdb
+    for (var i = 0; i < chatHistory.length; i++) {
+        var message = chatHistory[i];
+        proccessMsg(message);
     }
 }
 
-function newMessageEntry(gameId, username, message, image) {
-    createChatElement(username, message, image);
-
-    //todo: save server side as well
-    //todo: work out how to deal with images better
-    // without blowing storage limit
-    //todo: when we're close to limit, kick out old messages
-    var gameChatStorage = window.localStorage.getItem(gameId);
-    if (gameChatStorage == null) {
-        gameChatStorage = [];
-    } else {
-        gameChatStorage = JSON.parse(gameChatStorage);
+function proccessMsg(msg){
+    createChatElement(msg.publicId, msg.text, msg.image);
+    if (msg.botMessage) {
+        createChatElement('Gamebot3000', msg.botMessage);
     }
-    gameChatStorage.push({ "username": username, "message": message });
-    window.localStorage.setItem(gameId, JSON.stringify(gameChatStorage));
 }
 
 function markSnipe(event){
@@ -113,6 +101,11 @@ function sendMessage(ev){
     return false;
 }
 
+function setCurrentTarget(){
+    var targetElement = document.getElementById('target');
+    targetElement.innerText = "Target: " + gameState.userList[gameState.targets[publicId]].username;
+}
+
 var gameState;
 const NOT_STARTED = "NOT STARTED";
 const TARGETS_MADE = "TARGETS MADE";
@@ -157,8 +150,6 @@ window.onload = function () {
         { "enableHighAccuracy": true }
     );
 
-    loadChatHistory(gameId);
-
     document.getElementById('send-message-form').addEventListener('submit', function (ev) {
         ev.preventDefault();
         return false;
@@ -184,6 +175,7 @@ window.onload = function () {
 
     function inPlayView(){
         updateTimeLeft();
+        setCurrentTarget();
         document.getElementById('targets-made').hidden = true;
         document.getElementById('in-play').hidden = false;
         var targetElement = document.getElementById('target');
@@ -224,9 +216,12 @@ window.onload = function () {
     }
 
     socket.on('initialization', function(msg){
-        console.log('initilized');
+        console.log('initialized');
         gameState = msg.gameState;
         console.log(gameState.state);
+
+        loadChatHistory(msg.chatHistory);
+
         for (var element of document.getElementsByClassName('username')) {
             element.innerText = gameState.userList[publicId].username;
         }
@@ -283,15 +278,9 @@ window.onload = function () {
     socket.on('chat message', function (msg) {
         console.log(msg);
         gameState = msg.gameState;
-        username = gameState.userList[msg.publicId].username;
-        newMessageEntry(gameId, username, msg.text, msg.image)
+        proccessMsg(msg);
 
-        var targetElement = document.getElementById('target');
-        targetElement.innerText = "Target: " + gameState.userList[gameState.targets[publicId]].username;
-
-        if (msg.botMessage) {
-            newMessageEntry(gameId, 'Gamebot3000', msg.botMessage);
-        }
+        setCurrentTarget();
 
         //if we're scrolled to the bottom of messages, stick to the bottom
         messages = document.getElementById('messages')

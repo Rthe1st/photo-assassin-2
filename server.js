@@ -108,6 +108,9 @@ function gameStateForClient(game){
     state: game.state,
     winner: game.winner,
     nextCode: game.nextCode,
+    //we don't include chathistory here
+    // because it could be large and is wasteful to
+    // send often
   }
 }
 
@@ -154,6 +157,11 @@ function newGame(nameSpace){
     gameLength: undefined,
     timeLeft: undefined,
     nextCode: undefined,
+    // this includes images and so will get huge
+    // todo: make client smart so it only requests those its missing
+    // / saves what its already seen to local storage
+    // and consider off loading images to cdn
+    chatHistory: [],
   };
 
 }
@@ -264,7 +272,7 @@ function ioConnect(socket){
 
   logger.log("debug", "Socket connected", {publicId: publicId, gameCode: gameId});
   
-  socket.emit('initialization', {gameState: gameStateForClient(game)});
+  socket.emit('initialization', {gameState: gameStateForClient(game), chatHistory: game.chatHistory});
 
   socket.on('make targets', function(msg){
     if(game.state != NOT_STARTED){
@@ -334,12 +342,15 @@ function ioConnect(socket){
     }
 
     var outgoing_msg = {
-      gameState: gameStateForClient(game),
       publicId: publicId,
       text: msg.text,
       image: msg.image,
       botMessage: botMessage,
     }
+
+    game.chatHistory.push(outgoing_msg);
+
+    outgoing_msg.gameState = gameStateForClient(game);
     
     socket.nsp.emit('chat message', outgoing_msg);
   });
