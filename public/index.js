@@ -210,7 +210,7 @@ window.onload = function () {
         document.getElementById('game-length-ro').value = gameState.gameLength / 1000;
     }
 
-    function finishedView(winner){
+    function finishedView(winner, nextCode){
         if(gameState.userList[winner]){
             document.getElementById('game-result').innerText = gameState.userList[winner].username;
         }else{
@@ -218,6 +218,9 @@ window.onload = function () {
         }
         document.getElementById('finished').hidden = false;
         document.getElementById('in-play').hidden = true;
+
+        var username = gameState.userList[publicId].username;
+        document.getElementById('next-game-link').setAttribute('href', `/?code=${nextCode}&username=${username}`);
     }
 
     socket.on('initialization', function(msg){
@@ -244,7 +247,7 @@ window.onload = function () {
         }else if(gameState.state == TARGETS_MADE){
             targetsMadeView();
         }else if(gameState.state == FINISHED){
-            finishedView(gameState.winner);
+            finishedView(gameState.winner, gameState.nextCode);
         }
     });
 
@@ -269,12 +272,7 @@ window.onload = function () {
     });
 
     socket.on('game finished', function (msg) {
-        finishedView(msg.winner);
-
-        //todo: we need to save this to local storage or game state
-        // so that it's not lost if user refreshs the page
-        var username = gameState.userList[publicId].username;
-        document.getElementById('next-game-link').setAttribute('href', `/?code=${msg.nextGameCode}&username=${username}`);
+        finishedView(msg.winner, msg.nextCode);
     });
 
     socket.on('timeLeft', function (msg) {

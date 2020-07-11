@@ -107,6 +107,7 @@ function gameStateForClient(game){
     timeLeft: game.timeLeft,
     state: game.state,
     winner: game.winner,
+    nextCode: game.nextCode,
   }
 }
 
@@ -152,6 +153,7 @@ function newGame(nameSpace){
     startTime: undefined,
     gameLength: undefined,
     timeLeft: undefined,
+    nextCode: undefined,
   };
 
 }
@@ -181,8 +183,10 @@ winner can be the winning players publicId, 'time' if the clock ran out, or unde
   */
 function finishGame(game, winner){
   game.state = FINISHED;
-  game.nameSpace.emit('game finished', {nextGameCode: generateGame(), winner: winner});
+  var nextCode = generateGame();
+  game.nameSpace.emit('game finished', {nextGameCode: nextCode, winner: winner});
   game.winner = winner;
+  game.nextCode = generateGame();
   // logger.log("verbose", "Winner", {gameCode: gameId, gameState: game.state});
 }
 
