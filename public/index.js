@@ -55,9 +55,15 @@ function proccessMsg(msg){
 }
 
 function markSnipe(event){
-    document.getElementById('is-snipe').checked = true;
-    document.getElementById("mark-snipe").innerText = "Sniped ✓"
-    document.getElementById("mark-snipe").setAttribute("disabled", "");
+    //ui is a bit confusing, make clearer
+    var isSnipe = document.getElementById('is-snipe').checked;
+    if(isSnipe){
+        document.getElementById('is-snipe').checked = false;
+        document.getElementById("mark-snipe").innerText = "Snipe?"
+    }else{
+        document.getElementById('is-snipe').checked = true;
+        document.getElementById("mark-snipe").innerText = "Sniped ✓"
+    }
 }
 
 function deletePreview(){
@@ -102,8 +108,9 @@ function sendMessage(ev){
 }
 
 function setCurrentTarget(){
+    console.log(gameState.targets);
     var targetElement = document.getElementById('target');
-    targetElement.innerText = "Target: " + gameState.userList[gameState.targets[publicId]].username;
+    targetElement.innerText = "Target: " + gameState.userList[gameState.targets[publicId][0]].username;
 }
 
 var gameState;
@@ -178,8 +185,6 @@ window.onload = function () {
         setCurrentTarget();
         document.getElementById('targets-made').hidden = true;
         document.getElementById('in-play').hidden = false;
-        var targetElement = document.getElementById('target');
-        targetElement.innerText = "Target: " + gameState.userList[gameState.targets[publicId]].username;
         document.getElementById('time-left').innerText = gameState.timeLeft / 1000;
     }
 
@@ -193,9 +198,10 @@ window.onload = function () {
         var li = document.createElement('li');
         li.innerText = "Targets:";
         targetsElement.append(li);
+        console.log(gameState.targets);
         for (var key of Object.keys(gameState.targets)) {
             var element = document.createElement('li');
-            var text = gameState.userList[key].username + "->" + gameState.userList[gameState.targets[key]].username;
+            var text = gameState.userList[key].username + "->" + gameState.userList[gameState.targets[key][0]].username;
             element.innerText = text;
             targetsElement.appendChild(element);
         }
@@ -208,6 +214,32 @@ window.onload = function () {
         }else{
             document.getElementById('game-result').innerText = winner;
         }
+        console.log("dssd")
+        var targetsState = document.getElementById('targets-state');
+        for (var key of Object.keys(gameState.targets)) {
+            var outerLi = document.createElement('li');
+            var ul = document.createElement('ul');
+            var innerLi = document.createElement('li');
+            innerLi.innerText = gameState.userList[key].username
+            outerLi.appendChild(innerLi);
+            outerLi.appendChild(ul);
+            var innerLi = document.createElement('li');
+            //todo: map public ids to usernames
+            innerLi.innerText = "got: " + gameState.targetsGot[key].map(x=> gameState.userList[x].username).join(" -> ");    
+            ul.appendChild(innerLi);
+            
+            var innerLi = document.createElement('li');
+            innerLi.innerText = "left: " + gameState.targets[key].map(x=> gameState.userList[x].username).join(" -> ");    
+            ul.appendChild(innerLi);
+
+            // var innerLi = document.createElement('li');
+            // var got = document.createElement('p');
+            // var text = gameState.userList[key].username + ":" + gameState.userList[gameState.targets[key][0]].username;
+            // element.innerText = text;
+            // targetsElement.appendChild(element);
+            targetsState.appendChild(outerLi);
+        }
+
         document.getElementById('finished').hidden = false;
         document.getElementById('in-play').hidden = true;
 

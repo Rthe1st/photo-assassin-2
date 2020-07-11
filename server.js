@@ -60,7 +60,8 @@ function makeTargets(game, gameLength){
 
   var users = Array.from(game.userList.keys());
   for(var i=0; i<users.length;i++){
-    game.targets[users[i]] = users[(i+1)%users.length];
+    game.targets[users[i]] = users.slice(0,i).concat(users.slice(i+1));
+    game.targetsGot[users[i]] = [];
   }
   game.state = TARGETS_MADE;
 }
@@ -71,12 +72,12 @@ function start(game){
 
 function snipe(game, sniperId){
   //todo: let people vote on wether this is a valid snipe
-  var oldTarget = game.targets[sniperId];
-  var newTarget = game.targets[oldTarget];
-  if(newTarget == sniperId){
+  var targets = game.targets[sniperId];
+  //targets[0] becomes the new target
+  game.targetsGot[sniperId].push(targets.shift());
+  if(targets.length == 0){
     return true;
   }else{
-    game.targets[sniperId] = newTarget;
     return false;
   }
 }
@@ -103,6 +104,7 @@ function gameStateForClient(game){
   return {
     userList: Object.fromEntries(game.userList.entries()),
     targets: game.targets,
+    targetsGot: game.targetsGot,
     gameLength: game.gameLength,
     timeLeft: game.timeLeft,
     state: game.state,
@@ -152,6 +154,7 @@ function newGame(nameSpace){
     idMapping: new Map(),
     userList: new Map(),
     targets: {},
+    targetsGot: {},
     positions: new Map(),
     startTime: undefined,
     gameLength: undefined,
@@ -329,7 +332,9 @@ function ioConnect(socket){
     if(msg.isSnipe && msg.image){
       logger.log("debug", "targets", {targets: Array.from(game.targets)});
       var usernameWhoDidSniping = game.userList.get(publicId).username;
-      var usernameThatGotSniped = game.userList.get(game.targets[publicId]).username;
+      console.log(game.targets);
+      console.log(game.targets[publicId]);
+      var usernameThatGotSniped = game.userList.get(game.targets[publicId][0]).username;
       botMessage = usernameWhoDidSniping + " sniped " + usernameThatGotSniped;
 
       gameOver = snipe(game, publicId);
