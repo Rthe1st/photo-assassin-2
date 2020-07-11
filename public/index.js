@@ -72,7 +72,6 @@ function deletePreview(){
     document.getElementById('photo-input').value = '';
     document.getElementById('is-snipe').checked = false;
     document.getElementById("mark-snipe").innerText = "Snipe?"
-    document.getElementById("mark-snipe").removeAttribute("disabled");
 }
 
 function cameraButton(event){
@@ -100,7 +99,6 @@ function sendMessage(ev){
     document.getElementById('photo-input').value = '';
     document.getElementById('is-snipe').checked = false;
     document.getElementById("mark-snipe").innerText = "Snipe?"
-    document.getElementById("mark-snipe").removeAttribute("disabled");
     document.getElementById('photo-preview').hidden = true;
     document.getElementById('messages').hidden = false;
     ev.preventDefault();
@@ -214,7 +212,6 @@ window.onload = function () {
         }else{
             document.getElementById('game-result').innerText = winner;
         }
-        console.log("dssd")
         var targetsState = document.getElementById('targets-state');
         for (var key of Object.keys(gameState.targets)) {
             var outerLi = document.createElement('li');
@@ -231,12 +228,6 @@ window.onload = function () {
             var innerLi = document.createElement('li');
             innerLi.innerText = "left: " + gameState.targets[key].map(x=> gameState.userList[x].username).join(" -> ");    
             ul.appendChild(innerLi);
-
-            // var innerLi = document.createElement('li');
-            // var got = document.createElement('p');
-            // var text = gameState.userList[key].username + ":" + gameState.userList[gameState.targets[key][0]].username;
-            // element.innerText = text;
-            // targetsElement.appendChild(element);
             targetsState.appendChild(outerLi);
         }
 
@@ -261,6 +252,9 @@ window.onload = function () {
             inPlayView();
         }else if(gameState.state == NOT_STARTED){
             document.getElementById('not-started').hidden = false;
+            if(Object.entries(gameState.userList).length > 1){
+                document.getElementById('make-targets').removeAttribute('disabled');
+            }
             var userList = document.getElementById('user-list');
             userList.innerHTML = '';
             var li = document.createElement('li');
@@ -280,6 +274,9 @@ window.onload = function () {
 
     socket.on('New user', function (msg) {
         gameState = msg.gameState;
+        if(Object.entries(gameState.userList).length > 1){
+            document.getElementById('make-targets').removeAttribute('disabled');
+        }
         // msg needs to tell us which new user joined
         newUser = gameState.userList[msg.publicId].username;
         var userList = document.getElementById('user-list');
