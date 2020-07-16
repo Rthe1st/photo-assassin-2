@@ -1,0 +1,122 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Photo Assassin</title>
+    <style>
+        #map {
+            height: 100%;
+        }
+        html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+    <!--should be coded on the assumption that viewer might not be a player-->
+    <script>
+        const gameId = decodeURIComponent(document.cookie.replace(/(?:(?:^|.*;\s*)gameId\s*\=\s*([^;]*).*$)|^.*$/, "$1"));
+        console.log(gameId);
+        const privateId = document.cookie.replace(/(?:(?:^|.*;\s*)privateId\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+        const publicId = document.cookie.replace(/(?:(?:^|.*;\s*)publicId\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+
+        var gameState;
+        const getData = async () => {
+            const response = await fetch(window.location.href + "?format=json");
+            gameState = await response.json();
+            console.log(gameState);
+            setUpPage(gameState);
+            initMap();
+        }
+
+        function setUpPage(gameState) {
+            const username = gameState.userList[publicId].username;
+            document.getElementById("username").innerText = username;
+            if (gameState.userList[gameState.winner]) {
+                document.getElementById('game-result').innerText = gameState.userList[gameState.winner].username;
+            } else {
+                document.getElementById('game-result').innerText = gameState.winner;
+            }
+            var targetsState = document.getElementById('targets-state');
+            for (var key of Object.keys(gameState.targets)) {
+                var outerLi = document.createElement('li');
+                var ul = document.createElement('ul');
+                var innerLi = document.createElement('li');
+                innerLi.innerText = gameState.userList[key].username
+                outerLi.appendChild(innerLi);
+                outerLi.appendChild(ul);
+                var innerLi = document.createElement('li');
+                //todo: map public ids to usernames
+                innerLi.innerText = "got: " + gameState.targetsGot[key].map(x => gameState.userList[x].username).join(" -> ");
+                ul.appendChild(innerLi);
+
+                var innerLi = document.createElement('li');
+                innerLi.innerText = "left: " + gameState.targets[key].map(x => gameState.userList[x].username).join(" -> ");
+                ul.appendChild(innerLi);
+                targetsState.appendChild(outerLi);
+            }
+            document.getElementById('next-game-link').setAttribute('href', `/?code=${gameState.nextCode}&username=${username}`);
+        }
+
+        window.onload = function () {
+            getData();
+            document.getElementById('show-map').onclick = function(){
+                document.getElementById('info').hidden = !document.getElementById('info').hidden;
+                document.getElementById('map').hidden = !document.getElementById('map').hidden;
+            }
+        };
+
+        var ready = false;
+        function initMap() {
+            //hack to check that both google maps is loaded
+            // and game data has been fetched
+            console.log("called");
+            if (!ready) {
+                console.log("not ready");
+                ready = true;
+                return;
+            }
+            var map = new google.maps.Map(document.getElementById('map'), {
+                zoom: 17,
+                center: { lat: 51.402229, lng: -0.022935 },
+                mapTypeId: 'satellite'
+            });
+
+            console.log(gameState.positions[publicId]);
+            var flightPlanCoordinates = [];
+            gameState.positions[publicId].forEach(x => {flightPlanCoordinates.push({lat: x.latitude, lng: x.longitude});});
+
+            console.log(flightPlanCoordinates);
+
+            var flightPath = new google.maps.Polyline({
+                path: flightPlanCoordinates,
+                geodesic: true,
+                strokeColor: '#FF0000',
+                strokeOpacity: 1.0,
+                strokeWeight: 2
+            });
+
+            flightPath.setMap(map);
+        }
+    </script>
+    <script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDpVE1utBPfvtw9Y0b6LVAIWBJGxr7POUQ&callback=initMap">
+        </script>
+</head>
+
+<body>
+    <button id="show-map">Toggle map</button>
+    <div id="info">
+        <p id="username"></p>
+        <!--having this seems useful even for historic games
+        lets you trace the order games were player in-->
+        <a id="next-game-link">Next game</a>
+        <h2>Winner</h2>
+        <p id="game-result"></p>
+        <ul id="targets-state"></ul>
+    </div>
+    <div id="map" hidden></div>
+</body>
+
+</html>

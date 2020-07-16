@@ -50,7 +50,7 @@ exports.port = port;
 
 app.use('/static', express.static(__dirname + '/public'));
 
-function makeTargets(game, gameLength){
+function makeTargets(game, gameLength, countDown){
   game.startTime = Date.now();
   if(!isNaN(parseInt(gameLength))){
     game.gameLength = parseInt(gameLength) * 1000;
@@ -58,9 +58,15 @@ function makeTargets(game, gameLength){
     game.gameLength = 1000*60*5;//5 min game by default
   }
 
+  if(!isNaN(parseInt(countDown))){
+    game.countDown = parseInt(countDown) * 1000;
+  }else{
+    game.countDown = 1000*60;//1 min countdown by default
+  }
+
   var users = Array.from(game.userList.keys());
   for(var i=0; i<users.length;i++){
-    game.targets[users[i]] = users.slice(0,i).concat(users.slice(i+1));
+    game.targets[users[i]] =users.slice(i+1).concat(users.slice(0,i));
     game.targetsGot[users[i]] = [];
   }
   game.state = TARGETS_MADE;
@@ -101,11 +107,12 @@ exports.TARGETS_MADE = TARGETS_MADE;
 exports.IN_PLAY = IN_PLAY;
 
 function gameStateForClient(game){
-  return {
+  state = {
     userList: Object.fromEntries(game.userList.entries()),
     targets: game.targets,
     targetsGot: game.targetsGot,
     gameLength: game.gameLength,
+    countDown: game.countDown,
     timeLeft: game.timeLeft,
     state: game.state,
     winner: game.winner,
@@ -114,6 +121,13 @@ function gameStateForClient(game){
     // because it could be large and is wasteful to
     // send often
   }
+
+  if(game.state == FINISHED) {
+    state["positions"] = Object.fromEntries(game.positions.entries());
+  }
+
+  return state;
+
 }
 
 // public ID cannot change, username might be changed by user
@@ -158,6 +172,7 @@ function newGame(nameSpace){
     positions: new Map(),
     startTime: undefined,
     gameLength: undefined,
+    countDown: undefined,
     timeLeft: undefined,
     nextCode: undefined,
     // this includes images and so will get huge
@@ -195,9 +210,9 @@ winner can be the winning players publicId, 'time' if the clock ran out, or unde
 function finishGame(game, winner){
   game.state = FINISHED;
   var nextCode = generateGame();
-  game.nameSpace.emit('game finished', {nextGameCode: nextCode, winner: winner});
+  game.nameSpace.emit('game finished', {nextCode: nextCode, winner: winner});
   game.winner = winner;
-  game.nextCode = generateGame();
+  game.nextCode = nextCode;
   // logger.log("verbose", "Winner", {gameCode: gameId, gameState: game.state});
 }
 
@@ -248,11 +263,24 @@ app.get('/game/:code', function(req, res){
     return;
   }
   var game = games.get(req.params.code);
+
+  if(game.state == FINISHED){
+
+    if(req.query.format == "json"){
+      res.json(gameStateForClient(game));
+      return;
+    }else{
+      res.sendFile(__dirname + '/public/archived.html');    
+      return;  
+    }
+  }
+
   if(!(game.idMapping.has(req.cookies["privateId"]))){
 
     res.redirect(`/?code=${req.params.code}`);
     return;
   }
+
   res.sendFile(__dirname + '/public/index.html');
 });
 
@@ -281,7 +309,7 @@ function ioConnect(socket){
     if(game.state != NOT_STARTED){
       return;
     }
-    makeTargets(game, msg.gameLength);
+    makeTargets(game, msg.gameLength, msg.countDown);
     logger.log("debug", "targets when made", {targets: Array.from(game.targets)});
     logger.log("verbose", "Making targets", {gameCode: gameId, gameState: game.state});
     // todo: say who made the targets
@@ -332,8 +360,6 @@ function ioConnect(socket){
     if(msg.isSnipe && msg.image){
       logger.log("debug", "targets", {targets: Array.from(game.targets)});
       var usernameWhoDidSniping = game.userList.get(publicId).username;
-      console.log(game.targets);
-      console.log(game.targets[publicId]);
       var usernameThatGotSniped = game.userList.get(game.targets[publicId][0]).username;
       botMessage = usernameWhoDidSniping + " sniped " + usernameThatGotSniped;
 
@@ -368,6 +394,7 @@ function ioConnect(socket){
 function checkGameTiming(){
   for (let [gameId, game] of games.entries()) {
     let now = Date.now();
+    //todo: need a record when we're in count down vs real game
     if (game.state == IN_PLAY
       && game.startTime + game.gameLength < now){
       finishGame(game, 'time')

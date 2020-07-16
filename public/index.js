@@ -1,3 +1,10 @@
+var currentCords = {latitude: 51.402129, longitude: -0.022835};
+function mockCords(){
+    currentCords.latitude += (Math.random()-0.5)*0.0001;
+    currentCords.longitude += (Math.random()-0.5)*0.0001;
+}
+
+
 var position = { latitude: null, longitude: null };
 function updatePosition(geolocation) {
     position.latitude = geolocation.coords.latitude;
@@ -88,6 +95,9 @@ function photoInput(event){
 
 function sendMessage(ev){
     var file = document.getElementById('photo-input').files[0];
+    if (location.hostname === "localhost" || location.hostname === "127.0.0.1"){
+        mockCords();
+    }
     message = {
         "text": document.getElementById('message').value,
         "image": file,
@@ -115,7 +125,6 @@ var gameState;
 const NOT_STARTED = "NOT STARTED";
 const TARGETS_MADE = "TARGETS MADE";
 const IN_PLAY = "IN PLAY";
-const FINISHED = "FINISHED";
 
 function updateTimeLeft(){
     document.getElementById('time-left').innerText = gameState.timeLeft / 1000;
@@ -162,8 +171,11 @@ window.onload = function () {
     document.getElementById('send-message').addEventListener('click', sendMessage);
 
     document.getElementById('make-targets').onclick = function (event) {
-        var gameLength = document.getElementById('game-length').value;
-        socket.emit('make targets', { gameLength: gameLength });
+        if(confirm('Start the game?')){
+            var gameLength = document.getElementById('game-length').value;
+            var countDown = document.getElementById('count-down').value;
+            socket.emit('make targets', { gameLength: gameLength, countDown: countDown });
+        }
     }
 
     document.getElementById('start-game').onclick = function (event) {
@@ -206,38 +218,6 @@ window.onload = function () {
         document.getElementById('game-length-ro').value = gameState.gameLength / 1000;
     }
 
-    function finishedView(winner, nextCode){
-        if(gameState.userList[winner]){
-            document.getElementById('game-result').innerText = gameState.userList[winner].username;
-        }else{
-            document.getElementById('game-result').innerText = winner;
-        }
-        var targetsState = document.getElementById('targets-state');
-        for (var key of Object.keys(gameState.targets)) {
-            var outerLi = document.createElement('li');
-            var ul = document.createElement('ul');
-            var innerLi = document.createElement('li');
-            innerLi.innerText = gameState.userList[key].username
-            outerLi.appendChild(innerLi);
-            outerLi.appendChild(ul);
-            var innerLi = document.createElement('li');
-            //todo: map public ids to usernames
-            innerLi.innerText = "got: " + gameState.targetsGot[key].map(x=> gameState.userList[x].username).join(" -> ");    
-            ul.appendChild(innerLi);
-            
-            var innerLi = document.createElement('li');
-            innerLi.innerText = "left: " + gameState.targets[key].map(x=> gameState.userList[x].username).join(" -> ");    
-            ul.appendChild(innerLi);
-            targetsState.appendChild(outerLi);
-        }
-
-        document.getElementById('finished').hidden = false;
-        document.getElementById('in-play').hidden = true;
-
-        var username = gameState.userList[publicId].username;
-        document.getElementById('next-game-link').setAttribute('href', `/?code=${nextCode}&username=${username}`);
-    }
-
     socket.on('initialization', function(msg){
         console.log('initialized');
         gameState = msg.gameState;
@@ -267,8 +247,6 @@ window.onload = function () {
             }
         }else if(gameState.state == TARGETS_MADE){
             targetsMadeView();
-        }else if(gameState.state == FINISHED){
-            finishedView(gameState.winner, gameState.nextCode);
         }
     });
 
@@ -296,7 +274,7 @@ window.onload = function () {
     });
 
     socket.on('game finished', function (msg) {
-        finishedView(msg.winner, msg.nextCode);
+        location.reload(true);
     });
 
     socket.on('timeLeft', function (msg) {
