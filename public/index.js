@@ -2,6 +2,7 @@ function testMode(){
     return location.hostname === "localhost" || location.hostname === "127.0.0.1";
 }
 
+var position = { latitude: null, longitude: null };
 
 // try https://github.com/2gis/mock-geolocation
 //set up timer, change the gps every X secondsa, to trigger the normal gps watcher
@@ -10,16 +11,20 @@ function mockCords(){
     position.longitude += (Math.random()-0.5)*0.0001;
 }
 
-var position = { latitude: null, longitude: null };
-
 function updatePosition(geolocation) {
-    position.latitude = geolocation.coords.latitude;
-    position.longitude = geolocation.coords.longitude;
+    console.log("pos update");
+    if(testMode){
+        mockCords;
+    }else{
+        position.latitude = geolocation.coords.latitude;
+        position.longitude = geolocation.coords.longitude;
+    }
     if(socket){
         socket.emit('positionUpdate', position);
     }
 }
 function dontUpdatePosition(a) {
+    alert("geo faild");
     console.log("geo loc failed");
     console.log(a);
 }
@@ -95,6 +100,7 @@ function sendMessage(ev){
     if (testMode()){
         mockCords();
     }
+    console.log(position);
     message = {
         "text": document.getElementById('message').value,
         "image": file,
@@ -249,8 +255,7 @@ window.onload = function () {
             inPlayView();
             //the first time, before they move
             if (testMode()){
-                position = {latitude: 51.402129, longitude: -0.022835};
-            }else{
+                position = {latitude: 51.402129, longitude: -0.022835};            }else{
                 navigator.geolocation.getCurrentPosition((position) => {
                     updatePosition(position.coords.latitude, position.coords.longitude);
                 });
