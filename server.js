@@ -349,7 +349,7 @@ function ioConnect(socket){
     }
   });
 
-  socket.on('positionUpdate', function(){
+  socket.on('positionUpdate', function(msg){
     if(
       msg.position.hasOwnProperty('longitude')
       && msg.position.hasOwnProperty('latitude')

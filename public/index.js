@@ -255,7 +255,8 @@ window.onload = function () {
             inPlayView();
             //the first time, before they move
             if (testMode()){
-                position = {latitude: 51.402129, longitude: -0.022835};            }else{
+                position = {latitude: 51.402129, longitude: -0.022835};
+            }else{
                 navigator.geolocation.getCurrentPosition((position) => {
                     updatePosition(position.coords.latitude, position.coords.longitude);
                 });
