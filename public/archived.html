@@ -112,6 +112,12 @@
             var flightPlanCoordinates = [];
             gameState.positions[publicId].forEach(x => {flightPlanCoordinates.push({lat: x.latitude, lng: x.longitude});});
 
+            for(var i of gameState.positions[publicId]){
+                var item = document.createElement('li');
+                item.innerText = JSON.stringify(i);
+                document.getElementById("positions").appendChild(item);
+            }
+
             console.log(flightPlanCoordinates);
 
             var map = new google.maps.Map(document.getElementById('map'), {
@@ -150,6 +156,8 @@
                 <h2>Winner</h2>
                 <p id="game-result"></p>
                 <ul id="targets-state"></ul>
+                <h3>debug data</h3>
+                <ul id="positions"></ul>
             </div>
             <div id="map" hidden></div>
         </div>

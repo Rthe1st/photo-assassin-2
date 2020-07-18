@@ -236,7 +236,7 @@ window.onload = function () {
         navigator.geolocation.watchPosition(
             updatePosition,
             dontUpdatePosition,
-            { "enableHighAccuracy": true }
+            { "enableHighAccuracy": true, "maximumAge": 10000 }
         );
     }
 
