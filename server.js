@@ -74,6 +74,11 @@ function makeTargets(game, gameLength, countDown){
 
 function start(game){
   game.state = IN_PLAY;
+  if(game.countDown){
+    game.subState = COUNTDOWN;
+  }else{
+    game.subState = PLAYING;
+  }
 }
 
 function snipe(game, sniperId){
@@ -102,6 +107,11 @@ var NOT_STARTED = "NOT STARTED";
 var TARGETS_MADE = "TARGETS MADE";
 var IN_PLAY = "IN PLAY";
 
+// substates
+// inplay:
+var COUNTDOWN = "COUNTDOWN";
+var PLAYING = "PLAYING";
+
 exports.NOT_STARTED = NOT_STARTED;
 exports.TARGETS_MADE = TARGETS_MADE;
 exports.IN_PLAY = IN_PLAY;
@@ -115,6 +125,7 @@ function gameStateForClient(game){
     countDown: game.countDown,
     timeLeft: game.timeLeft,
     state: game.state,
+    subState: game.subState,
     winner: game.winner,
     nextCode: game.nextCode,
     //we don't include chathistory here
@@ -162,6 +173,8 @@ function newGame(nameSpace){
   return {
     nameSpace: nameSpace,
     state: NOT_STARTED,
+    //substate is used for dividing the in play state in countdown and playing, for example
+    subState: undefined,
     // this maps the private ID given to a client via a cookie
     // to an ID that is shown to other players
     // if other players learn your private ID, they can impersonate you
@@ -209,6 +222,7 @@ winner can be the winning players publicId, 'time' if the clock ran out, or unde
   */
 function finishGame(game, winner){
   game.state = FINISHED;
+  game.subState = undefined;
   var nextCode = generateGame();
   game.nameSpace.emit('game finished', {nextCode: nextCode, winner: winner});
   game.winner = winner;
@@ -294,8 +308,9 @@ function ioConnect(socket){
   let privateId = socket.handshake.query.privateId;
   
   //todo: allow sockets to connect in "view only" mode if they're not players
+  var publicId;
   if(game.idMapping.has(privateId)){
-    var publicId = game.idMapping.get(privateId);
+    publicId = game.idMapping.get(privateId);
   }else{
     logger.log("verbose", `invalid privateId ${privateId}`);
     return;
@@ -334,6 +349,19 @@ function ioConnect(socket){
     }
   });
 
+  socket.on('positionUpdate', function(){
+    if(
+      msg.position.hasOwnProperty('longitude')
+      && msg.position.hasOwnProperty('latitude')
+      && msg.position.longitude != null
+      && msg.position.latitude != null
+      && game.state == IN_PLAY
+    ){
+      game.positions.get(publicId).push(msg.position);
+    }
+
+  });
+
   socket.on('chat message', function(msg){
     if(game.state != IN_PLAY){
       logger.log("debug", "chat message while not IN_PLAY");
@@ -357,7 +385,7 @@ function ioConnect(socket){
     // snipes must contain an image
     // but not all images have to be snipes
     // for example, to send a selfie
-    if(msg.isSnipe && msg.image){
+    if(msg.isSnipe && msg.image && game.subState == PLAYING){
       logger.log("debug", "targets", {targets: Array.from(game.targets)});
       var usernameWhoDidSniping = game.userList.get(publicId).username;
       var usernameThatGotSniped = game.userList.get(game.targets[publicId][0]).username;
@@ -400,7 +428,8 @@ function checkGameTiming(){
       finishGame(game, 'time')
       logger.log("verbose", "TimeUp", {gameCode: gameId, gameState: game.state});
     }else if(game.state == IN_PLAY){
-      var timeLeft = game.startTime + game.gameLength - now;
+      var timeLeft = game.startTime + game.countDown + game.gameLength - now;
+
       logger.log("debug", "timeLeft", 
         {
           gameCode: gameId,
@@ -413,7 +442,12 @@ function checkGameTiming(){
       );
 
       game.timeLeft = timeLeft;
-      game.nameSpace.emit('timeLeft', {gameState: gameStateForClient(game)});
+      var forClient = {gameState: gameStateForClient(game)};
+      if(game.subState == COUNTDOWN && timeLeft < game.gameLength){
+        game.subState = PLAYING;
+        forClient["countdownOver"] = true;
+      }
+      game.nameSpace.emit('timeLeft', forClient);
     }
   };
 }

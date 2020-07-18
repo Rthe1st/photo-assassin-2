@@ -23,7 +23,7 @@
             <!--https://stackoverflow.com/questions/29661058/how-do-i-add-text-based-units-like-lbs-floated-to-right-inside-of-an-input-ele-->
             <label>Game Length (sec)<input id="game-length" value="300"></label>
             <!--todo: time people have to hide before game starts-->
-            <label>Countdown (sec)<input id="count-down"></label>
+            <label>Countdown (sec)<input id="count-down" value="60"></label>
         </div>
     </div>
   </div>
@@ -43,14 +43,17 @@
             <!--https://stackoverflow.com/questions/29661058/how-do-i-add-text-based-units-like-lbs-floated-to-right-inside-of-an-input-ele-->
             <label>Game Length (sec)<input id="game-length-ro" readonly></label>
             <!--todo: time people have to hide before game starts-->
-            <!-- <label>Countdown (sec)<input id="count-down"></label> -->
+            <label>Countdown (sec)<input id="count-down-ro" readonly></label>
         </div>
     </div>
   </div>
   <div id="in-play" hidden class="container">
     <div class="top">
       <p class="username" style="grid-column: 1;grid-row: 1;"></p>
-      <p id="time-left" style="grid-column: 2;grid-row: 1;"></p>
+      <div style="grid-column: 2;grid-row: 1;">
+        <p id="sub-state"></p>
+        <p id="time-left"></p>
+      </div>
       <button id="stop-game" style="grid-column: 3;grid-row: 1;">Stop</button>
       <p id="target"></p>
     </div>
@@ -69,17 +72,6 @@
       <button id="camera-button" class="fa">&#xf030;</button>
       <input hidden id="photo-input" type="file" accept="image/*" capture="environment">
     </form>
-  </div>
-  <div id="finished" hidden class="container">
-    <div class="top">
-      <p class="username" style="grid-column: 1;grid-row: 1;"></p>
-      <a id="next-game-link" style="grid-column: 3;grid-row: 1;">Next game</a>
-    </div>
-    <div class="middle">
-      <h2>Winner</h2>
-      <p id="game-result"></p>
-      <ul id="targets-state"></ul>
-    </div>
   </div>
 </body>
 

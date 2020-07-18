@@ -1,3 +1,7 @@
+function testMode(){
+    return location.hostname === "localhost" || location.hostname === "127.0.0.1";
+}
+
 
 // try https://github.com/2gis/mock-geolocation
 //set up timer, change the gps every X secondsa, to trigger the normal gps watcher
@@ -7,14 +11,13 @@ function mockCords(){
 }
 
 var position = { latitude: null, longitude: null };
-if (location.hostname === "localhost" || location.hostname === "127.0.0.1"){
-    position = {latitude: 51.402129, longitude: -0.022835};
-}
 
 function updatePosition(geolocation) {
-            //todo: send back to sever when we move
     position.latitude = geolocation.coords.latitude;
     position.longitude = geolocation.coords.longitude;
+    if(socket){
+        socket.emit('positionUpdate', position);
+    }
 }
 function dontUpdatePosition(a) {
     console.log("geo loc failed");
@@ -67,18 +70,6 @@ function proccessMsg(msg){
     }
 }
 
-function markSnipe(event){
-    //ui is a bit confusing, make clearer
-    var isSnipe = document.getElementById('is-snipe').checked;
-    if(isSnipe){
-        document.getElementById('is-snipe').checked = false;
-        document.getElementById("mark-snipe").innerText = "Snipe?"
-    }else{
-        document.getElementById('is-snipe').checked = true;
-        document.getElementById("mark-snipe").innerText = "Sniped ✓"
-    }
-}
-
 function deletePreview(){
     document.getElementById('photo-preview').hidden = true;
     document.getElementById('messages').hidden = false;
@@ -101,7 +92,7 @@ function photoInput(event){
 
 function sendMessage(ev){
     var file = document.getElementById('photo-input').files[0];
-    if (location.hostname === "localhost" || location.hostname === "127.0.0.1"){
+    if (testMode()){
         mockCords();
     }
     message = {
@@ -133,7 +124,12 @@ const TARGETS_MADE = "TARGETS MADE";
 const IN_PLAY = "IN PLAY";
 
 function updateTimeLeft(){
-    document.getElementById('time-left').innerText = gameState.timeLeft / 1000;
+    document.getElementById('sub-state').innerText = gameState.subState;
+    if(gameState.subState == "COUNTDOWN"){
+        document.getElementById('time-left').innerText = (gameState.timeLeft - gameState.gameLength) / 1000;
+    }else{
+        document.getElementById('time-left').innerText = (gameState.timeLeft) / 1000;
+    }
 }
 
 // gameId needs to be decoded because it contains a '/'
@@ -156,6 +152,25 @@ const socket = io(
 
 window.onload = function () {
 
+    function markSnipe(event){
+        //dont think this needs to check game state
+        // because if theres not game state the button will be hidden
+        if(gameState && gameState.subState == "COUNTDOWN"){
+            alert("Can't snipe yet - wait to countdown is over");
+            return;
+        }
+        //ui is a bit confusing, make clearer
+        var isSnipe = document.getElementById('is-snipe').checked;
+        if(isSnipe){
+            document.getElementById('is-snipe').checked = false;
+            document.getElementById("mark-snipe").innerText = "Snipe?"
+        }else{
+            document.getElementById('is-snipe').checked = true;
+            document.getElementById("mark-snipe").innerText = "Sniped ✓"
+        }
+    }
+
+
     document.getElementById("mark-snipe").addEventListener('click', markSnipe);
 
     document.getElementById("delete-preview").addEventListener('click', deletePreview);
@@ -163,17 +178,6 @@ window.onload = function () {
     document.getElementById("camera-button").addEventListener('click', cameraButton);
 
     document.getElementById('photo-input').addEventListener('change', photoInput);
-
-    //the first time, before they move
-    navigator.geolocation.getCurrentPosition((position) => {
-        updatePosition(position.coords.latitude, position.coords.longitude);
-    });
-
-    navigator.geolocation.watchPosition(
-        updatePosition,
-        dontUpdatePosition,
-        { "enableHighAccuracy": true }
-    );
 
     document.getElementById('send-message-form').addEventListener('submit', function (ev) {
         ev.preventDefault();
@@ -206,6 +210,7 @@ window.onload = function () {
         setCurrentTarget();
         document.getElementById('targets-made').hidden = true;
         document.getElementById('in-play').hidden = false;
+        document.getElementById('sub-state').innerText = gameState.subState;
         document.getElementById('time-left').innerText = gameState.timeLeft / 1000;
     }
 
@@ -227,13 +232,14 @@ window.onload = function () {
             targetsElement.appendChild(element);
         }
         document.getElementById('game-length-ro').value = gameState.gameLength / 1000;
+        document.getElementById('count-down-ro').value = gameState.countDown / 1000;
     }
 
     socket.on('initialization', function(msg){
         console.log('initialized');
         gameState = msg.gameState;
         console.log(gameState.state);
-
+        // console.log(msg.chatHistory);
         loadChatHistory(msg.chatHistory);
 
         for (var element of document.getElementsByClassName('username')) {
@@ -241,6 +247,20 @@ window.onload = function () {
         }
         if(gameState.state == IN_PLAY){
             inPlayView();
+            //the first time, before they move
+            if (testMode()){
+                position = {latitude: 51.402129, longitude: -0.022835};
+            }else{
+                navigator.geolocation.getCurrentPosition((position) => {
+                    updatePosition(position.coords.latitude, position.coords.longitude);
+                });
+            }
+
+            navigator.geolocation.watchPosition(
+                updatePosition,
+                dontUpdatePosition,
+                { "enableHighAccuracy": true }
+            );
         }else if(gameState.state == NOT_STARTED){
             document.getElementById('not-started').hidden = false;
             if(Object.entries(gameState.userList).length > 1){
@@ -290,6 +310,9 @@ window.onload = function () {
 
     socket.on('timeLeft', function (msg) {
         gameState = msg.gameState;
+        if(msg.countDownOver){
+            //update screen to show in play mode
+        }
         updateTimeLeft();
     });
 
