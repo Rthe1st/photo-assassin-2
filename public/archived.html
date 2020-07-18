@@ -7,14 +7,41 @@
     <style>
         #map {
             height: 100%;
+            width: 100%;
         }
         html, body {
             height: 100%;
             margin: 0;
             padding: 0;
         }
+        .container {
+            font-size: 2em;
+            height: 100%;
+            width: 100%;
+            position: fixed;
+            display: flex;
+            flex-direction: column;
+        }
+        /* p h2 ul {
+            text-align: center;
+        } */
+
         button, input, label[type=text], textarea {
             font-size: 150%;
+        }
+        .top {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .middle-2 {
+            list-style-type: none;
+            overflow-y: auto;
+            width: 100%;
+            height: 100%;
+            flex: 1;
+            display: flex;
+            flex-direction: row;
         }
     </style>
     <!--should be coded on the assumption that viewer might not be a player-->
@@ -110,17 +137,23 @@
 </head>
 
 <body>
-    <button id="show-map">Toggle map</button>
-    <div id="info">
-        <p id="username"></p>
-        <!--having this seems useful even for historic games
+    <div class="container" id="not-started" hidden>
+        <div class="top">
+            <p id="username" style="grid-column: 1;grid-row: 1;"></p>
+            <button id="show-map" style="grid-column: 2;grid-row: 1;">Map</button>
+            <!--having this seems useful even for historic games
         lets you trace the order games were player in-->
-        <a id="next-game-link">Next game</a>
-        <h2>Winner</h2>
-        <p id="game-result"></p>
-        <ul id="targets-state"></ul>
+            <a id="next-game-link" style="grid-column: 3;grid-row: 1;">Next game</a>
+        </div>
+        <div class="middle-2">
+            <div id="info">
+                <h2>Winner</h2>
+                <p id="game-result"></p>
+                <ul id="targets-state"></ul>
+            </div>
+            <div id="map" hidden></div>
+        </div>
     </div>
-    <div id="map" hidden></div>
 </body>
 
 </html>

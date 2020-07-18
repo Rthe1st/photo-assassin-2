@@ -194,7 +194,7 @@ window.onload = function () {
     document.getElementById('send-message').addEventListener('click', sendMessage);
 
     document.getElementById('make-targets').onclick = function (event) {
-        if(confirm('Start the game?')){
+        if(confirm('Are you sure?')){
             var gameLength = document.getElementById('game-length').value;
             var countDown = document.getElementById('count-down').value;
             socket.emit('make targets', { gameLength: gameLength, countDown: countDown });
