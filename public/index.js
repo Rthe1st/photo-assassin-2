@@ -1,3 +1,6 @@
+
+// try https://github.com/2gis/mock-geolocation
+//set up timer, change the gps every X secondsa, to trigger the normal gps watcher
 function mockCords(){
     position.latitude += (Math.random()-0.5)*0.0001;
     position.longitude += (Math.random()-0.5)*0.0001;
@@ -160,6 +163,11 @@ window.onload = function () {
     document.getElementById("camera-button").addEventListener('click', cameraButton);
 
     document.getElementById('photo-input').addEventListener('change', photoInput);
+
+    //the first time, before they move
+    navigator.geolocation.getCurrentPosition((position) => {
+        updatePosition(position.coords.latitude, position.coords.longitude);
+    });
 
     navigator.geolocation.watchPosition(
         updatePosition,
