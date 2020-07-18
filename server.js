@@ -51,7 +51,6 @@ exports.port = port;
 app.use('/static', express.static(__dirname + '/public'));
 
 function makeTargets(game, gameLength, countDown){
-  game.startTime = Date.now();
   if(!isNaN(parseInt(gameLength))){
     game.gameLength = parseInt(gameLength) * 1000;
   }else{
@@ -73,6 +72,7 @@ function makeTargets(game, gameLength, countDown){
 }
 
 function start(game){
+  game.startTime = Date.now();
   game.state = IN_PLAY;
   if(game.countDown){
     game.subState = COUNTDOWN;
@@ -349,15 +349,15 @@ function ioConnect(socket){
     }
   });
 
-  socket.on('positionUpdate', function(msg){
+  socket.on('positionUpdate', function(position){
     if(
-      msg.position.hasOwnProperty('longitude')
-      && msg.position.hasOwnProperty('latitude')
-      && msg.position.longitude != null
-      && msg.position.latitude != null
+      position.hasOwnProperty('longitude')
+      && position.hasOwnProperty('latitude')
+      && position.longitude != null
+      && position.latitude != null
       && game.state == IN_PLAY
     ){
-      game.positions.get(publicId).push(msg.position);
+      game.positions.get(publicId).push(position);
     }
 
   });

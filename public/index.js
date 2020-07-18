@@ -12,10 +12,11 @@ function mockCords(){
 }
 
 function updatePosition(geolocation) {
-    console.log("pos update");
-    if(testMode){
-        mockCords;
+    if(testMode()){
+        console.log("mock pos update");
+        mockCords();
     }else{
+        console.log("real pos update");
         position.latitude = geolocation.coords.latitude;
         position.longitude = geolocation.coords.longitude;
     }
@@ -100,6 +101,7 @@ function sendMessage(ev){
     if (testMode()){
         mockCords();
     }
+    console.log("position");
     console.log(position);
     message = {
         "text": document.getElementById('message').value,
@@ -218,6 +220,24 @@ window.onload = function () {
         document.getElementById('in-play').hidden = false;
         document.getElementById('sub-state').innerText = gameState.subState;
         document.getElementById('time-left').innerText = gameState.timeLeft / 1000;
+        //the first time, before they move
+        if (testMode()){
+            console.log("set fake start pos");
+            position.latitude = 51.402129;
+            position.longitude = -0.022835;
+            console.log(position);
+        }else{
+            console.log("real start pos")
+            navigator.geolocation.getCurrentPosition((position) => {
+                updatePosition(position.coords.latitude, position.coords.longitude);
+            });
+        }
+
+        navigator.geolocation.watchPosition(
+            updatePosition,
+            dontUpdatePosition,
+            { "enableHighAccuracy": true }
+        );
     }
 
     function targetsMadeView(){
@@ -253,20 +273,6 @@ window.onload = function () {
         }
         if(gameState.state == IN_PLAY){
             inPlayView();
-            //the first time, before they move
-            if (testMode()){
-                position = {latitude: 51.402129, longitude: -0.022835};
-            }else{
-                navigator.geolocation.getCurrentPosition((position) => {
-                    updatePosition(position.coords.latitude, position.coords.longitude);
-                });
-            }
-
-            navigator.geolocation.watchPosition(
-                updatePosition,
-                dontUpdatePosition,
-                { "enableHighAccuracy": true }
-            );
         }else if(gameState.state == NOT_STARTED){
             document.getElementById('not-started').hidden = false;
             if(Object.entries(gameState.userList).length > 1){
