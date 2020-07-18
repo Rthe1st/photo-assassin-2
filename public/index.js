@@ -1,12 +1,15 @@
-var currentCords = {latitude: 51.402129, longitude: -0.022835};
 function mockCords(){
-    currentCords.latitude += (Math.random()-0.5)*0.0001;
-    currentCords.longitude += (Math.random()-0.5)*0.0001;
+    position.latitude += (Math.random()-0.5)*0.0001;
+    position.longitude += (Math.random()-0.5)*0.0001;
 }
 
-
 var position = { latitude: null, longitude: null };
+if (location.hostname === "localhost" || location.hostname === "127.0.0.1"){
+    position = {latitude: 51.402129, longitude: -0.022835};
+}
+
 function updatePosition(geolocation) {
+            //todo: send back to sever when we move
     position.latitude = geolocation.coords.latitude;
     position.longitude = geolocation.coords.longitude;
 }
