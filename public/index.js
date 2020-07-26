@@ -200,6 +200,12 @@ window.onload = function () {
         }
     }
 
+    document.getElementById('undo-make-targets').onclick = function (event) {
+        if(confirm('Back to game setup?')){
+            socket.emit('undo make targets');
+        }
+    }
+
     document.getElementById('start-game').onclick = function (event) {
         if(confirm('Start the game?')){
             socket.emit('start game');
@@ -277,37 +283,75 @@ window.onload = function () {
             if(Object.entries(gameState.userList).length > 1){
                 document.getElementById('make-targets').removeAttribute('disabled');
             }
-            var userList = document.getElementById('user-list');
-            userList.innerHTML = '';
-            var li = document.createElement('li');
-            li.innerText = "Players:";
-            userList.append(li);
-            for (const [index, user] of Object.entries(gameState.userList)) {
-                var li = document.createElement('li');
-                li.innerText = user.username;
-                userList.append(li);
-            }
+            resetUserList(gameState.userList);
         }else if(gameState.state == TARGETS_MADE){
             targetsMadeView();
         }
     });
+
+    function resetUserList(userList){
+        var userListElement = document.getElementById('user-list');
+        userListElement.innerHTML = '';
+        var li = document.createElement('li');
+        li.innerText = "Players:";
+        userListElement.append(li);
+        for (const [publicId, user] of Object.entries(userList)) {
+            userListElement.append(createUserElement(user.username, publicId));
+        }
+    }
+
+    function createUserElement(username, publicId){
+        var li = document.createElement('li');
+        var text = document.createElement('p');
+        text.innerText = username;
+        li.appendChild(text);
+        var remove = document.createElement('button');
+        remove.setAttribute('id', `delete-user-${publicId}`);
+        remove.innerText = 'Remove';
+        remove.onclick = function(){
+            if(confirm(`Remove ${username} from the game?`)){
+                socket.emit('remove user', { publicId: publicId });
+            }
+        }
+        li.appendChild(remove);
+        return li;
+    }
 
     socket.on('New user', function (msg) {
         gameState = msg.gameState;
         if(Object.entries(gameState.userList).length > 1){
             document.getElementById('make-targets').removeAttribute('disabled');
         }
-        // msg needs to tell us which new user joined
         newUser = gameState.userList[msg.publicId].username;
         var userList = document.getElementById('user-list');
-        var li = document.createElement('li');
-        li.innerText = newUser;
-        userList.append(li);
+        userList.append(createUserElement(newUser, msg.publicId));
+    });
+
+    socket.on('Remove user', function(msg){
+        gameState = msg.gameState;
+        console.log(gameState.userList);
+        resetUserList(gameState.userList);
+        if(publicId == msg.publicId){
+            //delete our cookie and reload
+            // so we look like a brandnew user
+            document.cookie = name+'=; Max-Age=-99999999;';
+            location.reload(true);
+        }
     });
 
     socket.on('make targets', function (msg) {
         gameState = msg.gameState;
         targetsMadeView();
+    });
+
+    socket.on('undo make targets', function (msg) {
+        gameState = msg.gameState;
+        //reseting values isn't needed
+        // because they should already be in their from the make-targets message
+        document.getElementById('game-length').value = gameState.gameLength /1000;
+        document.getElementById('count-down').value = gameState.countDown /1000;
+        document.getElementById('targets-made').hidden = true;
+        document.getElementById('not-started').hidden = false;
     });
 
     socket.on('start', function (msg) {

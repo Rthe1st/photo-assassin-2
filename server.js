@@ -71,6 +71,14 @@ function makeTargets(game, gameLength, countDown){
   game.state = TARGETS_MADE;
 }
 
+function undoMakeTargets(game){
+  game.gameLength = undefined;
+  game.countDown = undefined;
+  game.targets = {};
+  game.targetsGot = {};
+  game.state = NOT_STARTED;
+}
+
 function start(game){
   game.startTime = Date.now();
   game.state = IN_PLAY;
@@ -118,7 +126,7 @@ exports.IN_PLAY = IN_PLAY;
 
 function gameStateForClient(game){
   state = {
-    userList: Object.fromEntries(game.userList.entries()),
+    userList: Object.fromEntries(game.userList),
     targets: game.targets,
     targetsGot: game.targetsGot,
     gameLength: game.gameLength,
@@ -143,9 +151,9 @@ function gameStateForClient(game){
 
 // public ID cannot change, username might be changed by user
 function addPlayer(game, privateId, publicId, username){
-  game.idMapping.set(privateId,publicId);
-  game.userList.set(publicId,{username: username});
-  game.positions.set(publicId, []);
+  game.idMapping.set(privateId,publicId.toString());
+  game.userList.set(publicId.toString(),{username: username});
+  game.positions.set(publicId.toString(), []);
   
 }
 
@@ -153,7 +161,8 @@ function addUserToGame(code, res, username){
     var game = games.get(code);
 
     var randomness = crypto.randomBytes(256).toString('hex');
-    var publicId = game.idMapping.size;
+    var publicId = game.nextId;
+    game.nextId += 1;//todo: handle this malicously overflowing
     // including publicId because its guaranteed to be unique
     // todo: is this true even if people leave the game?
     var privateId = `${randomness}-${publicId}`;
@@ -169,6 +178,20 @@ function addUserToGame(code, res, username){
     logger.log("verbose", "Adding user to game", {publicId: publicId, gameCode: code});
 }
 
+function removeUserFromGame(game, publicId){
+  for(var [privateId, currentPublicId] of game.idMapping.entries()){
+    if(publicId == currentPublicId){
+      game.idMapping.delete(privateId);
+      break;
+    }
+  }
+  console.log(game.userList);
+  game.userList.delete(publicId);
+  console.log(game.userList);
+  console.log(game.userList.get(publicId));
+  game.positions.delete(publicId);
+}
+
 function newGame(nameSpace){
   return {
     nameSpace: nameSpace,
@@ -179,6 +202,7 @@ function newGame(nameSpace){
     // to an ID that is shown to other players
     // if other players learn your private ID, they can impersonate you
     idMapping: new Map(),
+    nextId: 0,//includes old users - used to get a historicly unique id for a user
     userList: new Map(),
     targets: {},
     targetsGot: {},
@@ -329,6 +353,28 @@ function ioConnect(socket){
     logger.log("verbose", "Making targets", {gameCode: gameId, gameState: game.state});
     // todo: say who made the targets
     socket.nsp.emit('make targets', {gameState: gameStateForClient(game)});
+  });
+
+  socket.on('undo make targets', function(msg){
+    if(game.state != TARGETS_MADE){
+      return;
+    }
+    // save gamestate before wipe
+    // so we can use the settings as default values for the input fields
+    var gameState = gameStateForClient(game);
+    undoMakeTargets(game);
+    socket.nsp.emit('undo make targets', {gameState: gameState});
+  });
+
+  socket.on('remove user', function(msg){
+    if(game.state != NOT_STARTED){
+      return;
+    }
+    console.log(gameStateForClient(game).userList);
+    console.log(msg)
+    removeUserFromGame(game, msg.publicId);
+    game.nameSpace.emit('Remove user', {publicId: msg.publicId, gameState: gameStateForClient(game)});
+    console.log(gameStateForClient(game).userList);
   });
 
   socket.on('start game', function(msg){
