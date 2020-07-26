@@ -213,7 +213,7 @@ function generateGame(){
 
 /*
 when a game ends this function should be responsible for
-1) Generating the next game, and messagine the code back to placers
+1) Generating the next game, and message in the code back to placers
   (so they can join it easily)
 2) saving the data from the game into a form you can use to review it
   (this should then be sent back to players / accessible from a link)
@@ -372,12 +372,19 @@ function ioConnect(socket){
 
     logger.log("debug", "positionUpdate", {'positionHistory': game.positions.get(publicId), 'position': msg.position});
 
+    var wasSnipe = msg.isSnipe && msg.image && game.subState == PLAYING;
+
     if(
       msg.position.hasOwnProperty('longitude')
       && msg.position.hasOwnProperty('latitude')
       && msg.position.longitude != null
       && msg.position.latitude != null
     ){
+      if(wasSnipe){
+        var snipedId = game.targets[publicId][0];
+        //todo: may send request to target for current pos?
+        msg.position["snipeInfo"] = {"target": snipedId, "targetPosition": game.positions.get(snipedId)[game.positions.get(snipedId).length -1]};
+      }
       game.positions.get(publicId).push(msg.position);
     }
     var botMessage;
@@ -385,7 +392,7 @@ function ioConnect(socket){
     // snipes must contain an image
     // but not all images have to be snipes
     // for example, to send a selfie
-    if(msg.isSnipe && msg.image && game.subState == PLAYING){
+    if(wasSnipe){
       logger.log("debug", "targets", {targets: Array.from(game.targets)});
       var usernameWhoDidSniping = game.userList.get(publicId).username;
       var usernameThatGotSniped = game.userList.get(game.targets[publicId][0]).username;

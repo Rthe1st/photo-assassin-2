@@ -8,6 +8,8 @@ This project is an app to make playing [Photo Assassin](https://github.com/Rthe1
 * [demo socket-io project](https://github.com/socketio/chat-example)
 * [google maps api](https://developers.google.com/maps/documentation/javascript/examples/polyline-simple)
 
+CNAME'd to Cloudflare for forcing https and for caching under photo-assassin.prangten.com
+
 ## Run locally
 
 ```bash

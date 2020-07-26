@@ -39,11 +39,10 @@ function targetDisplay(targets) {
     return output
 }
 
-function createChatElement(publicId, message, image) {
-    var username = gameState.userList[publicId].username;
+function createChatElement(sender, message, image) {
     var li = document.createElement('li');
     var span = document.createElement('span');
-    span.innerText = username;
+    span.innerText = sender;
 
     span.classList.add("username");
     li.appendChild(span);
@@ -70,7 +69,7 @@ function loadChatHistory(chatHistory) {
 }
 
 function proccessMsg(msg){
-    createChatElement(msg.publicId, msg.text, msg.image);
+    createChatElement(gameState.userList[msg.publicId].username, msg.text, msg.image);
     if (msg.botMessage) {
         createChatElement('Gamebot3000', msg.botMessage);
     }

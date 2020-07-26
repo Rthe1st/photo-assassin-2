@@ -77,8 +77,7 @@
                 outerLi.appendChild(innerLi);
                 outerLi.appendChild(ul);
                 var innerLi = document.createElement('li');
-                //todo: map public ids to usernames
-                innerLi.innerText = "got: " + gameState.targetsGot[key].map(x => gameState.userList[x].username).join(" -> ");
+                innerLi.innerText = "got " + gameState.targetsGot[key].map(x => gameState.userList[x].username).join(" -> ");
                 ul.appendChild(innerLi);
 
                 var innerLi = document.createElement('li');
@@ -87,15 +86,141 @@
                 targetsState.appendChild(outerLi);
             }
             document.getElementById('next-game-link').setAttribute('href', `/?code=${gameState.nextCode}&username=${username}`);
+
+            var options = document.getElementById("options");
+            for(const [playerPublicId, player] of Object.entries(gameState.userList)){
+                var input = document.createElement("input");
+                input.setAttribute("type", "checkbox");
+                input.setAttribute("checked", true);
+                input.setAttribute("id", `show-player-${player.username}`);
+                var label = document.createElement("label");
+                label.innerText = player.username;
+                label.appendChild(input);
+                options.appendChild(label);
+            }
         }
 
         window.onload = function () {
             getData();
             document.getElementById('show-map').onclick = function(){
                 document.getElementById('info').hidden = !document.getElementById('info').hidden;
+                document.getElementById('options').hidden = !document.getElementById('options').hidden;
                 document.getElementById('map').hidden = !document.getElementById('map').hidden;
+                if(!document.getElementById('map').hidden){
+                    annotateMap();
+                }
             }
         };
+
+        var mapData = {
+            "playerPaths": [],
+            "playerSnipes": [],
+        };
+
+        // hardcode distinct colours, and reuse if too many players
+        // todo: find a js library to handle colour generation
+        var playerColours = [
+            "#FFB300",  //Vivid Yellow
+            "#803E75",  //Strong Purple
+            "#FF6800",  //Vivid Orange
+            "#A6BDD7",  //Very Light Blue
+            "#C10020",  //Vivid Red
+            "#CEA262",  //Grayish Yellow
+            "#817066",  //Medium Gray
+
+            // The following don't work well for people with defective color vision
+            "#007D34",  //Vivid Green
+            "#F6768E",  //Strong Purplish Pink
+            "#00538A",  //Strong Blue
+            "#FF7A5C",  //Strong Yellowish Pink
+            "#53377A",  //Strong Violet
+            "#FF8E00",  //Vivid Orange Yellow
+            "#B32851",  //Strong Purplish Red
+            "#F4C800",  //Vivid Greenish Yellow
+            "#7F180D",  //Strong Reddish Brown
+            "#93AA00",  //Vivid Yellowish Green
+            "#593315",  //Deep Yellowish Brown
+            "#F13A13",  //Vivid Reddish Orange
+            "#232C16",  //Dark Olive Green
+        ];
+
+        function prepareMapData(gameState){
+            for(const [playerPublicId, player] of Object.entries(gameState.userList)){
+                console.log(gameState.positions[publicId]);
+                var path = [];
+                mapData["playerSnipes"][playerPublicId] = [];
+                for(var position of gameState.positions[playerPublicId]){
+                    var latlng = {lat: position.latitude, lng: position.longitude};
+                    path.push(latlng);
+                    if(position["snipeInfo"]){
+                        var sniper = gameState.userList[playerPublicId].username;
+                        var target = gameState.userList[position["snipeInfo"]["target"]].username;
+                        var marker = new google.maps.Marker({position: latlng, title: `${sniper} got ${target}`});
+
+                        var obj = {"marker": marker};
+
+                        //this can fail if target play didnt send a position all game
+                        if(position["snipeInfo"]["targetPosition"]){
+                            var lineSymbol = {
+                                path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW
+                            };
+                            var targetLatLng = {
+                                lat: position["snipeInfo"]["targetPosition"].latitude,
+                                lng: position["snipeInfo"]["targetPosition"].longitude,
+                            };
+                            var arrow = new google.maps.Polyline({
+                                path: [latlng, targetLatLng],
+                                icons: [{
+                                    icon: lineSymbol,
+                                    offset: '100%'
+                                }],
+                            });
+                            obj["arrow"] = arrow;
+                        }
+                        mapData["playerSnipes"][playerPublicId].push(obj);
+                    }
+                }
+                var polyLine = new google.maps.Polyline({
+                    path: path,
+                    geodesic: true,
+                    strokeColor: playerColours[playerPublicId%playerColours.length],
+                    strokeOpacity: 1.0,
+                    strokeWeight: 2
+                });
+                //todo: this is undefined if player never sends position and so explodes
+                //in annotation
+                mapData["playerPaths"][playerPublicId] = polyLine;
+            }
+        }
+
+        var map;
+
+        function annotateMap(){
+            // it's more efficient if we just add/remove the relevant bits when
+            // for a specific option that's been changed
+            // but this is more flexable for now
+
+            for(const [playerPublicId, player] of Object.entries(gameState.userList)){
+                var checkbox = document.getElementById(`show-player-${player.username}`);
+                if(checkbox.checked){
+                    mapData["playerPaths"][playerPublicId].setMap(map);
+                    for(var snipe of mapData["playerSnipes"][playerPublicId]){
+                        snipe["marker"].setMap(map);
+                        snipe["arrow"].setMap(map);
+                    }
+                }else{
+                    mapData["playerPaths"][playerPublicId].setMap(null);
+                    for(var snipe of mapData["playerSnipes"][playerPublicId]){
+                        snipe["marker"].setMap(null);
+                        snipe["arrow"].setMap(null);
+                    }
+                }
+            }
+            //center on when they started
+            //instead we should capture the agreed starting point of the game and use that
+            //current approach also breaks for observers without a publicId
+            map.setCenter(mapData["playerPaths"][publicId].getPath().getAt(0));
+        }
 
         var ready = false;
         function initMap() {
@@ -108,9 +233,7 @@
                 return;
             }
 
-            console.log(gameState.positions[publicId]);
-            var flightPlanCoordinates = [];
-            gameState.positions[publicId].forEach(x => {flightPlanCoordinates.push({lat: x.latitude, lng: x.longitude});});
+            prepareMapData(gameState);
 
             for(var i of gameState.positions[publicId]){
                 var item = document.createElement('li');
@@ -118,23 +241,10 @@
                 document.getElementById("positions").appendChild(item);
             }
 
-            console.log(flightPlanCoordinates);
-
-            var map = new google.maps.Map(document.getElementById('map'), {
+            map = new google.maps.Map(document.getElementById('map'), {
                 zoom: 17,
-                center: flightPlanCoordinates[0],
                 mapTypeId: 'satellite'
             });
-
-            var flightPath = new google.maps.Polyline({
-                path: flightPlanCoordinates,
-                geodesic: true,
-                strokeColor: '#FF0000',
-                strokeOpacity: 1.0,
-                strokeWeight: 2
-            });
-
-            flightPath.setMap(map);
         }
     </script>
     <script async defer
@@ -152,12 +262,15 @@
             <a id="next-game-link" style="grid-column: 3;grid-row: 1;">Next game</a>
         </div>
         <div class="middle-2">
-            <div id="info">
+            <div id="info" style="flex: 1;">
                 <h2>Winner</h2>
                 <p id="game-result"></p>
                 <ul id="targets-state"></ul>
                 <h3>debug data</h3>
                 <ul id="positions"></ul>
+            </div>
+            <div id="options" style="flex: 1;">
+                <!--insert checkboxes for each player in the game-->
             </div>
             <div id="map" hidden></div>
         </div>
