@@ -92,13 +92,29 @@ function start(game){
 function snipe(game, sniperId){
   //todo: let people vote on wether this is a valid snipe
   var targets = game.targets[sniperId];
+  var snipeNumber = targets.length;
   //targets[0] becomes the new target
+  game.badSnipeVotes.get(sniperId).set(snipeNumber, 0);
   game.targetsGot[sniperId].push(targets.shift());
   if(targets.length == 0){
-    return true;
+    return {"gameOver": true, "snipeNumber": snipeNumber};
   }else{
-    return false;
+    return {"gameOver": false, "snipeNumber": snipeNumber};
   }
+}
+
+function undoSnipe(game, sniperId, snipeNumber){
+  game.badSnipeVotes.get(sniperId).delete(snipeNumber);
+  // snipe number is index of the target list the snipe was for
+  // at the start of the game
+  // so push @got@ targets back onto the target list until it's snipeNumber+1 long
+  var undoneSnipes = []
+  while(game.targets[sniperId].length < snipeNumber){
+    game.badSnipeVotes.get(sniperId).delete(game.targets[sniperId].length);
+    game.targets[sniperId].unshift(game.targetsGot[sniperId].pop());
+    undoneSnipes.push(game.targets[sniperId].length);
+  }
+  return undoneSnipes;
 }
 
 //todo: handle making and joining games here
@@ -124,6 +140,16 @@ exports.NOT_STARTED = NOT_STARTED;
 exports.TARGETS_MADE = TARGETS_MADE;
 exports.IN_PLAY = IN_PLAY;
 
+function undoneSnipesForClient(undoneSnipes){
+  var list = [];
+  for(var [player, value] of undoneSnipes.entries()){
+    for(var [snipeNumber, count] of value.entries()){
+      list.push(`${player}-${snipeNumber}-${count}`);
+    }
+  }
+  return list;
+}
+
 function gameStateForClient(game){
   state = {
     userList: Object.fromEntries(game.userList),
@@ -136,6 +162,8 @@ function gameStateForClient(game){
     subState: game.subState,
     winner: game.winner,
     nextCode: game.nextCode,
+    badSnipeVotes: Object.fromEntries(game.badSnipeVotes),
+    undoneSnipes: undoneSnipesForClient(game.undoneSnipes),//todo: store this in chat history alongside the message
     //we don't include chathistory here
     // because it could be large and is wasteful to
     // send often
@@ -154,6 +182,7 @@ function addPlayer(game, privateId, publicId, username){
   game.idMapping.set(privateId,publicId.toString());
   game.userList.set(publicId.toString(),{username: username});
   game.positions.set(publicId.toString(), []);
+  game.badSnipeVotes.set(publicId.toString(), new Map());
   
 }
 
@@ -185,10 +214,7 @@ function removeUserFromGame(game, publicId){
       break;
     }
   }
-  console.log(game.userList);
   game.userList.delete(publicId);
-  console.log(game.userList);
-  console.log(game.userList.get(publicId));
   game.positions.delete(publicId);
 }
 
@@ -212,6 +238,8 @@ function newGame(nameSpace){
     countDown: undefined,
     timeLeft: undefined,
     nextCode: undefined,
+    badSnipeVotes: new Map(),
+    undoneSnipes: new Map(),
     // this includes images and so will get huge
     // todo: make client smart so it only requests those its missing
     // / saves what its already seen to local storage
@@ -370,11 +398,8 @@ function ioConnect(socket){
     if(game.state != NOT_STARTED){
       return;
     }
-    console.log(gameStateForClient(game).userList);
-    console.log(msg)
     removeUserFromGame(game, msg.publicId);
     game.nameSpace.emit('Remove user', {publicId: msg.publicId, gameState: gameStateForClient(game)});
-    console.log(gameStateForClient(game).userList);
   });
 
   socket.on('start game', function(msg){
@@ -443,11 +468,10 @@ function ioConnect(socket){
       var usernameWhoDidSniping = game.userList.get(publicId).username;
       var usernameThatGotSniped = game.userList.get(game.targets[publicId][0]).username;
       botMessage = usernameWhoDidSniping + " sniped " + usernameThatGotSniped;
-
-      gameOver = snipe(game, publicId);
+      snipeRes = snipe(game, publicId);
       logger.log("debug", "targets post", {targets: Array.from(game.targets)});
       logger.log("verbose", "Snipe", {gameCode: gameId, gameState: game.state});
-      if(gameOver){
+      if(snipeRes.gameOver){
         finishGame(game, publicId);
         return;
       }
@@ -460,12 +484,52 @@ function ioConnect(socket){
       botMessage: botMessage,
     }
 
+    if(wasSnipe){
+      if(game.undoneSnipes.has(msg.snipePlayer) && game.undoneSnipes.get(msg.snipePlayer).has(msg.snipeNumber)){
+        outgoing_msg.snipeCount = game.undoneSnipes.get(msg.snipePlayer).get(msg.snipeNumber);
+      }else{
+        outgoing_msg.snipeCount = 1;
+      }
+      outgoing_msg.snipeNumber = snipeRes.snipeNumber;
+      outgoing_msg.snipePlayer = publicId;
+    }
+
     game.chatHistory.push(outgoing_msg);
 
     outgoing_msg.gameState = gameStateForClient(game);
     
     socket.nsp.emit('chat message', outgoing_msg);
   });
+
+  socket.on('bad snipe', function(msg){
+    var playerSnipeVotes = game.badSnipeVotes.get(msg.snipePlayer);
+    if(!playerSnipeVotes.has(msg.snipeNumber)){
+      return;
+    }
+    var voteCount = game.badSnipeVotes.get(msg.snipePlayer).get(msg.snipeNumber);
+    if(publicId != msg.snipePlayer){
+      voteCount += 1;
+      playerSnipeVotes.set(msg.snipeNumber, voteCount);
+    }
+    if(publicId == msg.snipePlayer || voteCount >= 2){
+      var undoneSnipes = undoSnipe(game, msg.snipePlayer, msg.snipeNumber);
+      //below helps track how many times a single [player, snipenumber] has been undone
+      // so client side can work out all the images to mark as undone
+      // it's a hack to get around chat history not storing this info
+      if(!game.undoneSnipes.has(msg.snipePlayer)){
+        game.undoneSnipes.set(msg.snipePlayer, new Map());
+      }
+      if(!game.undoneSnipes.get(msg.snipePlayer).has(msg.snipeNumber)){
+        game.undoneSnipes.get(msg.snipePlayer).set(msg.snipeNumber, 1);
+      } else{
+        game.undoneSnipes.get(msg.snipePlayer).set(msg.snipeNumber, game.undoneSnipes.get(msg.snipePlayer).get(msg.snipeNumber) + 1);
+      }
+      //we need to tell the client which snipes need ot be marked as canceled in the gui
+      //undosnipe should probs return that
+      socket.nsp.emit('bad snipe', {gameState: gameStateForClient(game), snipePlayer: msg.snipePlayer, undoneSnipes: undoneSnipes});
+    }
+  });
+
   socket.on('disconnect', function(){
     logger.log('debug','socket disconnected', { 'player': publicId});
   });

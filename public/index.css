@@ -96,9 +96,25 @@ button, label, textarea {
     display: block;
 }
 
+/* this is needed to make undotext's absoulte position relative to the containing li*/
+.message-li {
+    position: relative;
+}
+
+.undotext { 
+    position: absolute; 
+    top: 50%; 
+    left: 0; 
+    width: 100%;
+    color: crimson;
+    font-size: 5em;
+    font-weight: 20;
+ }
+
 .message-image {
     width: 100%;
     object-fit: contain;
+    display: inline;
 }
 
 input[type=checkbox] {

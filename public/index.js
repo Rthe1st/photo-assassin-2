@@ -39,8 +39,9 @@ function targetDisplay(targets) {
     return output
 }
 
-function createChatElement(sender, message, image) {
+function createChatElement(sender, message, image, snipeNumber, snipePlayer, snipeCount) {
     var li = document.createElement('li');
+    li.setAttribute('class', 'message-li');
     var span = document.createElement('span');
     span.innerText = sender;
 
@@ -56,6 +57,15 @@ function createChatElement(sender, message, image) {
         img.classList.add('message-image');
         img.src = url;
         li.appendChild(img);
+        if(snipePlayer){
+            img.setAttribute('id', `snipe-${snipePlayer}-${snipeNumber}-${snipeCount}`)
+            var voteButton = document.createElement('button');
+            voteButton.innerText = 'vote';
+            voteButton.onclick = function(){
+                socket.emit('bad snipe', {snipeNumber: snipeNumber, snipePlayer: snipePlayer});
+            };
+            li.appendChild(voteButton);
+        }
     }
     document.getElementById('messages').appendChild(li);
 }
@@ -69,7 +79,7 @@ function loadChatHistory(chatHistory) {
 }
 
 function proccessMsg(msg){
-    createChatElement(gameState.userList[msg.publicId].username, msg.text, msg.image);
+    createChatElement(gameState.userList[msg.publicId].username, msg.text, msg.image, msg.snipeNumber, msg.snipePlayer, msg.snipeCount);
     if (msg.botMessage) {
         createChatElement('Gamebot3000', msg.botMessage);
     }
@@ -272,7 +282,7 @@ window.onload = function () {
         console.log(gameState.state);
         // console.log(msg.chatHistory);
         loadChatHistory(msg.chatHistory);
-
+        markSnipesAsBad(gameState);
         for (var element of document.getElementsByClassName('username')) {
             element.innerText = gameState.userList[publicId].username;
         }
@@ -316,6 +326,30 @@ window.onload = function () {
         li.appendChild(remove);
         return li;
     }
+
+    function markSnipesAsBad(gameState){
+        for(var snipeId of gameState.undoneSnipes){
+            console.log(snipeId);
+            snipeImage = document.getElementById(`snipe-${snipeId}`);
+            if(!document.getElementById(`snipe-text-${snipeId}`)){
+                var undotext = document.createElement('p');
+                undotext.innerText = "BAD SNIPE";
+                undotext.setAttribute('class', 'undotext');
+                undotext.setAttribute('id', `snipe-text-${snipeId}`);
+                snipeImage.parentNode.appendChild(undotext);
+                snipeImage.parentNode.getElementsByTagName('button')[0].hidden = true;
+            }
+        }
+    }
+
+    socket.on('bad snipe', function(msg){
+        gameState = msg.gameState;
+        setCurrentTarget();
+        //go through msg history and mark delete snipes as gone
+        markSnipesAsBad(gameState);
+        //good to know what snipes go undone in this event so we can show user
+        console.log(msg.snipePlayer + "had to undo " +msg.undoneSnipes);
+    });
 
     socket.on('New user', function (msg) {
         gameState = msg.gameState;
