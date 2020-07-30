@@ -18,6 +18,8 @@ var io = require('socket.io')(http, { cookie: false });
 var winston = require('winston');
 var Writable = require('stream').Writable;
 
+import * as crypto from 'crypto';
+
 import * as Game from './server/game.js';
 
 var logs_for_tests = [];
