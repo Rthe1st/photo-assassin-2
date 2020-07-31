@@ -12,6 +12,12 @@ CNAME'd to Cloudflare for forcing https and for caching under photo-assassin.pra
 
 ## Run locally
 
+build browser js
+
+```bash
+npm build
+```
+
 ```bash
 nodejs ./server.js
 ```
