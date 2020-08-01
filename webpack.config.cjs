@@ -6,4 +6,5 @@ module.exports = {
     filename: 'index.js',
     path: path.resolve(__dirname, 'public'),
   },
+  mode: 'development'
 };

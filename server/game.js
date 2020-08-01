@@ -92,7 +92,7 @@ function snipe(game, sniperId) {
 
   var snipeCount;
   if (game.undoneSnipes.has(sniperId) && game.undoneSnipes.get(sniperId).has(snipeNumber)) {
-    snipeCount = game.undoneSnipes.get(sniperId).get(snipeNumber);
+    snipeCount = game.undoneSnipes.get(sniperId).get(snipeNumber) + 1;
   } else {
     snipeCount = 1;
   }

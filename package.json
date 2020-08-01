@@ -10,12 +10,12 @@
   },
   "type": "module",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "build": "npx webpack --config webpack.config.cjs"
   },
   "devDependencies": {
     "selenium-webdriver": "^4.0.0-alpha.7",
     "webpack": "^4.44.1",
     "webpack-cli": "^3.3.12"
-  },
-  "build": "webpack --config webpack.config.cjs"
+  }
 }
