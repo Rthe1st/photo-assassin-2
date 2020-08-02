@@ -1,6 +1,4 @@
-import { finished } from "stream";
-
-let socket;
+import io from 'socket.io-client';
 
 function setup(
     gameId,
@@ -14,12 +12,15 @@ function setup(
     start,
     finished,
     timeLeft,
-    chatMessage
+    chatMessage,
+    // this only needs to be supplied when note in a browser
+    // otherwise window.location is used
+    hostname = ''
 ){
-    socket = io(
+    let socket = io(
         // leading slash is needed so IO nows we're giving it a path
         // otherwise it uses it as a domain
-        `/${gameId}`,
+        `${hostname}/${gameId}`,
         {
             query: {
                 "privateId": privateId,
@@ -39,37 +40,39 @@ function setup(
     socket.on('bad snipe', badSnipe);
     socket.on('timeLeft', timeLeft);
     socket.on('game finished', finished);
+
+    return socket;
 }
 
-function chatMessage(message){
+function chatMessage(socket, message){
     socket.emit('chat message', message);
 }
 
-function badSnipe(snipeNumber, snipePlayer){
+function badSnipe(socket, snipeNumber, snipePlayer){
     socket.emit('bad snipe', {snipeNumber: snipeNumber, snipePlayer: snipePlayer});
 }
 
-function makeTargets(gameLength, countDown){
+function makeTargets(socket, gameLength, countDown){
     socket.emit('make targets', { gameLength: gameLength, countDown: countDown });
 }
 
-function undoMakeTargets(){
+function undoMakeTargets(socket){
     socket.emit('undo make targets');
 }
 
-function startGame(){
+function startGame(socket){
     socket.emit('start game');
 }
 
-function positionUpdate(position){
+function positionUpdate(socket, position){
     socket.emit('positionUpdate', position);
 }
 
-function stopGame(){
+function stopGame(socket){
     socket.emit('stop game');
 }
 
-function removeUser(publicId){
+function removeUser(socket, publicId){
     socket.emit('remove user', { publicId: publicId });
 }
 

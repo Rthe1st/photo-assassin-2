@@ -76,6 +76,8 @@ function addUserToGame(code, res, username){
     res.cookie("privateId", privateId, {sameSite: "strict"});
     res.cookie("publicId", publicId, {sameSite: "strict"});
     logger.log("verbose", "Adding user to game", {publicId: publicId, gameCode: code});
+
+    return [privateId, publicId];
 }
 
 function generateGame(){
@@ -98,10 +100,19 @@ function finishGame(game, winner){
   game.nameSpace.emit('game finished', {nextCode: nextCode, winner: winner});
 }
 
+//todo make this a post
+// because its not idempotent
 app.get('/make', function(req, res){
+  if(!req.query.username){
+    res.redirect('/');
+  }
   var code = generateGame();
-  addUserToGame(code, res, req.query.username);
-  res.redirect(`/game/${code}`);
+  var [privateId, publicId] = addUserToGame(code, res, req.query.username);
+  if(req.query.format == 'json'){
+    res.json({publicId: publicId, privateId: privateId, gameId: code});
+  }else{
+    res.redirect(`/game/${code}`);
+  }
 });
 
 app.get('/join', function(req, res){
@@ -125,8 +136,13 @@ app.get('/join', function(req, res){
     return;
   }
   logger.log("debug", 'adding to game');
-  addUserToGame(req.query.code, res, req.query.username);
-  res.redirect(`/game/${code}`);
+  var [privateId, publicId] = addUserToGame(req.query.code, res, req.query.username);
+
+  if(req.query.format == 'json'){
+    res.json({publicId: publicId, privateId: privateId, gameId: code});
+  }else{
+    res.redirect(`/game/${code}`);
+  }
 });
 
 app.get('/game/:code', function(req, res){

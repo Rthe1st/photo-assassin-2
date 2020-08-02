@@ -25,7 +25,7 @@ function createChatElement(sender, message, image, snipeNumber, snipePlayer, sni
             var voteButton = document.createElement('button');
             voteButton.innerText = 'vote';
             voteButton.onclick = function(){
-                socketEvents.badSnipe(snipeNumber, snipePlayer);
+                socketEvents.badSnipe(socket, snipeNumber, snipePlayer);
             };
             li.appendChild(voteButton);
         }
@@ -68,7 +68,7 @@ function sendMessage(ev){
         "position": gps.position,
         "isSnipe": document.getElementById('is-snipe').checked,
     }
-    socketEvents.chatMessage(message);
+    socketEvents.chatMessage(socket, message);
     document.getElementById('message').value = '';
     document.getElementById('photo-input').value = '';
     document.getElementById('is-snipe').checked = false;
@@ -116,7 +116,7 @@ function inPlayView(){
     document.getElementById('time-left').innerText = game.game.timeLeft / 1000;
 
     //the first time, before they move
-    gps.setup(socketEvents.positionUpdate);
+    gps.setup((position) => socketEvents.positionUpdate(socket, position));
 }
 
 function targetsMadeView(){
@@ -208,7 +208,7 @@ function createUserElement(username, publicId){
     remove.innerText = 'Remove';
     remove.onclick = function(){
         if(confirm(`Remove ${username} from the game?`)){
-            socketEvents.removeUser(publicId);
+            socketEvents.removeUser(socket, publicId);
         }
     }
     li.appendChild(remove);
@@ -287,11 +287,13 @@ console.log(gameId);
 const privateId = document.cookie.replace(/(?:(?:^|.*;\s*)privateId\s*\=\s*([^;]*).*$)|^.*$/, "$1");
 const publicId = document.cookie.replace(/(?:(?:^|.*;\s*)publicId\s*\=\s*([^;]*).*$)|^.*$/, "$1");
 
+let socket;
+
 window.onload = function () {
 
     // do in onload, so that we can't accidentally receive a socket event
     // before dom loaded
-    socketEvents.setup(
+    socket = socketEvents.setup(
         gameId,
         privateId,
         initialization,
@@ -324,25 +326,25 @@ window.onload = function () {
         if(confirm('Are you sure?')){
             var gameLength = document.getElementById('game-length').value;
             var countDown = document.getElementById('count-down').value;
-            socketEvents.makeTargets(gameLength, countDown);
+            socketEvents.makeTargets(socket, gameLength, countDown);
         }
     }
 
     document.getElementById('undo-make-targets').onclick = function (event) {
         if(confirm('Back to game setup?')){
-            socketEvents.undoMakeTargets();
+            socketEvents.undoMakeTargets(socket);
         }
     }
 
     document.getElementById('start-game').onclick = function (event) {
         if(confirm('Start the game?')){
-            socketEvents.startGame();
+            socketEvents.startGame(socket);
         }
     }
 
     document.getElementById('stop-game').onclick = function (event) {
         if(confirm('Finish the game?')){
-            socketEvents.stopGame();
+            socketEvents.stopGame(socket);
         }
     }
 };
