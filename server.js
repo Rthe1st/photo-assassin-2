@@ -115,6 +115,7 @@ function finishGame(game, winner){
 app.get('/make', function(req, res){
   if(!req.query.username){
     res.redirect('/');
+    return;
   }
   var code = generateGame();
   var [privateId, publicId] = addUserToGame(code, res, req.query.username);
