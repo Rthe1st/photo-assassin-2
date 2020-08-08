@@ -1,6 +1,7 @@
+const dotenv = require('dotenv')
 const path = require('path');
 const webpack = require('webpack');
-const SentryWebpackPlugin = require('@sentry/webpack-plugin');
+// const SentryWebpackPlugin = require('@sentry/webpack-plugin');
 // it cant fetch the source basue we're on loachost
 // 1) would it just work on proper webpack
 // 2) why isn't it finding the styff we;ve uploaded?
@@ -15,9 +16,8 @@ module.exports = {
   devtool: 'source-map',
   plugins: [
     new webpack.DefinePlugin({
-      'process.env':{
-        'BROWSER_SENTRY': process.env.BROWSER_SENTRY
-      }
+      'process.env': JSON.stringify(dotenv.config().parsed)
+      // 'process.env.BROWSER_SENTRY': JSON.stringify(process.env.BROWSER_SENTRY)
     })
     // ,
     // new SentryWebpackPlugin({

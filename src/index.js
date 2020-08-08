@@ -5,7 +5,7 @@ import * as socketEvents from './socketEvents'
 import * as Sentry from '@sentry/browser';
 
 Sentry.init({ dsn: process.env.BROWSER_SENTRY });
-myUndefinedFunction2();
+
 function createChatElement(sender, message, image, snipeNumber, snipePlayer, snipeCount) {
     var li = document.createElement('li');
     li.setAttribute('class', 'message-li');
