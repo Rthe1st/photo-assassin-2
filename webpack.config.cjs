@@ -18,12 +18,13 @@ module.exports = {
       'process.env':{
         'BROWSER_SENTRY': process.env.BROWSER_SENTRY
       }
-    }),
-    new SentryWebpackPlugin({
-      include: '.',
-      ignoreFile: '.sentrycliignore',
-      ignore: ['node_modules', 'webpack.config.cjs'],
-      configFile: 'sentry.properties'
     })
+    // ,
+    // new SentryWebpackPlugin({
+    //   include: '.',
+    //   ignoreFile: '.sentrycliignore',
+    //   ignore: ['node_modules', 'webpack.config.cjs'],
+    //   configFile: 'sentry.properties'
+    // })
   ]
 };
