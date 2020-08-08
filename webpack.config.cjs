@@ -6,6 +6,10 @@ const webpack = require('webpack');
 // 1) would it just work on proper webpack
 // 2) why isn't it finding the styff we;ve uploaded?
 // I think its because of the source folder prefix
+let envs = dotenv.config().parsed;
+if(envs == undefined){
+  envs = process.env
+}
 module.exports = {
   entry: './src/index.js',
   output: {
@@ -16,7 +20,7 @@ module.exports = {
   devtool: 'source-map',
   plugins: [
     new webpack.DefinePlugin({
-      'process.env': JSON.stringify(dotenv.config().parsed)
+      'process.env': JSON.stringify(envs)
       // 'process.env.BROWSER_SENTRY': JSON.stringify(process.env.BROWSER_SENTRY)
     })
     // ,
