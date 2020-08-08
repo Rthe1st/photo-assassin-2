@@ -2,3 +2,4 @@ node_modules
 api_key
 logs/
 public/index.js
+secrets

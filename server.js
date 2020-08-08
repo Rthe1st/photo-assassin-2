@@ -6,9 +6,17 @@ import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+import * as fs from 'fs';
+import * as Sentry from '@sentry/node';
+
+Sentry.default.init({ dsn: fs.readFileSync('./secrets/sentry', 'utf8')});
+
 var cookieParser = require('cookie-parser');
 const express = require('express');
 var app = express();
+// The request handler must be the first middleware on the app
+app.use(Sentry.default.Handlers.requestHandler());
+
 app.use(cookieParser());
 var http = require('http').Server(app);
 // https://github.com/socketio/socket.io/issues/2276
@@ -342,6 +350,9 @@ function checkGameTiming(){
     }
   };
 }
+
+// The error handler must be before any other error middleware and after all controllers
+app.use(Sentry.default.Handlers.errorHandler());
 
 var connections = {}
 
