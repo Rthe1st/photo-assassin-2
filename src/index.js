@@ -4,8 +4,8 @@ import * as socketEvents from './socketEvents'
 
 import * as Sentry from '@sentry/browser';
 
-Sentry.init({ dsn: 'https://0622ee38668548dcb4af966730298b31@o428868.ingest.sentry.io/5374680' });
-myUndefinedFunction();
+Sentry.init({ dsn: process.env.BROWSER_SENTRY });
+myUndefinedFunction2();
 function createChatElement(sender, message, image, snipeNumber, snipePlayer, snipeCount) {
     var li = document.createElement('li');
     li.setAttribute('class', 'message-li');

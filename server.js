@@ -6,10 +6,9 @@ import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-import * as fs from 'fs';
 import * as Sentry from '@sentry/node';
 
-Sentry.default.init({ dsn: fs.readFileSync('./secrets/sentry', 'utf8')});
+Sentry.default.init({ dsn: process.env.NODE_SENTRY});
 
 var cookieParser = require('cookie-parser');
 const express = require('express');

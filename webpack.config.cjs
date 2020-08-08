@@ -1,4 +1,5 @@
 const path = require('path');
+const webpack = require('webpack');
 const SentryWebpackPlugin = require('@sentry/webpack-plugin');
 // it cant fetch the source basue we're on loachost
 // 1) would it just work on proper webpack
@@ -13,6 +14,11 @@ module.exports = {
   mode: 'development',
   devtool: 'source-map',
   plugins: [
+    new webpack.DefinePlugin({
+      'process.env':{
+        'BROWSER_SENTRY': process.env.BROWSER_SENTRY
+      }
+    }),
     new SentryWebpackPlugin({
       include: '.',
       ignoreFile: '.sentrycliignore',
