@@ -294,6 +294,7 @@ function ioConnect(socket){
       logger.log("debug", "targets post", {targets: Array.from(game.targets)});
       logger.log("verbose", "Snipe", {gameCode: gameId, gameState: game.state});
       if(snipeRes.gameOver){
+        Game.updatePosition(game, publicId, msg.position);
         finishGame(game, publicId);
         return;
       }

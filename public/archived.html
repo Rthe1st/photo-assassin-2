@@ -53,10 +53,17 @@
         // if(process.env.SENTRY_TESTS == "true"){
         Sentry.captureException(new Error("sentry test archieved.html"));
         //}
-        const gameId = decodeURIComponent(document.cookie.replace(/(?:(?:^|.*;\s*)gameId\s*\=\s*([^;]*).*$)|^.*$/, "$1"));
-        console.log(gameId);
-        const privateId = document.cookie.replace(/(?:(?:^|.*;\s*)privateId\s*\=\s*([^;]*).*$)|^.*$/, "$1");
-        const publicId = document.cookie.replace(/(?:(?:^|.*;\s*)publicId\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+        const cookieGameId = decodeURIComponent(document.cookie.replace(/(?:(?:^|.*;\s*)gameId\s*\=\s*([^;]*).*$)|^.*$/, "$1"));
+
+        let urlGameId = window.location.href.split('/').pop()
+        let privateId;
+        let publicId;
+        // we only let users have cookies for one game at a time at the moment
+        // so check they're for the current and treat the as observer if not
+        if(cookieGameId == urlGameId){
+            privateId = document.cookie.replace(/(?:(?:^|.*;\s*)privateId\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+            publicId = document.cookie.replace(/(?:(?:^|.*;\s*)publicId\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+        }
 
         var gameState;
         const getData = async () => {
@@ -68,8 +75,12 @@
         }
 
         function setUpPage(gameState) {
-            const username = gameState.userList[publicId].username;
-            document.getElementById("username").innerText = username;
+            if(publicId){
+                const username = gameState.userList[publicId].username;
+                document.getElementById("username").innerText = username;
+            }else{
+                document.getElementById("username").innerText = "observer";
+            }
             if (gameState.userList[gameState.winner]) {
                 document.getElementById('game-result').innerText = gameState.userList[gameState.winner].username;
             } else {
@@ -153,7 +164,6 @@
 
         function prepareMapData(gameState){
             for(const [playerPublicId, player] of Object.entries(gameState.userList)){
-                console.log(gameState.positions[publicId]);
                 var path = [];
                 mapData["playerSnipes"][playerPublicId] = [];
                 for(var position of gameState.positions[playerPublicId]){
@@ -166,7 +176,6 @@
 
                         var obj = {"marker": marker};
 
-                        //this can fail if target play didnt send a position all game
                         if(position["snipeInfo"]["targetPosition"]){
                             var lineSymbol = {
                                 path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW
@@ -213,20 +222,29 @@
                     mapData["playerPaths"][playerPublicId].setMap(map);
                     for(var snipe of mapData["playerSnipes"][playerPublicId]){
                         snipe["marker"].setMap(map);
-                        snipe["arrow"].setMap(map);
+                        //this might not be set if the target never sent a position
+                        if(snipe["arrow"]){
+                            snipe["arrow"].setMap(map);
+                        }
                     }
                 }else{
                     mapData["playerPaths"][playerPublicId].setMap(null);
                     for(var snipe of mapData["playerSnipes"][playerPublicId]){
                         snipe["marker"].setMap(null);
-                        snipe["arrow"].setMap(null);
+                        if(snipe["arrow"]){
+                            snipe["arrow"].setMap(null);
+                        }
                     }
                 }
             }
             //center on when they started
             //instead we should capture the agreed starting point of the game and use that
             //current approach also breaks for observers without a publicId
-            map.setCenter(mapData["playerPaths"][publicId].getPath().getAt(0));
+            if(publicId){
+                map.setCenter(mapData["playerPaths"][publicId].getPath().getAt(0));
+            }else{
+                map.setCenter(mapData["playerPaths"][0].getPath().getAt(0));
+            }
         }
 
         var ready = false;
@@ -241,11 +259,12 @@
             }
 
             prepareMapData(gameState);
-
-            for(var i of gameState.positions[publicId]){
-                var item = document.createElement('li');
-                item.innerText = JSON.stringify(i);
-                document.getElementById("positions").appendChild(item);
+            if(publicId){
+                for(var i of gameState.positions[publicId]){
+                    var item = document.createElement('li');
+                    item.innerText = JSON.stringify(i);
+                    document.getElementById("positions").appendChild(item);
+                }
             }
 
             map = new google.maps.Map(document.getElementById('map'), {

@@ -12,7 +12,6 @@ This project is an app to make playing [Photo Assassin](https://github.com/Rthe1
 
     Don't know the cause but seen in error reporting in index.js. You can tell these events because the latency in their received and occurred times will be massive
 
-
 CNAME'd to Cloudflare for forcing https and for caching under photo-assassin.prangten.com
 
 ## Run locally

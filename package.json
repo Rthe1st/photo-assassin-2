@@ -20,6 +20,7 @@
   "devDependencies": {
     "@sentry/webpack-plugin": "^1.12.0",
     "node-fetch": "^2.6.0",
+    "random-seed": "^0.3.0",
     "selenium-webdriver": "^4.0.0-alpha.7",
     "webpack": "^4.44.1",
     "webpack-cli": "^3.3.12"
