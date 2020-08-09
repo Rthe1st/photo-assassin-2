@@ -8,6 +8,17 @@ let envs = dotenv.config().parsed;
 if(envs == undefined){
   envs = process.env
 }
+
+// error if variables we depend on aren't set
+// because I lost 2 hours from setting BROWER_SENTRY
+let expected_vars = ["BROWSER_SENTRY", "NODE_SENTRY", "NODE_ENV"];
+for(let env of expected_vars){
+  if(envs[env] == undefined){
+    console.log(env);
+    throw Error(`no ${env} environment variable`);
+  }
+}
+
 module.exports = {
   entry: './src/index.js',
   output: {
