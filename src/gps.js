@@ -17,7 +17,7 @@ function setup(callback){
         console.log(position);
     }else{
         console.log("real start pos")
-        geolocation.getCurrentPosition((geolocationPosition) => {
+        navigator.geolocation.getCurrentPosition((geolocationPosition) => {
             updatePosition(geolocationPosition, callback);
         });
     }

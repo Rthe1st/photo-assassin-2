@@ -49,6 +49,7 @@
     <!--should be coded on the assumption that viewer might not be a player-->
     <script>
         Sentry.init({ dsn: 'https://0622ee38668548dcb4af966730298b31@o428868.ingest.sentry.io/5374680' });
+        Sentry.captureException(new Error("sentry test archieved.html"));
         const gameId = decodeURIComponent(document.cookie.replace(/(?:(?:^|.*;\s*)gameId\s*\=\s*([^;]*).*$)|^.*$/, "$1"));
         console.log(gameId);
         const privateId = document.cookie.replace(/(?:(?:^|.*;\s*)privateId\s*\=\s*([^;]*).*$)|^.*$/, "$1");

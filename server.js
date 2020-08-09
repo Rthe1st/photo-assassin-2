@@ -1,5 +1,10 @@
 import dotenv from 'dotenv'
-dotenv.config()
+import * as fs from 'fs'
+
+// .env file doesn't exist in prod
+if (fs.existsSync('.env')) {
+  dotenv.config()
+}
 
 import { createRequire } from 'module'
 const require = createRequire(import.meta.url);
@@ -12,7 +17,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 import * as Sentry from '@sentry/node';
 
 Sentry.default.init({ dsn: process.env.NODE_SENTRY});
-
+Sentry.default.captureException(new Error("sentry test server.js"));
 var cookieParser = require('cookie-parser');
 const express = require('express');
 var app = express();

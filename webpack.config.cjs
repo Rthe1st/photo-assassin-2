@@ -1,11 +1,9 @@
 const dotenv = require('dotenv')
 const path = require('path');
 const webpack = require('webpack');
+// this is used to upload map files to sentry
+// but I can't work out how to get sentry to actually used them in issues
 // const SentryWebpackPlugin = require('@sentry/webpack-plugin');
-// it cant fetch the source basue we're on loachost
-// 1) would it just work on proper webpack
-// 2) why isn't it finding the styff we;ve uploaded?
-// I think its because of the source folder prefix
 let envs = dotenv.config().parsed;
 if(envs == undefined){
   envs = process.env
@@ -21,7 +19,6 @@ module.exports = {
   plugins: [
     new webpack.DefinePlugin({
       'process.env': JSON.stringify(envs)
-      // 'process.env.BROWSER_SENTRY': JSON.stringify(process.env.BROWSER_SENTRY)
     })
     // ,
     // new SentryWebpackPlugin({
