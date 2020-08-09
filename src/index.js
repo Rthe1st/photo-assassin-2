@@ -5,8 +5,9 @@ import * as socketEvents from './socketEvents'
 import * as Sentry from '@sentry/browser';
 
 Sentry.init({ dsn: process.env.BROWSER_SENTRY });
-Sentry.captureException(new Error("sentry test in index.js"));
-console.log(process.env.BROWSER_SENTRY);
+if(process.env.SENTRY_TESTS == "true"){
+    Sentry.captureException(new Error("sentry test in index.js"));
+}
 function createChatElement(sender, message, image, snipeNumber, snipePlayer, snipeCount) {
     var li = document.createElement('li');
     li.setAttribute('class', 'message-li');
