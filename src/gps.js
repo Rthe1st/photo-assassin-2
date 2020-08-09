@@ -12,11 +12,11 @@ function mockCords(){
 function setup(callback){
     if (dev.testMode()){
         console.log("set fake start pos");
-        position.latitude = 51.402129;
-        position.longitude = -0.022835;
+        position.latitude = 51.389;
+        position.longitude = 0.012;
         console.log(position);
     }else{
-        console.log("real start pos")
+        console.log("real start pos");
         navigator.geolocation.getCurrentPosition((geolocationPosition) => {
             updatePosition(geolocationPosition, callback);
         });

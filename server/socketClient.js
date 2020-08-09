@@ -9,7 +9,7 @@ import fs from 'fs';
 import * as randomSeed from 'random-seed';
 
 let domain;
-if(process.argv[2] == "prod"){
+if(process.argv.length == 4 && process.argv[3] == "prod"){
     domain = "https://photo-assassin.prangten.com"
 }else{
     domain = "http://localhost:3000"
@@ -132,23 +132,137 @@ function passivePlayer(gameId, privateId, player){
     return socket;
 }
 
-gameSetup([
-    {
-        name:'p1',
-        algo: passivePlayer,
-        position: {lat: 51.389, long: 0.012}
-    },
-    {
-        name:'p2',
-        algo: passivePlayer,
-        position: {lat: 51.389, long: 0.012}
-    },
-    {
-        name:'p3',
-        algo: passivePlayer,
-        position: {lat: 51.389, long: 0.012}
-    }, {
-        name: 'simpleSloth',
-        algo: activePlayer,
-        position: {lat: 51.389, long: 0.012}
-    }]);
+function listeningPlayer(gameId, privateId, player){
+    let socket = socketEvents.setup(
+        gameId,
+        privateId,
+        (msg)=>{
+            console.log('init');
+        },
+        ()=>{},
+        ()=>{},
+        ()=>{},
+        (msg)=>{},
+        ()=>{},
+        (msg)=>{
+            console.log('start')
+        },
+        ()=>{
+            console.log("game over");
+        },
+        ()=>{},
+        (msg)=>{
+            console.log('chat message');
+            player.position.lat += (Math.random()-0.5)*0.001;
+            player.position.long += (Math.random()-0.5)*0.001;
+            let parts = msg.text.split(" ");
+            if(parts.length < 2){
+                console.log("bad comand");
+                console.log(parts);
+                return;
+            }
+            let command = parts[0];
+            let name = parts[1];
+            if(name == player.name || name == "all"){
+                if(command == "snipe"){
+                    let file = fs.readFileSync('/home/mehow/Dropbox/Photos/rabbits.jpg');
+                    let message = {
+                        "text": "gotya",
+                        "image": file,
+                        "position": {"latitude": player.position.lat, "longitude": player.position.long},
+                        "isSnipe": true,
+                    }
+                    socketEvents.chatMessage(socket, message);
+                }else if(command == "move"){
+                    player.position.lat += (Math.random()-0.5)*0.001;
+                    player.position.long += (Math.random()-0.5)*0.001;
+                    socketEvents.positionUpdate(socket, {"latitude": player.position.lat, "longitude": player.position.long});
+                }else if(command == "picture"){
+                    let file = fs.readFileSync('/home/mehow/Dropbox/Photos/rabbits.jpg');
+                    let message = {
+                        "text": "gotya",
+                        "image": file,
+                        "position": {"latitude": player.position.lat, "longitude": player.position.long},
+                        "isSnipe": false,
+                    }
+                    socketEvents.chatMessage(socket, message);
+                }else if(command == "message"){
+                    let message = {
+                        "text": "blahblah",
+                        "position": {"latitude": player.position.lat, "longitude": player.position.long},
+                    }
+                    socketEvents.chatMessage(socket, message);
+                }else if(command == "badsnipe" && parts.length == 4){
+                    socketEvents.badSnipe(socket, parts[2], parts[3]);
+                }
+            }
+        },
+        domain
+    );
+    return socket;
+}
+
+if(process.argv[2] == "active"){
+    gameSetup([
+        {
+            name:'p1',
+            algo: passivePlayer,
+            position: {lat: 51.389, long: 0.012}
+        },
+        {
+            name:'p2',
+            algo: passivePlayer,
+            position: {lat: 51.389, long: 0.012}
+        },
+        {
+            name:'p3',
+            algo: passivePlayer,
+            position: {lat: 51.389, long: 0.012}
+        }, {
+            name: 'simpleSloth',
+            algo: activePlayer,
+            position: {lat: 51.389, long: 0.012}
+        }]);    
+}else if(process.argv[2] == "passive"){
+    gameSetup([
+        {
+            name:'p1',
+            algo: passivePlayer,
+            position: {lat: 51.389, long: 0.012}
+        },
+        {
+            name:'p2',
+            algo: passivePlayer,
+            position: {lat: 51.389, long: 0.012}
+        },
+        {
+            name:'p3',
+            algo: passivePlayer,
+            position: {lat: 51.389, long: 0.012}
+        }, {
+            name: 'simpleSloth',
+            algo: passivePlayer,
+            position: {lat: 51.389, long: 0.012}
+        }]);
+}else if(process.argv[2] == "listen"){
+    gameSetup([
+        {
+            name:'p1',
+            algo: listeningPlayer,
+            position: {lat: 51.389, long: 0.012}
+        },
+        {
+            name:'p2',
+            algo: listeningPlayer,
+            position: {lat: 51.389, long: 0.012}
+        },
+        {
+            name:'p3',
+            algo: listeningPlayer,
+            position: {lat: 51.389, long: 0.012}
+        }, {
+            name: 'simpleSloth',
+            algo: listeningPlayer,
+            position: {lat: 51.389, long: 0.012}
+        }]);
+}
