@@ -76,6 +76,20 @@ app.use('/static', express.static(__dirname + '/public'));
 //todo: handle making and joining games here
 
 app.get('/', function(req, res){
+  var code = req.query.code;
+  if(code != undefined && !games.has(code)){
+    logger.log("verbose", `/ Accessing invalid game: ${req.query.code}`);
+    res.redirect(`/static/game_doesnt_exist.html`);
+    return;
+  }else if(games.has(code)){
+    var game = games.get(req.query.code);
+    if(game.state != Game.states.NOT_STARTED){
+      logger.log("verbose", "/ Attempt to join game " + req.query.code + " that has already started");
+      res.redirect(`/static/game_in_progress.html`);
+      return;
+    }
+  }
+
   res.sendFile(__dirname + '/public/lobby.html');
 });
 
@@ -138,19 +152,19 @@ app.get('/join', function(req, res){
   //todo: convey errors to user
   if(!(req.query.code)){
     logger.log("debug", 'no code supplied');
-    res.redirect('/');
+    res.redirect('/static/game_doesnt_exist.html');
     return;
   }
   var code = req.query.code;
   if(!games.has(req.query.code)){
     logger.log("verbose", `Accessing invalid game: ${req.query.code}`);
-    res.redirect(`/`);
+    res.redirect(`/static/game_doesnt_exist.html`);
     return;
   }
   var game = games.get(req.query.code);
   if(game.state != Game.states.NOT_STARTED){
     logger.log("verbose", "Attempt to join game " + req.query.code + " that has already started");
-    res.redirect(`/`);
+    res.redirect(`/static/game_in_progress.html`);
     return;
   }
   logger.log("debug", 'adding to game');
@@ -168,7 +182,7 @@ app.get('/game/:code', function(req, res){
   logger.log("debug", `Accessing game: ${req.params.code}`);
   if(!games.has(req.params.code)){
     logger.log("verbose", `Accessing invalid game: ${req.params.code}`);
-    res.redirect(`/`);
+    res.redirect(`/static/game_doesnt_exist.html`);
     return;
   }
   var game = games.get(req.params.code);
@@ -187,7 +201,6 @@ app.get('/game/:code', function(req, res){
     res.redirect(`/?code=${req.params.code}`);
     return;
   }
-
   res.sendFile(__dirname + '/public/index.html');
 });
 

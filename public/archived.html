@@ -103,7 +103,11 @@
                 ul.appendChild(innerLi);
                 targetsState.appendChild(outerLi);
             }
-            document.getElementById('next-game-link').setAttribute('href', `/?code=${gameState.nextCode}&username=${username}`);
+            if(publicId){
+                const username = gameState.userList[publicId].username;
+                console.log(username)
+                document.getElementById('next-game-link').setAttribute('href', `/?code=${gameState.nextCode}&username=${username}`);
+            }
 
             var options = document.getElementById("options");
             for(const [playerPublicId, player] of Object.entries(gameState.userList)){
@@ -251,9 +255,7 @@
         function initMap() {
             //hack to check that both google maps is loaded
             // and game data has been fetched
-            console.log("called");
             if (!ready) {
-                console.log("not ready");
                 ready = true;
                 return;
             }

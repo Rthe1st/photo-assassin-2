@@ -44,6 +44,7 @@ async function gameSetup(players){
     let hostPlayer = players.shift();
     let details = await makeGame(hostPlayer.name);
     console.log(details);
+    console.log(`${domain}/game/${details["gameId"]}`);
     let gameId = details.gameId;
     let sockets = new Map();
     let socket = hostPlayer.algo(details.gameId, details.privateId, hostPlayer);
