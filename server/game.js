@@ -1,12 +1,14 @@
 import * as crypto from 'crypto';
 
+import { logger } from './logging.js'
+
 const states = Object.freeze({ "FINISHED": "FINISHED", "NOT_STARTED": "NOT STARTED", "IN_PLAY": "IN PLAY", "TARGETS_MADE": "TARGETS MADE" })
 
 const inPlaySubStates = Object.freeze({ COUNTDOWN: "COUNTDOWN", PLAYING: "PLAYING" })
 
-function newGame(nameSpace) {
+function newGame(code, namespace) {
   return {
-    nameSpace: nameSpace,
+    code: code,
     state: states.NOT_STARTED,
     //substate is used for dividing the in play state in countdown and playing, for example
     subState: undefined,
@@ -228,4 +230,16 @@ function badSnipe(game, snipePlayer, snipeNumber, publicId) {
   return;
 }
 
-export { newGame, makeTargets, states, undoMakeTargets, start, inPlaySubStates, snipe, gameStateForClient, addPlayer, removePlayer, finishGame, updatePosition, badSnipe };
+function generateGame(games){
+  var first_part = crypto.randomBytes(2).toString('hex');
+  var second_part = crypto.randomBytes(2).toString('hex');
+  // used number of games as a guarantee prevent collisions
+  // (even though collisions must be unlikely anyway for the code to provide security)
+  var third_part = (games.size + 1).toString(16);
+  const code = `${first_part}-${second_part}-${third_part}`;
+  games.set(code, newGame(code));
+  logger.log("verbose", "making game", {gameCode: code});
+  return code;
+}
+
+export { newGame, makeTargets, states, undoMakeTargets, start, inPlaySubStates, snipe, gameStateForClient, addPlayer, removePlayer, finishGame, updatePosition, badSnipe, generateGame };

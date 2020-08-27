@@ -13,14 +13,14 @@ function setup(
     finished,
     timeLeft,
     chatMessage,
-    // this only needs to be supplied when note in a browser
+    // this only needs to be supplied when not in a browser
     // otherwise window.location is used
     hostname = ''
 ){
     let socket = io(
         // leading slash is needed so IO nows we're giving it a path
         // otherwise it uses it as a domain
-        `${hostname}/${gameId}`,
+        `${hostname}/game/${gameId}`,
         {
             query: {
                 "privateId": privateId,

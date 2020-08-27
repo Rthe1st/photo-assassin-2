@@ -1,7 +1,7 @@
 import * as Game from './game.js';
 
 function basicGame(){
-    var game = Game.newGame("fakenamespace");
+    var game = Game.newGame("fakegamecode");
     const [privateId, publicId] = Game.addPlayer(game, "player1");
     Game.removePlayer(game, publicId);
     const [privateId2, publicId2] = Game.addPlayer(game, "player2");

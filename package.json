@@ -1,5 +1,5 @@
 {
-  "name": "socket-chat-example",
+  "name": "photo-assassin",
   "version": "0.0.1",
   "description": "my first socket.io app",
   "dependencies": {
@@ -15,7 +15,8 @@
   "type": "module",
   "scripts": {
     "start": "node server.js",
-    "build": "npx webpack --config webpack.config.cjs"
+    "build": "npx webpack --config webpack.config.cjs",
+    "test": "node ./server/game_test.js"
   },
   "devDependencies": {
     "@sentry/webpack-plugin": "^1.12.0",
