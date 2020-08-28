@@ -14,7 +14,7 @@
   },
   "type": "module",
   "scripts": {
-    "start": "node server.js",
+    "start": "node server/start.js",
     "build": "npx webpack --config webpack.config.cjs",
     "test": "node ./server/test.js"
   },
