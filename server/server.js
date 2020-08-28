@@ -22,8 +22,8 @@ import * as socketIo from 'socket.io'
 import * as httpServer from 'http'
 
 import * as Game from './game.js';
-import {ioConnect, checkGameTiming, addUser} from './socketHandler.js'
-import { logger } from './logging.js'
+import * as socketHandler from './socketHandler.js';
+import { logger } from './logging.js';
 
 export function createServer(useSentry=true,port=process.env.PORT || 3000){
   var games = new Map();
@@ -51,7 +51,7 @@ export function createServer(useSentry=true,port=process.env.PORT || 3000){
 
   http.listen(port);
   
-  setInterval(() => {checkGameTiming(io, games)}, 1000);
+  setInterval(() => {socketHandler.checkGameTiming(io, games)}, 1000);
 }
 
 function addSentry(app){
@@ -89,7 +89,7 @@ function addUserToGame(code, res, username, games){
 
     const [privateId, publicId] = Game.addPlayer(game, username);
     
-    addUser(publicId, game);
+    socketHandler.addUser(publicId, game);
 
     // todo: set good settings (https only, etc)
     res.cookie("gameId", code, {sameSite: "strict"});
@@ -111,7 +111,7 @@ function make(req, res, games, io){
   games.get(code).namespace = namespace;
   // register connection after setting game space to prevent race condition
   // where ioConnect relies on game.namespace
-  namespace.on('connection', (socket) => ioConnect(socket, games));
+  namespace.on('connection', (socket) => socketHandler.ioConnect(socket, games));
   var [privateId, publicId] = addUserToGame(code, res, req.query.username, games);
   if(req.query.format == 'json'){
     res.json({publicId: publicId, privateId: privateId, gameId: code});

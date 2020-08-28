@@ -8,6 +8,10 @@ function update(updatedGame){
     game = updatedGame;
 }
 
+function getSettings(){
+    return game.chosenSettings;
+}
+
 function getUsername(publicId){
     return game.userList[publicId].username;
 }
@@ -44,4 +48,4 @@ function timeLeft(){
     }
 }
 
-export { getUsername, update, getTarget, states, timeLeft, inPlaySubStates, game, getTargetPairs}
+export { getUsername, getSettings, update, getTarget, states, timeLeft, inPlaySubStates, game, getTargetPairs}

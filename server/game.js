@@ -8,6 +8,10 @@ const inPlaySubStates = Object.freeze({ COUNTDOWN: "COUNTDOWN", PLAYING: "PLAYIN
 
 function newGame(code) {
   return {
+    // this is the settings chosen by the users before maketargets
+    // useful for settings that are now easy to derive from gamestate
+    // list proposed target list
+    chosenSettings: {},
     code: code,
     state: states.NOT_STARTED,
     //substate is used for dividing the in play state in countdown and playing, for example
@@ -52,23 +56,30 @@ function shuffle(userList){
   return shuffled;
 }
 
-function makeTargets(game, gameLength, countDown) {
+function saveSettings(game, gameLength, countDown, proposedTargetList){
+  // todo: return errors if invalid options are supplied
+  // for now - choose sensible values because its easy
   if (!isNaN(parseInt(gameLength))) {
-    game.gameLength = parseInt(gameLength) * 1000;
+    game.chosenSettings.gameLength = parseInt(gameLength) * 1000;
   } else {
-    game.gameLength = 1000 * 60 * 5;//5 min game by default
+    game.chosenSettings.gameLength = 1000 * 60 * 5; // 5 min game by default
   }
-
   if (!isNaN(parseInt(countDown))) {
-    game.countDown = parseInt(countDown) * 1000;
+    game.chosenSettings.countDown = parseInt(countDown) * 1000;
   } else {
-    game.countDown = 1000 * 60;//1 min countdown by default
+    game.chosenSettings.countDown = 1000 * 60;// 1 min countdown by default
   }
+  //todo: validate
+  game.chosenSettings.proposedTargetList = proposedTargetList;
+}
 
-  var users = shuffle(Array.from(game.userList.keys()));
-  for (var i = 0; i < users.length; i++) {
-    game.targets[users[i]] = users.slice(i + 1).concat(users.slice(0, i));
-    game.targetsGot[users[i]] = [];
+function makeTargets(game, gameLength, countDown, proposedTargetList) {
+  saveSettings(game, gameLength, countDown, proposedTargetList);
+  game.gameLength = game.chosenSettings.gameLength;
+  game.countDown = game.chosenSettings.countDown;
+  for (var i = 0; i < proposedTargetList.length; i++) {
+    game.targets[proposedTargetList[i]] = proposedTargetList.slice(i + 1).concat(proposedTargetList.slice(0, i));
+    game.targetsGot[proposedTargetList[i]] = [];
   }
   game.state = states.TARGETS_MADE;
 }
@@ -143,6 +154,7 @@ function undoneSnipesForClient(undoneSnipes) {
 
 function gameStateForClient(game) {
   var state = {
+    chosenSettings: game.chosenSettings,
     userList: Object.fromEntries(game.userList),
     targets: game.targets,
     targetsGot: game.targetsGot,
@@ -180,6 +192,8 @@ function addPlayer(game, username) {
   game.userList.set(publicId, { username: username });
   game.positions.set(publicId, []);
   game.badSnipeVotes.set(publicId, new Map());
+  let proposedTargetList = shuffle(Array.from(game.userList.keys()));
+  saveSettings(game, undefined, undefined, proposedTargetList);
   return [privateId, publicId];
 }
 
@@ -192,6 +206,8 @@ function removePlayer(game, publicId) {
   }
   game.userList.delete(publicId);
   game.positions.delete(publicId);
+  let proposedTargetList = shuffle(Array.from(game.userList.keys()));
+  saveSettings(game, undefined, undefined, proposedTargetList);
 }
 
 /*

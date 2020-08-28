@@ -31,7 +31,7 @@ export function ioConnect(socket, games){
       if(game.state != Game.states.NOT_STARTED){
         return;
       }
-      Game.makeTargets(game, msg.gameLength, msg.countDown);
+      Game.makeTargets(game, msg.gameLength, msg.countDown, msg.proposedTargetList);
       logger.log("debug", "targets when made", {targets: Array.from(game.targets)});
       logger.log("verbose", "Making targets", {gameCode: gameId, gameState: game.state});
       // todo: say who made the targets
@@ -42,10 +42,8 @@ export function ioConnect(socket, games){
       if(game.state != Game.states.TARGETS_MADE){
         return;
       }
-      // save gamestate before wipe
-      // so we can use the settings as default values for the input fields
-      var gameState = Game.gameStateForClient(game);
       Game.undoMakeTargets(game);
+      var gameState = Game.gameStateForClient(game);
       socket.nsp.emit('undo make targets', {gameState: gameState});
     });
   

@@ -52,8 +52,8 @@ function badSnipe(socket, snipeNumber, snipePlayer){
     socket.emit('bad snipe', {snipeNumber: snipeNumber, snipePlayer: snipePlayer});
 }
 
-function makeTargets(socket, gameLength, countDown){
-    socket.emit('make targets', { gameLength: gameLength, countDown: countDown });
+function makeTargets(socket, gameLength, countDown, proposedTargetList){
+    socket.emit('make targets', { gameLength: gameLength, countDown: countDown, proposedTargetList: proposedTargetList });
 }
 
 function undoMakeTargets(socket){

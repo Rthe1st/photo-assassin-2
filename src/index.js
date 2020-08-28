@@ -166,6 +166,7 @@ function initialization(msg){
     for (let message of msg.chatHistory) {
         processMsg(message);
     }
+    proposedTargetList = msg.gameState.chosenSettings.proposedTargetList;
     markSnipesAsBad(game.game.undoneSnipes);
     for (var element of document.getElementsByClassName('username')) {
         element.innerText = game.getUsername(publicId);
@@ -223,6 +224,8 @@ function createUserElement(username, publicId){
 
 function newUser(msg) {
     game.update(msg.gameState);
+    //todo: display proposed target list
+    proposedTargetList = msg.proposedTargetList;
     if(Object.entries(game.game.userList).length > 1){
         document.getElementById('make-targets').removeAttribute('disabled');
     }
@@ -232,8 +235,9 @@ function newUser(msg) {
 };
 
 function removeUser(msg){
+    //todo: display proposed target list
+    proposedTargetList = msg.proposedTargetList;
     game.update(msg.gameState);
-    console.log(game.game.userList);
     resetUserList(game.game.userList);
     if(publicId == msg.publicId){
         //delete our cookie and reload
@@ -250,12 +254,13 @@ function makeTargets(msg) {
 
 function undoMakeTargets(msg) {
     game.update(msg.gameState);
-    //reseting values isn't needed
+    //resetting values isn't needed
     // because they should already be in their from the make-targets message
-    document.getElementById('game-length').value = game.game.gameLength /1000;
-    document.getElementById('count-down').value = game.game.countDown /1000;
+    document.getElementById('game-length').value = game.getSettings().gameLength /1000;
+    document.getElementById('count-down').value = game.getSettings().countDown /1000;
     document.getElementById('targets-made').hidden = true;
     document.getElementById('not-started').hidden = false;
+    proposedTargetList = game.getSettings().proposedTargetList;
 };
 
 function start(msg) {
@@ -273,7 +278,6 @@ function timeLeft(msg) {
 };
 
 function chatMessage(msg) {
-    console.log(msg);
     game.update(msg.gameState);
     processMsg(msg);
 
@@ -294,6 +298,7 @@ const privateId = document.cookie.replace(/(?:(?:^|.*;\s*)privateId\s*\=\s*([^;]
 const publicId = document.cookie.replace(/(?:(?:^|.*;\s*)publicId\s*\=\s*([^;]*).*$)|^.*$/, "$1");
 
 let socket;
+let proposedTargetList;
 
 window.onload = function () {
 
@@ -332,7 +337,7 @@ window.onload = function () {
         if(confirm('Are you sure?')){
             var gameLength = document.getElementById('game-length').value;
             var countDown = document.getElementById('count-down').value;
-            socketEvents.makeTargets(socket, gameLength, countDown);
+            socketEvents.makeTargets(socket, gameLength, countDown, proposedTargetList);
         }
     }
 
