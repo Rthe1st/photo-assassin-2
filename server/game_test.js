@@ -1,6 +1,6 @@
 import * as Game from './game.js';
 
-function basicGame(){
+export function basicGame(){
     var game = Game.newGame("fakegamecode");
     const [privateId, publicId] = Game.addPlayer(game, "player1");
     Game.removePlayer(game, publicId);
@@ -24,5 +24,3 @@ function basicGame(){
         console.log("game not over, fail :(");
     }
 }
-
-basicGame();

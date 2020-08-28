@@ -6,9 +6,6 @@ if (fs.existsSync('.env')) {
   dotenv.config()
 }
 
-import { createRequire } from 'module'
-const require = createRequire(import.meta.url);
-
 // only import path and use path.join
 // to avoid name collision with join function
 import * as path from 'path';
@@ -20,6 +17,9 @@ import * as Sentry from '@sentry/node';
 
 import cookieParser from 'cookie-parser';
 import express from 'express';
+
+import * as socketIo from 'socket.io'
+import * as httpServer from 'http'
 
 import * as Game from './game.js';
 import {ioConnect, checkGameTiming, addUser} from './socketHandler.js'
@@ -38,11 +38,11 @@ export function createServer(useSentry=true,port=process.env.PORT || 3000){
   app.get('/', (req, res) => root(req, res, games));
   app.get('/game/:code', (req, res) => gamePage(req, res, games));
 
-  var http = require('http').Server(app);
+  var http = httpServer.Server(app);
 
   //io needs to be accessablrwhen we setup game - pass it in
   // https://github.com/socketio/socket.io/issues/2276
-  var io = require('socket.io')(http, { cookie: false });
+  var io = socketIo.default(http, { cookie: false });
 
   // todo make this a post
   // because its not idempotent

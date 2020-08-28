@@ -4,9 +4,11 @@
 
 import * as socketEvents from '../src/socketEvents.js';
 import fetch from 'node-fetch';
-// import { game } from '../src/game.js';
 import fs from 'fs';
 import * as randomSeed from 'random-seed';
+
+import * as Server from './server.js';
+import * as Logging from './logging.js';
 
 let domain;
 if(process.argv.length == 4 && process.argv[3] == "prod"){
@@ -89,6 +91,7 @@ function activePlayer(gameId, privateId, player){
         },
         ()=>{
             console.log("game over");
+            process.exit();
         },
         ()=>{},
         (msg)=>{
@@ -203,7 +206,11 @@ function listeningPlayer(gameId, privateId, player){
     return socket;
 }
 
-if(process.argv[2] == "active"){
+export function activeGame(){
+    //todo: use test logger if we're in test mode
+    Logging.setUpLogging('realGame');
+
+    Server.createServer();
     gameSetup([
         {
             name:'p1',
@@ -223,8 +230,14 @@ if(process.argv[2] == "active"){
             name: 'simpleSloth',
             algo: activePlayer,
             position: {lat: 51.389, long: 0.012}
-        }]);    
-}else if(process.argv[2] == "passive"){
+        }]);
+}
+
+export function passiveGame(){
+    //todo: use test logger if we're in test mode
+    Logging.setUpLogging('realGame');
+
+    Server.createServer();
     gameSetup([
         {
             name:'p1',
@@ -245,7 +258,13 @@ if(process.argv[2] == "active"){
             algo: passivePlayer,
             position: {lat: 51.389, long: 0.012}
         }]);
-}else if(process.argv[2] == "listen"){
+}
+
+export function listenGame(){
+    //todo: use test logger if we're in test mode
+    Logging.setUpLogging('realGame');
+
+    Server.createServer();
     gameSetup([
         {
             name:'p1',

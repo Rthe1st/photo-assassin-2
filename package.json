@@ -16,7 +16,7 @@
   "scripts": {
     "start": "node server.js",
     "build": "npx webpack --config webpack.config.cjs",
-    "test": "node ./server/game_test.js"
+    "test": "node ./server/test.js"
   },
   "devDependencies": {
     "@sentry/webpack-plugin": "^1.12.0",
