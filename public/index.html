@@ -22,7 +22,6 @@
         <div class="right">
             <!--https://stackoverflow.com/questions/29661058/how-do-i-add-text-based-units-like-lbs-floated-to-right-inside-of-an-input-ele-->
             <label>Game Length (sec)<input id="game-length" value="300"></label>
-            <!--todo: time people have to hide before game starts-->
             <label>Countdown (sec)<input id="count-down" value="60"></label>
             <button id="shuffle-targets">Redo targets</button>
             <ul id="proposed-target-list"></ul>
@@ -34,10 +33,6 @@
       <p class="username" style="grid-column: 1;grid-row: 1;"></p>
       <button id="undo-make-targets">Back</button>
       <button id="start-game" style="grid-column: 3;grid-row: 1;">Start</button>
-      <!-- todo: this is has 2 potential uses
-          1) regen target lists people don't like
-          2) include later users in the target list-->
-      <!--<button id="make-targets">Re-make targets</button>-->
     </div>
     <div class="middle-2">
         <ul id="target-list" class="left"></ul>
@@ -53,12 +48,14 @@
   <div id="in-play" hidden class="container">
     <div class="top">
       <p class="username" style="grid-column: 1;grid-row: 1;"></p>
-      <div style="grid-column: 2;grid-row: 1;">
-        <p id="sub-state"></p>
-        <p id="time-left"></p>
-      </div>
-      <button id="stop-game" style="grid-column: 3;grid-row: 1;">Stop</button>
-      <p id="target"></p>
+      <p id="sub-state" style="grid-column: 2;grid-row: 1;"></p>
+      <button id="show-game-info" style="grid-column: 3;grid-row: 1;">info</button>
+      <p id="target" style="grid-column: 1;grid-row: 2;"></p>
+      <p id="time-left" style="grid-column: 2;grid-row: 2;"></p>
+      <button id="stop-game" style="grid-column: 3;grid-row: 2;">Stop</button>
+    </div>
+    <div id="game-info" hidden>
+      <ul id="player-progress"></ul>
     </div>
     <div id="photo-preview" hidden class="middle">
       <img id="preview">

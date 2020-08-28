@@ -16,6 +16,12 @@ function getUsername(publicId){
     return game.userList[publicId].username;
 }
 
+function getPlayerProgress(publicId){
+    let got = game.targetsGot[publicId].length;
+    let remaining = got + game.targets[publicId].length;
+    return [got, remaining];
+}
+
 function targetDisplay(targets) {
     users = Object.keys(targets);
     output = "";
@@ -31,19 +37,15 @@ function getTarget(publicId){
 
 export function getProposedTargetPairs(proposedTargetList){
     let pairs = [];
-    let firstPlayerPosition;
     for (var i=0; i<proposedTargetList.length; i++) {
         let sniper = parseInt(proposedTargetList[i]);
-        if(sniper == 0){
-            firstPlayerPosition = i;
-        }
         let target = parseInt(proposedTargetList[(i+1)%proposedTargetList.length]);
         pairs.push([
             getUsername(sniper),
             getUsername(target)
         ]);
     }
-    return pairs;    
+    return pairs;
 }
 
 function getTargetPairs(){
@@ -65,4 +67,4 @@ function timeLeft(){
     }
 }
 
-export { getUsername, getSettings, update, getTarget, states, timeLeft, inPlaySubStates, game, getTargetPairs}
+export { getUsername, getSettings, update, getTarget, states, timeLeft, inPlaySubStates, game, getTargetPairs, getPlayerProgress}

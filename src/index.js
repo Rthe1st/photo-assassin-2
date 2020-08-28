@@ -312,6 +312,29 @@ function shuffleTargets(){
     refreshProposedTargets();
 }
 
+function showGameInfo(){
+    let gameInfoDiv = document.getElementById('game-info');
+    let messages = document.getElementById('messages');
+    let sendMessageForm = document.getElementById('send-message-form')
+    if(gameInfoDiv.hidden){
+        gameInfoDiv.hidden = false;
+        sendMessageForm.hidden = true;
+        messages.hidden = true;
+        let playerProgressList = document.getElementById('player-progress');
+        playerProgressList.innerHTML = '';
+        for (const [publicId, user] of Object.entries(game.game.userList)) {
+            let playerElement = document.createElement('li');
+            let [got, remaining] = game.getPlayerProgress(publicId);
+            playerElement.innerText = user.username + ", target: " + game.getTarget(publicId) + ', ' + got + '/' + remaining;
+            playerProgressList.appendChild(playerElement);
+        }
+    }else{
+        gameInfoDiv.hidden = true;
+        sendMessageForm.hidden = false;
+        messages.hidden = false;
+    }
+}
+
 // gameId needs to be decoded because it contains a '/'
 // which gets URI encoded otherwise
 const gameId = decodeURIComponent(document.cookie.replace(/(?:(?:^|.*;\s*)gameId\s*\=\s*([^;]*).*$)|^.*$/, "$1"));
@@ -340,6 +363,8 @@ window.onload = function () {
         timeLeft,
         chatMessage
     );
+
+    document.getElementById("show-game-info").addEventListener('click', showGameInfo);
 
     document.getElementById("shuffle-targets").addEventListener('click', shuffleTargets);
 
