@@ -8,6 +8,8 @@ if(process.argv[2] == "active"){
     socketClient.passiveGame();
 }else if(process.argv[2] == "listen"){
     socketClient.listenGame();
+}else if(process.argv.length > 2){
+    console.log('unrecognized arguments')
 }else{
     Logging.setUpLogging('realGame');
     Server.createServer();

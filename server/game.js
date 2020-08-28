@@ -6,7 +6,7 @@ const states = Object.freeze({ "FINISHED": "FINISHED", "NOT_STARTED": "NOT START
 
 const inPlaySubStates = Object.freeze({ COUNTDOWN: "COUNTDOWN", PLAYING: "PLAYING" })
 
-function newGame(code, namespace) {
+function newGame(code) {
   return {
     code: code,
     state: states.NOT_STARTED,
@@ -37,6 +37,21 @@ function newGame(code, namespace) {
 
 }
 
+function shuffle(userList){
+  // inside-out fisher-yates
+  // https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle
+  // note: wiki says multiplying a float and rounding down can give bias
+  let shuffled = []
+  for(let boundary=0; boundary < userList.length; boundary +=1){
+    shuffled.push(userList[boundary]);
+    let swapPosition = Math.floor(Math.random() * (boundary + 1));
+    if(swapPosition != boundary){
+      [ shuffled[boundary], shuffled[swapPosition] ] = [ shuffled[swapPosition], shuffled[boundary] ];
+    }
+  }
+  return shuffled;
+}
+
 function makeTargets(game, gameLength, countDown) {
   if (!isNaN(parseInt(gameLength))) {
     game.gameLength = parseInt(gameLength) * 1000;
@@ -50,7 +65,7 @@ function makeTargets(game, gameLength, countDown) {
     game.countDown = 1000 * 60;//1 min countdown by default
   }
 
-  var users = Array.from(game.userList.keys());
+  var users = shuffle(Array.from(game.userList.keys()));
   for (var i = 0; i < users.length; i++) {
     game.targets[users[i]] = users.slice(i + 1).concat(users.slice(0, i));
     game.targetsGot[users[i]] = [];
