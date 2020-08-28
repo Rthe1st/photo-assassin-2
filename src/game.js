@@ -29,9 +29,26 @@ function getTarget(publicId){
     return getUsername(game.targets[publicId][0])
 }
 
+export function getProposedTargetPairs(proposedTargetList){
+    let pairs = [];
+    let firstPlayerPosition;
+    for (var i=0; i<proposedTargetList.length; i++) {
+        let sniper = parseInt(proposedTargetList[i]);
+        if(sniper == 0){
+            firstPlayerPosition = i;
+        }
+        let target = parseInt(proposedTargetList[(i+1)%proposedTargetList.length]);
+        pairs.push([
+            getUsername(sniper),
+            getUsername(target)
+        ]);
+    }
+    return pairs;    
+}
+
 function getTargetPairs(){
     let pairs = [];
-    for (var publicId of Object.keys(game.targets)) {
+    for (var publicId of Object.keys(game.targets).sort()) {
         pairs.push([getUsername(publicId), getTarget(publicId)]);
     }
     return pairs;

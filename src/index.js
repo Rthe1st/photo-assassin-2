@@ -3,6 +3,7 @@ import * as game from './game'
 import * as socketEvents from './socketEvents'
 
 import * as Sentry from '@sentry/browser';
+import { shuffle } from './shuffle';
 
 Sentry.init({ dsn: process.env.BROWSER_SENTRY });
 if(process.env.SENTRY_TESTS == "true"){
@@ -160,13 +161,26 @@ function markSnipesAsBad(undoneSnipes){
     }
 }
 
+function refreshProposedTargets(){
+    let targetList = document.getElementById('proposed-target-list');
+    targetList.innerHTML = '';
+    var li = document.createElement('li');
+    li.innerText = "Targets:";
+    targetList.append(li);
+    for (var [sniper, target] of game.getProposedTargetPairs(proposedTargetList)){
+        var element = document.createElement('li');
+        var text = `${sniper} -> ${target}`;
+        element.innerText = text;
+        targetList.appendChild(element);
+    }
+}
+
 function initialization(msg){
     console.log('initialized');
     game.update(msg.gameState);
     for (let message of msg.chatHistory) {
         processMsg(message);
     }
-    proposedTargetList = msg.gameState.chosenSettings.proposedTargetList;
     markSnipesAsBad(game.game.undoneSnipes);
     for (var element of document.getElementsByClassName('username')) {
         element.innerText = game.getUsername(publicId);
@@ -174,7 +188,9 @@ function initialization(msg){
     if(game.game.state == game.states.IN_PLAY){
         inPlayView();
     }else if(game.game.state == game.states.NOT_STARTED){
+        proposedTargetList = msg.gameState.chosenSettings.proposedTargetList;
         document.getElementById('not-started').hidden = false;
+        refreshProposedTargets();
         // todo: move into game as isGameReady()
         if(Object.entries(game.game.userList).length > 1){
             document.getElementById('make-targets').removeAttribute('disabled');
@@ -224,8 +240,8 @@ function createUserElement(username, publicId){
 
 function newUser(msg) {
     game.update(msg.gameState);
-    //todo: display proposed target list
-    proposedTargetList = msg.proposedTargetList;
+    proposedTargetList = game.getSettings().proposedTargetList;
+    refreshProposedTargets();
     if(Object.entries(game.game.userList).length > 1){
         document.getElementById('make-targets').removeAttribute('disabled');
     }
@@ -235,9 +251,9 @@ function newUser(msg) {
 };
 
 function removeUser(msg){
-    //todo: display proposed target list
-    proposedTargetList = msg.proposedTargetList;
     game.update(msg.gameState);
+    proposedTargetList = game.getSettings().proposedTargetList;
+    refreshProposedTargets();
     resetUserList(game.game.userList);
     if(publicId == msg.publicId){
         //delete our cookie and reload
@@ -261,6 +277,7 @@ function undoMakeTargets(msg) {
     document.getElementById('targets-made').hidden = true;
     document.getElementById('not-started').hidden = false;
     proposedTargetList = game.getSettings().proposedTargetList;
+    refreshProposedTargets();
 };
 
 function start(msg) {
@@ -290,6 +307,11 @@ function chatMessage(msg) {
     // }
 };
 
+function shuffleTargets(){
+    proposedTargetList = shuffle(proposedTargetList);
+    refreshProposedTargets();
+}
+
 // gameId needs to be decoded because it contains a '/'
 // which gets URI encoded otherwise
 const gameId = decodeURIComponent(document.cookie.replace(/(?:(?:^|.*;\s*)gameId\s*\=\s*([^;]*).*$)|^.*$/, "$1"));
@@ -318,6 +340,8 @@ window.onload = function () {
         timeLeft,
         chatMessage
     );
+
+    document.getElementById("shuffle-targets").addEventListener('click', shuffleTargets);
 
     document.getElementById("mark-snipe").addEventListener('click', markSnipe);
 
