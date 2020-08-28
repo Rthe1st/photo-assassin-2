@@ -42,6 +42,11 @@ function createChatElement(sender, message, image, snipeNumber, snipePlayer, sni
 
 function processMsg(msg){
     createChatElement(game.getUsername(msg.publicId), msg.text, msg.image, msg.snipeNumber, msg.snipePlayer, msg.snipeCount);
+    if(msg.snipePlayer == publicId){
+        //todo: show photo on screen
+        // and flash text on screen saying you got got
+        var successBool = window.navigator.vibrate([10]);
+    }
     if (msg.botMessage) {
         createChatElement('Gamebot3000', msg.botMessage);
     }
