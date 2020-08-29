@@ -114,6 +114,7 @@ export function ioConnect(socket, games){
         outgoing_msg.snipeNumber = snipeRes.snipeNumber;
         outgoing_msg.snipePlayer = publicId;
         outgoing_msg.snipeCount = snipeRes.snipeCount;
+        outgoing_msg.botMessage = snipeRes.botMessage;
       }
   
       logger.log("debug", "positionUpdate", {'positionHistory': game.positions.get(publicId), 'position': msg.position});

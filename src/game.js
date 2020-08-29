@@ -16,6 +16,11 @@ function getUsername(publicId){
     return game.userList[publicId].username;
 }
 
+export function getLastSnipedPlayerId(publicId){
+    let targetsGot = game.targetsGot[publicId];
+    return targetsGot[targetsGot.length - 1];
+}
+
 function getPlayerProgress(publicId){
     let got = game.targetsGot[publicId].length;
     let remaining = got + game.targets[publicId].length;

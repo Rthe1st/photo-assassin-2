@@ -41,14 +41,14 @@ function createChatElement(sender, message, image, snipeNumber, snipePlayer, sni
 }
 
 function processMsg(msg){
-    createChatElement(game.getUsername(msg.publicId), msg.text, msg.image, msg.snipeNumber, msg.snipePlayer, msg.snipeCount);
-    if(msg.snipePlayer == publicId){
-        //todo: show photo on screen
-        // and flash text on screen saying you got got
-        var successBool = window.navigator.vibrate([10]);
-    }
     if (msg.botMessage) {
         createChatElement('Gamebot3000', msg.botMessage);
+    }
+    //todo: you can actual work out snipe number ,player, snipecount from game state
+    // if game state is upto date
+    createChatElement(game.getUsername(msg.publicId), msg.text, msg.image, msg.snipeNumber, msg.snipePlayer, msg.snipeCount);
+    if(publicId == game.getLastSnipedPlayerId(msg.publicId)){
+        showSnipedScreen(msg.botMessage);
     }
 }
 
@@ -317,6 +317,30 @@ function shuffleTargets(){
     refreshProposedTargets();
 }
 
+function hideSnipedScreen(){
+    let snipeScreen = document.getElementById('sniped-screen');
+    let messages = document.getElementById('messages');
+    let sendMessageForm = document.getElementById('send-message-form');
+    let inPlayTop = document.getElementById('in-play').getElementsByClassName('top')[0];
+    messages.hidden = false;
+    sendMessageForm.hidden = false;
+    inPlayTop.hidden = false;
+    snipeScreen.hidden = true;
+}
+
+function showSnipedScreen(msg){
+    let snipeScreen = document.getElementById('sniped-screen');
+    let messages = document.getElementById('messages');
+    let sendMessageForm = document.getElementById('send-message-form');
+    let inPlayTop = document.getElementById('in-play').getElementsByClassName('top')[0];
+    messages.hidden = true;
+    sendMessageForm.hidden = true;
+    inPlayTop.hidden = true;
+    snipeScreen.hidden = false;
+    document.getElementById('sniped-alert-text').innerText = msg;
+    var successBool = window.navigator.vibrate([10]);
+}
+
 function showGameInfo(){
     let gameInfoDiv = document.getElementById('game-info');
     let messages = document.getElementById('messages');
@@ -368,6 +392,8 @@ window.onload = function () {
         timeLeft,
         chatMessage
     );
+
+    document.getElementById("exit-sniped-screen").addEventListener('click', hideSnipedScreen);
 
     document.getElementById("show-game-info").addEventListener('click', showGameInfo);
 
