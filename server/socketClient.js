@@ -7,14 +7,10 @@ import fetch from 'node-fetch';
 import fs from 'fs';
 import * as randomSeed from 'random-seed';
 
-import * as Server from './server.js';
-import * as Logging from './logging.js';
+let domain = "http://localhost:3000";
 
-let domain;
-if(process.argv.length == 4 && process.argv[3] == "prod"){
-    domain = "https://photo-assassin.prangten.com"
-}else{
-    domain = "http://localhost:3000"
+export function useProd(){
+    domain = "https://photo-assassin.prangten.com";
 }
 
 function makeGame(username){
@@ -207,10 +203,6 @@ function listeningPlayer(gameId, privateId, player){
 }
 
 export function activeGame(){
-    //todo: use test logger if we're in test mode
-    Logging.setUpLogging('realGame');
-
-    Server.createServer();
     gameSetup([
         {
             name:'p1',
@@ -234,10 +226,6 @@ export function activeGame(){
 }
 
 export function passiveGame(){
-    //todo: use test logger if we're in test mode
-    Logging.setUpLogging('realGame');
-
-    Server.createServer();
     gameSetup([
         {
             name:'p1',
@@ -261,10 +249,6 @@ export function passiveGame(){
 }
 
 export function listenGame(){
-    //todo: use test logger if we're in test mode
-    Logging.setUpLogging('realGame');
-
-    Server.createServer();
     gameSetup([
         {
             name:'p1',

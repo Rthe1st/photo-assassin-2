@@ -1,11 +1,3 @@
-import dotenv from 'dotenv'
-import * as fs from 'fs'
-
-// .env file doesn't exist in prod
-if (fs.existsSync('.env')) {
-  dotenv.config()
-}
-
 // only import path and use path.join
 // to avoid name collision with join function
 import * as path from 'path';
