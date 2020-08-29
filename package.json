@@ -14,9 +14,13 @@
   },
   "type": "module",
   "scripts": {
-    "start": "node server/start.js",
+    "start": "node ./server/start.js",
     "build": "npx webpack --config webpack.config.cjs",
     "test": "node ./server/test.js"
+  },
+  "engines": {
+    "node": "14.6.x",
+    "npm": "6.14.x"
   },
   "devDependencies": {
     "@sentry/webpack-plugin": "^1.12.0",
