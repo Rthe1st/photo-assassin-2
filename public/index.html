@@ -14,7 +14,7 @@
   <!--todo: use semantic elements-->
   <div class="container" id="not-started" hidden>
     <div class="top">
-      <p class="username current-user" style="grid-column: 1;grid-row: 1;"></p>
+      <p class="username current-username" style="grid-column: 1;grid-row: 1;"></p>
       <button id="make-targets" style="grid-column: 3;grid-row: 1;" disabled>Make targets</button>
     </div>
     <div class="middle-2">
@@ -30,7 +30,7 @@
   </div>
   <div class="container" id="targets-made" hidden>
     <div class="top">
-      <p class="username current-user" style="grid-column: 1;grid-row: 1;"></p>
+      <p class="username current-username" style="grid-column: 1;grid-row: 1;"></p>
       <button id="undo-make-targets">Back</button>
       <button id="start-game" style="grid-column: 3;grid-row: 1;">Start</button>
     </div>
@@ -47,7 +47,7 @@
   </div>
   <div id="in-play" hidden class="container">
     <div class="top">
-      <p class="username current-user" style="grid-column: 1;grid-row: 1;"></p>
+      <p class="username current-username" style="grid-column: 1;grid-row: 1;"></p>
       <p id="sub-state" style="grid-column: 2;grid-row: 1;"></p>
       <button id="show-game-info" style="grid-column: 3;grid-row: 1;">info</button>
       <p id="target" style="grid-column: 1;grid-row: 2;"></p>
