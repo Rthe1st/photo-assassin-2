@@ -12,11 +12,6 @@ if(process.env.NODE_ENV == "production"){
     Logging.setUpLogging('realGame');
     Server.createServer();
 }else{
-    if(!process.argv.includes("--no-server")){
-        Logging.setUpLogging('realGame');
-        Server.createServer();
-    }
-    
     // wrap in an async so we can dynamically import socketClient
     // which means we don't need to install dev dependencies in production
     // where socketclient is never used
@@ -24,19 +19,27 @@ if(process.env.NODE_ENV == "production"){
         let socketClient = await import('./socketClient.js');
         if(process.argv.includes("--prod")){
             socketClient.useProd();
+        }else{
+            Logging.setUpLogging('realGame');
+            Server.createServer();
         }
 
         let clientTypeIndex = process.argv.indexOf("--clients") + 1
 
         if(clientTypeIndex < process.argv.length){
-            if(process.argv[clientTypeIndex] == "active"){
-                socketClient.activeGame();
-            }else if(process.argv[2] == "passive"){
-                socketClient.passiveGame();
-            }else if(process.argv[2] == "listen"){
-                socketClient.listenGame();
-            }else{
-                console.log('unrecognized arguments');
+            switch(process.argv[clientTypeIndex]){
+                case "active":
+                    socketClient.activeGame();
+                    break;
+                case "passive":
+                    socketClient.passiveGame();
+                    break;
+                case "listen":
+                    socketClient.listenGame();
+                    break;
+                default:
+                    console.log('unrecognized arguments');                    
+                    break;
             }
         }else{
             console.log('no client type');
