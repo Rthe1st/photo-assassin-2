@@ -187,7 +187,7 @@ function initialization(msg){
         processMsg(message);
     }
     markSnipesAsBad(game.game.undoneSnipes);
-    for (var element of document.getElementsByClassName('username')) {
+    for (var element of document.getElementsByClassName('current-username')) {
         element.innerText = game.getUsername(publicId);
     }
     if(game.game.state == game.states.IN_PLAY){

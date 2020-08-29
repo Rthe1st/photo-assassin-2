@@ -133,11 +133,88 @@ function passivePlayer(gameId, privateId, player){
 }
 
 function listeningPlayer(gameId, privateId, player){
+
+    //this is incase we re-connect and miss messages
+    let commandsSeen = 0;
+
+    function processCommand(msg){
+        console.log('chat message');
+        player.position.lat += (Math.random()-0.5)*0.001;
+        player.position.long += (Math.random()-0.5)*0.001;
+        let parts = msg.text.split(" ");
+        if(parts.length < 2){
+            console.log("bad comand");
+            console.log(parts);
+            return;
+        }
+        let command = parts[0];
+        let name = parts[1];
+        if(name == player.name || name == "all"){
+            commandsSeen += 1;
+            console.log(command);
+            console.log(name);
+            if(command == "snipe"){
+                console.log("sniping");
+                let file = fs.readFileSync('/home/mehow/Dropbox/Photos/rabbits.jpg');
+                let message = {
+                    "text": "gotya",
+                    "image": file,
+                    "position": {"latitude": player.position.lat, "longitude": player.position.long},
+                    "isSnipe": true,
+                }
+                socketEvents.chatMessage(socket, message);
+            }else if(command == "move"){
+                console.log("moving");
+                player.position.lat += (Math.random()-0.5)*0.001;
+                player.position.long += (Math.random()-0.5)*0.001;
+                socketEvents.positionUpdate(socket, {"latitude": player.position.lat, "longitude": player.position.long});
+            }else if(command == "picture"){
+                console.log("pictureing");
+                let file = fs.readFileSync('/home/mehow/Dropbox/Photos/rabbits.jpg');
+                let message = {
+                    "text": "gotya",
+                    "image": file,
+                    "position": {"latitude": player.position.lat, "longitude": player.position.long},
+                    "isSnipe": false,
+                }
+                socketEvents.chatMessage(socket, message);
+            }else if(command == "message"){
+                console.log("messging");
+                let message = {
+                    "text": "blahblah",
+                    "position": {"latitude": player.position.lat, "longitude": player.position.long},
+                }
+                socketEvents.chatMessage(socket, message);
+            }else if(command == "badsnipe" && parts.length == 4){
+                console.log("badsniping");
+                socketEvents.badSnipe(socket, parts[2], parts[3]);
+            }
+        }
+    }
+
     let socket = socketEvents.setup(
         gameId,
         privateId,
         (msg)=>{
-            console.log('init');
+            console.log('init:');
+            console.log(player);
+            let commandsInHistory = 0;
+            for(let message of msg.chatHistory){
+                let parts = message.text.split(" ");
+                if(parts.length < 2){
+                    continue;
+                }
+                let name = parts[1];
+                if(name == player.name || name == "all"){
+                    commandsInHistory += 1;
+                    if(commandsInHistory > commandsSeen){
+                        console.log("replaying");
+                        console.log(message.text)
+                        commandsSeen += 1;
+                        processCommand(message);
+                    }
+                }
+            }
         },
         ()=>{},
         ()=>{},
@@ -151,52 +228,7 @@ function listeningPlayer(gameId, privateId, player){
             console.log("game over");
         },
         ()=>{},
-        (msg)=>{
-            console.log('chat message');
-            player.position.lat += (Math.random()-0.5)*0.001;
-            player.position.long += (Math.random()-0.5)*0.001;
-            let parts = msg.text.split(" ");
-            if(parts.length < 2){
-                console.log("bad comand");
-                console.log(parts);
-                return;
-            }
-            let command = parts[0];
-            let name = parts[1];
-            if(name == player.name || name == "all"){
-                if(command == "snipe"){
-                    let file = fs.readFileSync('/home/mehow/Dropbox/Photos/rabbits.jpg');
-                    let message = {
-                        "text": "gotya",
-                        "image": file,
-                        "position": {"latitude": player.position.lat, "longitude": player.position.long},
-                        "isSnipe": true,
-                    }
-                    socketEvents.chatMessage(socket, message);
-                }else if(command == "move"){
-                    player.position.lat += (Math.random()-0.5)*0.001;
-                    player.position.long += (Math.random()-0.5)*0.001;
-                    socketEvents.positionUpdate(socket, {"latitude": player.position.lat, "longitude": player.position.long});
-                }else if(command == "picture"){
-                    let file = fs.readFileSync('/home/mehow/Dropbox/Photos/rabbits.jpg');
-                    let message = {
-                        "text": "gotya",
-                        "image": file,
-                        "position": {"latitude": player.position.lat, "longitude": player.position.long},
-                        "isSnipe": false,
-                    }
-                    socketEvents.chatMessage(socket, message);
-                }else if(command == "message"){
-                    let message = {
-                        "text": "blahblah",
-                        "position": {"latitude": player.position.lat, "longitude": player.position.long},
-                    }
-                    socketEvents.chatMessage(socket, message);
-                }else if(command == "badsnipe" && parts.length == 4){
-                    socketEvents.badSnipe(socket, parts[2], parts[3]);
-                }
-            }
-        },
+        processCommand,
         domain
     );
     return socket;

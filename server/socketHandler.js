@@ -83,6 +83,9 @@ export function ioConnect(socket, games){
         return;
       }
   
+      console.log('ingame chat msg');
+      console.log(msg);
+
       logger.log("verbose", "Chat message", {gameCode: gameId, publicId: publicId, chatMessage: msg.text});
   
       var outgoing_msg = {
