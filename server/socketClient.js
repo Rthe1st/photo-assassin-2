@@ -138,24 +138,17 @@ function listeningPlayer(gameId, privateId, player){
     let commandsSeen = 0;
 
     function processCommand(msg){
-        console.log('chat message');
         player.position.lat += (Math.random()-0.5)*0.001;
         player.position.long += (Math.random()-0.5)*0.001;
         let parts = msg.text.split(" ");
-        if(parts.length < 2){
-            console.log("bad comand");
-            console.log(parts);
-            return;
-        }
         let command = parts[0];
         let name = parts[1];
         if(name == player.name || name == "all"){
-            commandsSeen += 1;
             console.log(command);
             console.log(name);
             if(command == "snipe"){
                 console.log("sniping");
-                let file = fs.readFileSync('/home/mehow/Dropbox/Photos/rabbits.jpg');
+                let file = fs.readFileSync('./sample_snipe_image.jpeg');
                 let message = {
                     "text": "gotya",
                     "image": file,
@@ -170,7 +163,7 @@ function listeningPlayer(gameId, privateId, player){
                 socketEvents.positionUpdate(socket, {"latitude": player.position.lat, "longitude": player.position.long});
             }else if(command == "picture"){
                 console.log("pictureing");
-                let file = fs.readFileSync('/home/mehow/Dropbox/Photos/rabbits.jpg');
+                let file = fs.readFileSync('./sample_snipe_image.jpeg');
                 let message = {
                     "text": "gotya",
                     "image": file,
@@ -189,6 +182,8 @@ function listeningPlayer(gameId, privateId, player){
                 console.log("badsniping");
                 socketEvents.badSnipe(socket, parts[2], parts[3]);
             }
+            // it's important this is only logged after we know the action was sent
+            commandsSeen += 1;
         }
     }
 
