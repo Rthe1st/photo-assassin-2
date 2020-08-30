@@ -338,7 +338,8 @@ function showSnipedScreen(msg){
     inPlayTop.hidden = true;
     snipeScreen.hidden = false;
     document.getElementById('sniped-alert-text').innerText = msg;
-    var successBool = window.navigator.vibrate([10]);
+    var successBool = window.navigator.vibrate([100, 50, 100]);
+    console.log(successBool);
 }
 
 function showGameInfo(){
