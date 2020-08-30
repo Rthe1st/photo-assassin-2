@@ -30,9 +30,9 @@ function createChatElement(sender, message, image, snipeNumber, snipePlayer, sni
         if(snipePlayer){
             img.setAttribute('id', `snipe-${snipePlayer}-${snipeNumber}-${snipeCount}`)
             var voteButton = document.createElement('button');
-            voteButton.innerText = 'vote';
+            let targetUser = game.getTarget(snipePlayer);
+            voteButton.innerText = `Was ${targetUser} not in the picture?`;
             voteButton.onclick = function(){
-                let targetUser = game.getUsername(snipePlayer);
                 if(confirm(`Was ${targetUser} not in the picture?`)){
                     socketEvents.badSnipe(socket, snipeNumber, snipePlayer);
                 }
@@ -43,13 +43,16 @@ function createChatElement(sender, message, image, snipeNumber, snipePlayer, sni
     document.getElementById('messages').appendChild(li);
 }
 
-function processMsg(msg){
+function processMsg(msg, isReplay){
     if (msg.botMessage) {
         createChatElement('Gamebot3000', msg.botMessage);
     }
     //todo: you can actual work out snipe number ,player, snipecount from game state
     // if game state is upto date
     createChatElement(game.getUsername(msg.publicId), msg.text, msg.image, msg.snipeNumber, msg.snipePlayer, msg.snipeCount);
+    if(isReplay){
+        return;
+    }
     if(publicId == game.getLastSnipedPlayerId(msg.publicId)){
         showSnipedScreen(game.getUsername(msg.publicId) + " sniped you!");
     }
@@ -60,7 +63,9 @@ function deletePreview(){
     document.getElementById('messages').hidden = false;
     document.getElementById('photo-input').value = '';
     document.getElementById('is-snipe').checked = false;
-    document.getElementById("mark-snipe").innerText = "Snipe?"
+    document.getElementById("mark-snipe-question").innerText = "Is your target in the picture?"
+    document.getElementById("mark-snipe").innerText = "Yes"
+    document.getElementById("mark-not-snipe").innerText = "No ✓"
 }
 
 function cameraButton(event){
@@ -72,6 +77,8 @@ function photoInput(event){
     var img = document.getElementById('preview');
     img.src = URL.createObjectURL(event.target.files[0]);
     document.getElementById('photo-preview').hidden = false;
+    let target = game.getTarget(publicId);
+    document.getElementById("mark-snipe-question").innerText = `Is ${target} in the picture?`
     document.getElementById('messages').hidden = true;
 }
 
@@ -87,7 +94,8 @@ function sendMessage(ev){
     document.getElementById('message').value = '';
     document.getElementById('photo-input').value = '';
     document.getElementById('is-snipe').checked = false;
-    document.getElementById("mark-snipe").innerText = "Snipe?"
+    document.getElementById("mark-snipe").innerText = "Yes"
+    document.getElementById("mark-not-snipe").innerText = "No ✓"
     document.getElementById('photo-preview').hidden = true;
     document.getElementById('messages').hidden = false;
     ev.preventDefault();
@@ -104,6 +112,30 @@ function updateTimeLeft(){
     document.getElementById('time-left').innerText = game.timeLeft();
 }
 
+function setSnipe(unset){
+    // ui is a bit confusing, make clearer
+    var isSnipe = document.getElementById('is-snipe');
+    if(unset){
+        isSnipe.checked = false;
+        document.getElementById("mark-snipe").innerText = "Yes";
+        document.getElementById("mark-not-snipe").innerText = "No ✓";
+    }else{
+        isSnipe.checked = true;
+        document.getElementById("mark-snipe").innerText = "Yes ✓";
+        document.getElementById("mark-not-snipe").innerText = "No";
+    }
+}
+
+function markNotSnipe(event){
+    //dont think this needs to check game state
+    // because if theres not game state the button will be hidden
+    if(game.game.subState == game.inPlaySubStates.COUNTDOWN){
+        alert("Can't snipe yet - wait to countdown is over");
+        return;
+    }
+    setSnipe(true);
+}
+
 function markSnipe(event){
     //dont think this needs to check game state
     // because if theres not game state the button will be hidden
@@ -111,15 +143,7 @@ function markSnipe(event){
         alert("Can't snipe yet - wait to countdown is over");
         return;
     }
-    //ui is a bit confusing, make clearer
-    var isSnipe = document.getElementById('is-snipe').checked;
-    if(isSnipe){
-        document.getElementById('is-snipe').checked = false;
-        document.getElementById("mark-snipe").innerText = "Snipe?"
-    }else{
-        document.getElementById('is-snipe').checked = true;
-        document.getElementById("mark-snipe").innerText = "Sniped ✓"
-    }
+    setSnipe();
 }
 
 function inPlayView(){
@@ -187,7 +211,7 @@ function initialization(msg){
     console.log('initialized');
     game.update(msg.gameState);
     for (let message of msg.chatHistory) {
-        processMsg(message);
+        processMsg(message, true);
     }
     markSnipesAsBad(game.game.undoneSnipes);
     for (var element of document.getElementsByClassName('current-username')) {
@@ -360,7 +384,7 @@ function showGameInfo(){
         for (const [publicId, user] of Object.entries(game.game.userList)) {
             let playerElement = document.createElement('li');
             let [got, remaining] = game.getPlayerProgress(publicId);
-            playerElement.innerText = user.username + ", target: " + game.getTarget(publicId) + ', ' + got + '/' + remaining;
+            playerElement.innerText = user.username + ", current target: " + game.getTarget(publicId) + ', ' + got + '/' + remaining;
             playerProgressList.appendChild(playerElement);
         }
     }else{
@@ -407,6 +431,8 @@ window.onload = function () {
     document.getElementById("shuffle-targets").addEventListener('click', shuffleTargets);
 
     document.getElementById("mark-snipe").addEventListener('click', markSnipe);
+
+    document.getElementById("mark-not-snipe").addEventListener('click', markNotSnipe);
 
     document.getElementById("delete-preview").addEventListener('click', deletePreview);
 
