@@ -140,7 +140,7 @@ function targetsMadeView(){
     var li = document.createElement('li');
     li.innerText = "Targets:";
     targetsElement.append(li);
-    for (var [sniper, target] of game.getTargetPairs()) {
+    for (var [sniper, target] of game.getProposedTargetPairs(game.getSettings().proposedTargetList)) {
         var element = document.createElement('li');
         var text = `${sniper} -> ${target}`;
         element.innerText = text;
@@ -193,7 +193,7 @@ function initialization(msg){
     if(game.game.state == game.states.IN_PLAY){
         inPlayView();
     }else if(game.game.state == game.states.NOT_STARTED){
-        proposedTargetList = msg.gameState.chosenSettings.proposedTargetList;
+        proposedTargetList = game.getSettings().proposedTargetList;
         document.getElementById('not-started').hidden = false;
         refreshProposedTargets();
         // todo: move into game as isGameReady()

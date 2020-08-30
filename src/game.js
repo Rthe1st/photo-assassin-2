@@ -40,6 +40,10 @@ function getTarget(publicId){
     return getUsername(game.targets[publicId][0])
 }
 
+// this takes proposedTargetList as a param instead of pulling it from game
+// for when a player reshuffles locally
+// because we want the game object to accurately reflect the server's view of the state
+// (so don't save the local reshuffle to the game)
 export function getProposedTargetPairs(proposedTargetList){
     let pairs = [];
     for (var i=0; i<proposedTargetList.length; i++) {
@@ -49,14 +53,6 @@ export function getProposedTargetPairs(proposedTargetList){
             getUsername(sniper),
             getUsername(target)
         ]);
-    }
-    return pairs;
-}
-
-function getTargetPairs(){
-    let pairs = [];
-    for (var publicId of Object.keys(game.targets).sort()) {
-        pairs.push([getUsername(publicId), getTarget(publicId)]);
     }
     return pairs;
 }
@@ -72,4 +68,4 @@ function timeLeft(){
     }
 }
 
-export { getUsername, getSettings, update, getTarget, states, timeLeft, inPlaySubStates, game, getTargetPairs, getPlayerProgress}
+export { getUsername, getSettings, update, getTarget, states, timeLeft, inPlaySubStates, game, getPlayerProgress}
