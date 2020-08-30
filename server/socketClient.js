@@ -76,7 +76,7 @@ function activePlayer(gameId, privateId, player){
         ()=>{},
         (msg)=>{
             console.log('start')
-            let file = fs.readFileSync('/home/mehow/Dropbox/Photos/rabbits.jpg');
+            let file = fs.readFileSync('./server/sample_snipe_image.jpeg');
             let message = {
                 "text": "gotya",
                 "image": file,
@@ -93,7 +93,7 @@ function activePlayer(gameId, privateId, player){
         (msg)=>{
             player.position.lat += (Math.random()-0.5)*0.001;
             player.position.long += (Math.random()-0.5)*0.001;
-            let file = fs.readFileSync('/home/mehow/Dropbox/Photos/rabbits.jpg');
+            let file = fs.readFileSync('./server/sample_snipe_image.jpeg');
             let message = {
                 "text": "gotya",
                 "image": file,
@@ -146,7 +146,7 @@ function listeningPlayer(gameId, privateId, player){
             console.log(name);
             if(command == "snipe"){
                 console.log("sniping");
-                let file = fs.readFileSync('./sample_snipe_image.jpeg');
+                let file = fs.readFileSync('./server/sample_snipe_image.jpeg');
                 let message = {
                     "text": "gotya",
                     "image": file,
@@ -161,7 +161,7 @@ function listeningPlayer(gameId, privateId, player){
                 socketEvents.positionUpdate(socket, {"latitude": player.position.lat, "longitude": player.position.long});
             }else if(command == "picture"){
                 console.log("pictureing");
-                let file = fs.readFileSync('./sample_snipe_image.jpeg');
+                let file = fs.readFileSync('./server/sample_snipe_image.jpeg');
                 let message = {
                     "text": "gotya",
                     "image": file,
