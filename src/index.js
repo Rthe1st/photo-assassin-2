@@ -32,7 +32,10 @@ function createChatElement(sender, message, image, snipeNumber, snipePlayer, sni
             var voteButton = document.createElement('button');
             voteButton.innerText = 'vote';
             voteButton.onclick = function(){
-                socketEvents.badSnipe(socket, snipeNumber, snipePlayer);
+                let targetUser = game.getUsername(snipePlayer);
+                if(confirm(`Was ${targetUser} not in the picture?`)){
+                    socketEvents.badSnipe(socket, snipeNumber, snipePlayer);
+                }
             };
             li.appendChild(voteButton);
         }
@@ -48,7 +51,7 @@ function processMsg(msg){
     // if game state is upto date
     createChatElement(game.getUsername(msg.publicId), msg.text, msg.image, msg.snipeNumber, msg.snipePlayer, msg.snipeCount);
     if(publicId == game.getLastSnipedPlayerId(msg.publicId)){
-        showSnipedScreen(msg.botMessage);
+        showSnipedScreen(game.getUsername(msg.publicId) + " sniped you!");
     }
 }
 
@@ -338,18 +341,20 @@ function showSnipedScreen(msg){
     inPlayTop.hidden = true;
     snipeScreen.hidden = false;
     document.getElementById('sniped-alert-text').innerText = msg;
+    // todo: this broken on firefox mobile
     var successBool = window.navigator.vibrate([100, 50, 100]);
-    console.log(successBool);
 }
 
 function showGameInfo(){
     let gameInfoDiv = document.getElementById('game-info');
     let messages = document.getElementById('messages');
     let sendMessageForm = document.getElementById('send-message-form')
+    let photoPreview = document.getElementById('photo-preview');
     if(gameInfoDiv.hidden){
         gameInfoDiv.hidden = false;
         sendMessageForm.hidden = true;
         messages.hidden = true;
+        photoPreview.hidden = true;
         let playerProgressList = document.getElementById('player-progress');
         playerProgressList.innerHTML = '';
         for (const [publicId, user] of Object.entries(game.game.userList)) {
@@ -362,6 +367,7 @@ function showGameInfo(){
         gameInfoDiv.hidden = true;
         sendMessageForm.hidden = false;
         messages.hidden = false;
+        photoPreview.hidden = false;
     }
 }
 
