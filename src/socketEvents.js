@@ -24,7 +24,11 @@ function setup(
         {
             query: {
                 "privateId": privateId,
-            }
+            },
+            // todo: review - done to avoid the default size limit
+            // of payloads when polling because large files will exceed this
+            // see maxHttpBufferSize at https://socket.io/docs/server-api/#new-Server-httpServer-options
+            transports: ['websocket']
         }
     );
 
@@ -40,6 +44,9 @@ function setup(
     socket.on('bad snipe', badSnipe);
     socket.on('timeLeft', timeLeft);
     socket.on('game finished', finished);
+    socket.on('error', (err) => console.log(err));
+    socket.on('disconnect', (reason) => console.log(reason));
+    socket.on('disconnecting', (reason) => console.log(reason));
 
     return socket;
 }

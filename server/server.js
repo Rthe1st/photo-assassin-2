@@ -39,6 +39,7 @@ export function createServer(useSentry=true,port=process.env.PORT || 3000){
     // todo: this is a hack to prevent our connection being terminated
     // during large file uploads because we're blocking and can't reply to pongs
     // real answer is to not block
+    // loads more info at https://github.com/socketio/socket.io/issues/3025
     pingTimeout: 50000,
     pingInterval: 250000
   });

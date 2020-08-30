@@ -91,7 +91,6 @@ function activePlayer(gameId, privateId, player){
         },
         ()=>{},
         (msg)=>{
-            console.log('chat message')
             player.position.lat += (Math.random()-0.5)*0.001;
             player.position.long += (Math.random()-0.5)*0.001;
             let file = fs.readFileSync('/home/mehow/Dropbox/Photos/rabbits.jpg');
@@ -122,7 +121,6 @@ function passivePlayer(gameId, privateId, player){
         ()=>{},
         ()=>{},
         (msg)=>{
-            console.log('chat message')
             player.position.lat += (Math.random()-0.5)*0.001;
             player.position.long += (Math.random()-0.5)*0.001;
             socketEvents.positionUpdate(socket, {"latitude": player.position.lat, "longitude": player.position.long});
