@@ -34,7 +34,14 @@ export function createServer(useSentry=true,port=process.env.PORT || 3000){
 
   //io needs to be accessablrwhen we setup game - pass it in
   // https://github.com/socketio/socket.io/issues/2276
-  var io = socketIo.default(http, { cookie: false });
+  var io = socketIo.default(http, {
+    cookie: false,
+    // todo: this is a hack to prevent our connection being terminated
+    // during large file uploads because we're blocking and can't reply to pongs
+    // real answer is to not block
+    pingTimeout: 50000,
+    pingInterval: 250000
+  });
 
   // todo make this a post
   // because its not idempotent
