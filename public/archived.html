@@ -43,6 +43,17 @@
             display: flex;
             flex-direction: row;
         }
+
+        .options-no-map {
+            flex: 1;
+        }
+
+        .options-map-overlay {
+            position: absolute;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.5);
+        }
     </style>
     <script src="https://browser.sentry-cdn.com/5.20.1/bundle.min.js" integrity="sha384-O8HdAJg1h8RARFowXd2J/r5fIWuinSBtjhwQoPesfVILeXzGpJxvyY/77OaPPXUo" crossorigin="anonymous">
     </script>
@@ -114,10 +125,15 @@
                 var input = document.createElement("input");
                 input.setAttribute("type", "checkbox");
                 input.setAttribute("checked", true);
+                input.addEventListener('change', () => {
+                    annotateMap();
+                });
                 input.setAttribute("id", `show-player-${player.username}`);
                 var label = document.createElement("label");
                 label.innerText = player.username;
                 label.appendChild(input);
+                let playerColour = playerColours[playerPublicId%playerColours.length];
+                label.setAttribute('style', `background-color: ${playerColour}`);
                 options.appendChild(label);
             }
         }
@@ -126,10 +142,12 @@
             getData();
             document.getElementById('show-map').onclick = function(){
                 document.getElementById('info').hidden = !document.getElementById('info').hidden;
-                document.getElementById('options').hidden = !document.getElementById('options').hidden;
                 document.getElementById('map').hidden = !document.getElementById('map').hidden;
                 if(!document.getElementById('map').hidden){
                     annotateMap();
+                    document.getElementById('options').setAttribute('class', 'options-map-overlay');
+                }else{
+                    document.getElementById('options').setAttribute('class', 'options-no-map');
                 }
             }
         };
@@ -297,10 +315,10 @@
                 <h3>debug data</h3>
                 <ul id="positions"></ul>
             </div>
-            <div id="options" style="flex: 1;">
-                <!--insert checkboxes for each player in the game-->
-            </div>
             <div id="map" hidden></div>
+            <div id="options" class="options-no-map">
+                    <!--insert checkboxes for each player in the game-->
+            </div>
         </div>
     </div>
 </body>
