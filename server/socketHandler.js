@@ -99,9 +99,10 @@ export function ioConnect(socket, games){
       // for example, to send a selfie
       var wasSnipe = msg.isSnipe && msg.image && game.subState == Game.inPlaySubStates.PLAYING;
 
+      let snipeRes;
       if(wasSnipe){
 
-        var snipeRes = Game.snipe(game, publicId);
+        snipeRes = Game.snipe(game, publicId);
         logger.log("debug", "targets", { targets: Array.from(game.targets) });
         //todo: may send request to target for current pos?
         msg.position["snipeInfo"] = snipeRes.snipeInfo;
@@ -124,7 +125,7 @@ export function ioConnect(socket, games){
         let snipeNumber = undefined;
         let targetPosition = undefined;
         if(wasSnipe){
-          targetPosition = msg.position["snipeInfo"].targetPosition;
+          targetPosition = snipeRes.snipeInfo.targetPosition;
           snipeNumber = snipeRes.snipeNumber;
         }
         Game.saveImage(game, msg.image, publicId, snipeNumber, msg.position, targetPosition);

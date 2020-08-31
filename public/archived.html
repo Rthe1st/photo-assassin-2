@@ -256,9 +256,6 @@
                         let title = `Picture by ${sniper}`
                         if(metadata["snipeNumber"] != undefined){
                             var sniper = gameState.userList[playerPublicId].username;
-                            console.log(metadata["snipeNumber"])
-                            console.log(gameState.targetsGot[playerPublicId])
-                            console.log(gameState.targetsGot[playerPublicId][metadata["snipeNumber"]])
                             var target = gameState.userList[gameState.targetsGot[playerPublicId][metadata["snipeNumber"]-1]].username;
                             title = `${sniper} got ${target}`
                         }

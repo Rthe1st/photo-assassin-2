@@ -170,7 +170,8 @@ function imageMetadata(game){
     for(let image of images){
       result[publicId].push({
         snipeNumber: image.snipeNumber,
-        position: image.position
+        position: image.position,
+        targetPosition: image.targetPosition
       })
     }
   }
