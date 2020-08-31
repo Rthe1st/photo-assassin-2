@@ -98,14 +98,14 @@ export function ioConnect(socket, games){
       // but not all images have to be snipes
       // for example, to send a selfie
       var wasSnipe = msg.isSnipe && msg.image && game.subState == Game.inPlaySubStates.PLAYING;
-  
+
       if(wasSnipe){
-        
+
         var snipeRes = Game.snipe(game, publicId);
         logger.log("debug", "targets", { targets: Array.from(game.targets) });
         //todo: may send request to target for current pos?
         msg.position["snipeInfo"] = snipeRes.snipeInfo;
-  
+
         logger.log("debug", "targets post", {targets: Array.from(game.targets)});
         logger.log("verbose", "Snipe", {gameCode: gameId, gameState: game.state});
         if(snipeRes.gameOver){
@@ -118,6 +118,16 @@ export function ioConnect(socket, games){
         outgoing_msg.snipePlayer = publicId;
         outgoing_msg.snipeCount = snipeRes.snipeCount;
         outgoing_msg.botMessage = snipeRes.botMessage;
+      }
+
+      if(msg.image){
+        let snipeNumber = undefined;
+        let targetPosition = undefined;
+        if(wasSnipe){
+          targetPosition = msg.position["snipeInfo"].targetPosition;
+          snipeNumber = snipeRes.snipeNumber;
+        }
+        Game.saveImage(game, msg.image, publicId, snipeNumber, msg.position, targetPosition);
       }
   
       logger.log("debug", "positionUpdate", {'positionHistory': game.positions.get(publicId), 'position': msg.position});

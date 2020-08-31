@@ -87,7 +87,6 @@ function activePlayer(gameId, privateId, player){
         },
         ()=>{
             console.log("game over");
-            process.exit();
         },
         ()=>{},
         (msg)=>{

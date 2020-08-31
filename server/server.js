@@ -161,7 +161,11 @@ function gamePage(req, res, games){
   var game = games.get(req.params.code);
 
   if(req.query.format == "json"){
-    res.json(Game.gameStateForClient(game));
+    if(req.query.publicId && req.query.index){
+      res.write(Game.getImage(game, req.query.publicId, req.query.index));
+    }else{
+      res.json(Game.gameStateForClient(game));
+    }
     return;
   }else if(game.state == Game.states.FINISHED){
       res.sendFile(staticDir + 'archived.html');    

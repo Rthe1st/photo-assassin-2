@@ -5,6 +5,11 @@
     <meta charset="utf-8">
     <title>Photo Assassin</title>
     <style>
+        /*hack so that elments with display:flex can still be hidden
+        https://stackoverflow.com/a/48936804*/
+        [hidden]{
+            display:none !important;
+        }
         #map {
             height: 100%;
             width: 100%;
@@ -22,9 +27,6 @@
             display: flex;
             flex-direction: column;
         }
-        /* p h2 ul {
-            text-align: center;
-        } */
 
         button, input, label[type=text], textarea {
             font-size: 150%;
@@ -54,6 +56,17 @@
             bottom: 0;
             background-color: rgba(255, 255, 255, 0.5);
         }
+
+        #photo-overlay {
+            position: absolute;
+            left: 0;
+            top: 0;
+        }
+
+        #photo {
+            width: 100%;
+            object-fit: contain;
+        }
     </style>
     <script src="https://browser.sentry-cdn.com/5.20.1/bundle.min.js" integrity="sha384-O8HdAJg1h8RARFowXd2J/r5fIWuinSBtjhwQoPesfVILeXzGpJxvyY/77OaPPXUo" crossorigin="anonymous">
     </script>
@@ -74,6 +87,39 @@
         if(cookieGameId == urlGameId){
             privateId = document.cookie.replace(/(?:(?:^|.*;\s*)privateId\s*\=\s*([^;]*).*$)|^.*$/, "$1");
             publicId = document.cookie.replace(/(?:(?:^|.*;\s*)publicId\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+        }
+
+        function getPlayerColor(playerPublicId){
+            //todo: let player choose and store in game
+            return playerColours[playerPublicId%playerColours.length];
+        }
+
+        let playerEmojis = [
+            "😀",
+            "😗",
+            "🕶",
+            "🐵",
+            "🐶",
+            "🦄",
+            "🦋",
+            "🐌",
+            "🦠",
+            "🦃",
+            "🦆",
+            "🦉",
+            "🦜",
+            "🐋",
+            "🐡",
+            "🦈",
+            "🐙",
+            "🌻",
+            "🌵",
+            "☘"
+        ];
+
+        function getPlayerEmoji(playerPublicId){
+            //todo: let player choose and store in game
+            return playerEmojis[playerPublicId%playerEmojis.length];
         }
 
         var gameState;
@@ -132,7 +178,7 @@
                 var label = document.createElement("label");
                 label.innerText = player.username;
                 label.appendChild(input);
-                let playerColour = playerColours[playerPublicId%playerColours.length];
+                let playerColour = getPlayerColor(playerPublicId);
                 label.setAttribute('style', `background-color: ${playerColour}`);
                 options.appendChild(label);
             }
@@ -149,6 +195,12 @@
                 }else{
                     document.getElementById('options').setAttribute('class', 'options-no-map');
                 }
+            }
+            document.getElementById('photo-back').onclick = function(){
+                document.getElementById('photo-div').hidden = true;
+                document.getElementById('main').hidden = false;
+                document.getElementById('photo').src = window.location.href + "/public/shitty_loader.jpg";
+
             }
         };
 
@@ -191,20 +243,46 @@
                 for(var position of gameState.positions[playerPublicId]){
                     var latlng = {lat: position.latitude, lng: position.longitude};
                     path.push(latlng);
-                    if(position["snipeInfo"]){
-                        var sniper = gameState.userList[playerPublicId].username;
-                        var target = gameState.userList[position["snipeInfo"]["target"]].username;
-                        var marker = new google.maps.Marker({position: latlng, title: `${sniper} got ${target}`});
+                }
+                var polyLine = new google.maps.Polyline({
+                    path: path,
+                    geodesic: true,
+                    strokeColor: getPlayerColor(playerPublicId),
+                    strokeOpacity: 1.0,
+                    strokeWeight: 2
+                });
+                if(gameState.imageMetadata[playerPublicId]){
+                    for(const [index, metadata] of gameState.imageMetadata[playerPublicId].entries()){
+                        let title = `Picture by ${sniper}`
+                        if(metadata["snipeNumber"] != undefined){
+                            var sniper = gameState.userList[playerPublicId].username;
+                            console.log(metadata["snipeNumber"])
+                            console.log(gameState.targetsGot[playerPublicId])
+                            console.log(gameState.targetsGot[playerPublicId][metadata["snipeNumber"]])
+                            var target = gameState.userList[gameState.targetsGot[playerPublicId][metadata["snipeNumber"]-1]].username;
+                            title = `${sniper} got ${target}`
+                        }
+                        var latlng = {lat: metadata.position.latitude, lng: metadata.position.longitude};
+                        var marker = new google.maps.Marker({
+                            position: latlng,
+                            title: title
+                        });
+                        marker.addListener('click', function() {
+                            document.getElementById('photo-div').hidden = false;
+                            document.getElementById('main').hidden = true;
+                            document.getElementById('photo-text').innerText = title;
+                            document.getElementById('photo').src = window.location.href + "?format=json&publicId="+playerPublicId+"&index="+index;
+                        });
 
                         var obj = {"marker": marker};
 
-                        if(position["snipeInfo"]["targetPosition"]){
+                        if(metadata["targetPosition"]){
                             var lineSymbol = {
                                 path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW
                             };
                             var targetLatLng = {
-                                lat: position["snipeInfo"]["targetPosition"].latitude,
-                                lng: position["snipeInfo"]["targetPosition"].longitude,
+                                lat: metadata["targetPosition"].latitude,
+                                lng: metadata["targetPosition"].longitude,
                             };
                             var arrow = new google.maps.Polyline({
                                 path: [latlng, targetLatLng],
@@ -218,13 +296,6 @@
                         mapData["playerSnipes"][playerPublicId].push(obj);
                     }
                 }
-                var polyLine = new google.maps.Polyline({
-                    path: path,
-                    geodesic: true,
-                    strokeColor: playerColours[playerPublicId%playerColours.length],
-                    strokeOpacity: 1.0,
-                    strokeWeight: 2
-                });
                 //todo: this is undefined if player never sends position and so explodes
                 //in annotation
                 mapData["playerPaths"][playerPublicId] = polyLine;
@@ -299,7 +370,7 @@
 </head>
 
 <body>
-    <div class="container" id="not-started" hidden>
+    <div class="container" id="main">
         <div class="top">
             <p id="username" style="grid-column: 1;grid-row: 1;"></p>
             <button id="show-map" style="grid-column: 2;grid-row: 1;">Map</button>
@@ -320,6 +391,13 @@
                     <!--insert checkboxes for each player in the game-->
             </div>
         </div>
+    </div>
+    <div id="photo-div" hidden>
+        <div id="photo-overlay">
+            <button id="photo-back">Back</button>
+            <p id="photo-text"></p>
+        </div>
+        <img id="photo"></img>
     </div>
 </body>
 

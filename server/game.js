@@ -37,9 +37,34 @@ function newGame(code) {
     // todo: make client smart so it only requests those its missing
     // / saves what its already seen to local storage
     // and consider off loading images to cdn
+    // todo: instead of saving images directly in here, we should point
+    // to those in the images key
+    // (and even that should just be a ref to images stored not in memory)
     chatHistory: [],
+    // we need to track images so we can reference them later
+    // say, when user clicks marker in map after game is over
+    //todo: store references to the snipes seperatly
+    // so we can look up snipe N effecitnly
+    images: new Map(),
   };
 
+}
+
+export function saveImage(game, image, publicId, snipeNumber, position, targetPosition){
+  if(!game.images.has(publicId)){
+    game.images.set(publicId, []);
+  }
+  game.images.get(publicId).push({
+    image: image,
+    snipeNumber: snipeNumber,
+    position: position,
+    targetPosition: targetPosition
+  })
+
+}
+
+export function getImage(game, publicId, index){
+  return game.images.get(publicId)[index].image;
 }
 
 function saveSettings(game, gameLength, countDown, proposedTargetList){
@@ -138,6 +163,20 @@ function undoneSnipesForClient(undoneSnipes) {
   return list;
 }
 
+function imageMetadata(game){
+  let result = {}
+  for(let [publicId, images] of game.images.entries()){
+    result[publicId] = []
+    for(let image of images){
+      result[publicId].push({
+        snipeNumber: image.snipeNumber,
+        position: image.position
+      })
+    }
+  }
+  return result;
+}
+
 function gameStateForClient(game) {
   var state = {
     chosenSettings: game.chosenSettings,
@@ -149,13 +188,16 @@ function gameStateForClient(game) {
     timeLeft: game.timeLeft,
     state: game.state,
     subState: game.subState,
-    winner: game.winner,
+    winner: game.winners,
     nextCode: game.nextCode,
     badSnipeVotes: Object.fromEntries(game.badSnipeVotes),
     undoneSnipes: undoneSnipesForClient(game.undoneSnipes),//todo: store this in chat history alongside the message
     //we don't include chathistory here
     // because it could be large and is wasteful to
     // send often
+    // we don't include raw images for same reason
+    // but metadata about them, so client can decide to reques the raw later
+    imageMetadata: imageMetadata(game),
   }
 
   if (game.state == states.FINISHED) {
