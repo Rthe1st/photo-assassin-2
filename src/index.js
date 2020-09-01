@@ -371,14 +371,12 @@ function showSnipedScreen(msg){
 
 function showGameInfo(){
     let gameInfoDiv = document.getElementById('game-info');
-    let messages = document.getElementById('messages');
+    let middle = document.getElementsByClassName("middle")[0];
     let sendMessageForm = document.getElementById('send-message-form')
-    let photoPreview = document.getElementById('photo-preview');
     if(gameInfoDiv.hidden){
         gameInfoDiv.hidden = false;
         sendMessageForm.hidden = true;
-        messages.hidden = true;
-        photoPreview.hidden = true;
+        middle.hidden = true;
         let playerProgressList = document.getElementById('player-progress');
         playerProgressList.innerHTML = '';
         for (const [publicId, user] of Object.entries(game.game.userList)) {
@@ -390,8 +388,7 @@ function showGameInfo(){
     }else{
         gameInfoDiv.hidden = true;
         sendMessageForm.hidden = false;
-        messages.hidden = false;
-        photoPreview.hidden = false;
+        middle.hidden = false;
     }
 }
 

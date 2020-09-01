@@ -61,18 +61,20 @@
       <button id="exit-sniped-screen">Back</button>
       <h2 id="sniped-alert-text"></h2>
     </div>
-    <div id="photo-preview" hidden class="middle">
-      <img id="preview">
-      <div id="preview-overlay">
-        <p id="mark-snipe-question">Is your target in the picture?</p>
-        <div id="preview-buttons">
-          <button id="mark-snipe">Yes</button>
-          <button id="mark-not-snipe">No ✓</button>
-          <button id="delete-preview">Delete</button>
+    <div class="middle">
+      <div id="photo-preview" hidden>
+        <img id="preview">
+        <div id="preview-overlay">
+          <p id="mark-snipe-question">Is your target in the picture?</p>
+          <div id="preview-buttons">
+            <button id="mark-snipe">Yes</button>
+            <button id="mark-not-snipe">No ✓</button>
+            <button id="delete-preview">Delete</button>
+          </div>
         </div>
       </div>
+      <ul id="messages"></ul>
     </div>
-    <ul id="messages" class="middle"></ul>
     <form id="send-message-form" action="">
       <textarea id="message" placeholder="Type a message"></textarea>
       <input id="is-snipe" type="checkbox" hidden />
