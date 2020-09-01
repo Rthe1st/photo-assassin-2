@@ -173,6 +173,8 @@
                 const username = gameState.userList[publicId].username;
                 console.log(username)
                 document.getElementById('next-game-link').setAttribute('href', `/?code=${gameState.nextCode}&username=${username}`);
+            }else{
+                document.getElementById('next-game-link').hidden = true
             }
 
             var options = document.getElementById("options");

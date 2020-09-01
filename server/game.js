@@ -189,7 +189,7 @@ function gameStateForClient(game) {
     timeLeft: game.timeLeft,
     state: game.state,
     subState: game.subState,
-    winner: game.winners,
+    winner: game.winner,
     nextCode: game.nextCode,
     badSnipeVotes: Object.fromEntries(game.badSnipeVotes),
     undoneSnipes: undoneSnipesForClient(game.undoneSnipes),//todo: store this in chat history alongside the message
