@@ -30,7 +30,7 @@ function createChatElement(sender, message, image, snipeNumber, snipePlayer, sni
         if(snipePlayer){
             img.setAttribute('id', `snipe-${snipePlayer}-${snipeNumber}-${snipeCount}`)
             var voteButton = document.createElement('button');
-            let targetUser = game.getTarget(snipePlayer);
+            let targetUser = game.getTarget(snipePlayer, snipeNumber);
             voteButton.innerText = `Was ${targetUser} not in the picture?`;
             voteButton.onclick = function(){
                 if(confirm(`Was ${targetUser} not in the picture?`)){

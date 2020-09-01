@@ -37,6 +37,9 @@ function targetDisplay(targets) {
 }
 
 function getTarget(publicId, snipeNumber){
+    if(snipeNumber == undefined){
+        snipeNumber = game.targets[publicId].length;
+    }
     let totalTargets = game.targetsGot[publicId].concat(game.targets[publicId])
     return getUsername(totalTargets[totalTargets.length - snipeNumber])
 }
