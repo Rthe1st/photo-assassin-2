@@ -173,8 +173,8 @@ function targetsMadeView(){
         element.innerText = text;
         targetsElement.appendChild(element);
     }
-    document.getElementById('game-length-ro').value = game.game.gameLength / 1000;
-    document.getElementById('count-down-ro').value = game.game.countDown / 1000;
+    document.getElementById('game-length-ro').innerText = game.game.gameLength / 1000;
+    document.getElementById('count-down-ro').innerText = game.game.countDown / 1000;
 }
 
 function markSnipesAsBad(undoneSnipes){
