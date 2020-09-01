@@ -347,25 +347,13 @@ function shuffleTargets(){
 }
 
 function hideSnipedScreen(){
-    let snipeScreen = document.getElementById('sniped-screen');
-    let messages = document.getElementById('messages');
-    let sendMessageForm = document.getElementById('send-message-form');
-    let inPlayTop = document.getElementById('in-play').getElementsByClassName('top')[0];
-    messages.hidden = false;
-    sendMessageForm.hidden = false;
-    inPlayTop.hidden = false;
-    snipeScreen.hidden = true;
+    document.getElementById('main-in-play').hidden = false;
+    document.getElementById('sniped-screen').hidden = true;
 }
 
 function showSnipedScreen(msg){
-    let snipeScreen = document.getElementById('sniped-screen');
-    let messages = document.getElementById('messages');
-    let sendMessageForm = document.getElementById('send-message-form');
-    let inPlayTop = document.getElementById('in-play').getElementsByClassName('top')[0];
-    messages.hidden = true;
-    sendMessageForm.hidden = true;
-    inPlayTop.hidden = true;
-    snipeScreen.hidden = false;
+    document.getElementById('main-in-play').hidden = true;
+    document.getElementById('sniped-screen').hidden = false;
     document.getElementById('sniped-alert-text').innerText = msg;
     // todo: this broken on firefox mobile
     var successBool = window.navigator.vibrate([100, 50, 100]);

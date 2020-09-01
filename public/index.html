@@ -44,43 +44,45 @@
         </div>
     </div>
   </div>
-  <div id="in-play" hidden class="container">
-    <div class="top">
-      <p class="username current-username" style="grid-column: 1;grid-row: 1;"></p>
-      <p id="sub-state" style="grid-column: 2;grid-row: 1;"></p>
-      <button id="show-game-info" style="grid-column: 3;grid-row: 1;">info</button>
-      <p id="target" style="grid-column: 1;grid-row: 2;"></p>
-      <p id="time-left" style="grid-column: 2;grid-row: 2;"></p>
-      <button id="stop-game" style="grid-column: 3;grid-row: 2;">Stop</button>
-    </div>
-    <div id="game-info" hidden>
-      <ul id="player-progress"></ul>
-    </div>
+  <div id="in-play" hidden>
     <div id="sniped-screen" hidden>
       <button id="exit-sniped-screen">Back</button>
       <h2 id="sniped-alert-text"></h2>
     </div>
-    <div class="middle">
-      <div id="photo-preview" hidden>
-        <img id="preview">
-        <div id="preview-overlay">
-          <p id="mark-snipe-question">Is your target in the picture?</p>
-          <div id="preview-buttons">
-            <button id="mark-snipe">Yes</button>
-            <button id="mark-not-snipe">No ✓</button>
-            <button id="delete-preview">Delete</button>
+    <div id="main-in-play" class="container">
+      <div class="top">
+        <p class="username current-username" style="grid-column: 1;grid-row: 1;"></p>
+        <p id="sub-state" style="grid-column: 2;grid-row: 1;"></p>
+        <button id="show-game-info" style="grid-column: 3;grid-row: 1;">info</button>
+        <p id="target" style="grid-column: 1;grid-row: 2;"></p>
+        <p id="time-left" style="grid-column: 2;grid-row: 2;"></p>
+        <button id="stop-game" style="grid-column: 3;grid-row: 2;">Stop</button>
+      </div>
+      <div id="game-info" hidden>
+        <ul id="player-progress"></ul>
+      </div>
+      <div class="middle">
+        <div id="photo-preview" hidden>
+          <img id="preview">
+          <div id="preview-overlay">
+            <p id="mark-snipe-question">Is your target in the picture?</p>
+            <div id="preview-buttons">
+              <button id="mark-snipe">Yes</button>
+              <button id="mark-not-snipe">No ✓</button>
+              <button id="delete-preview">Delete</button>
+            </div>
           </div>
         </div>
+        <ul id="messages"></ul>
       </div>
-      <ul id="messages"></ul>
+      <form id="send-message-form" action="">
+        <textarea id="message" placeholder="Type a message"></textarea>
+        <input id="is-snipe" type="checkbox" hidden />
+        <button id="send-message">Send</button>
+        <button id="camera-button" class="fa">&#xf030;</button>
+        <input hidden id="photo-input" type="file" accept="image/*" capture="environment">
+      </form>   
     </div>
-    <form id="send-message-form" action="">
-      <textarea id="message" placeholder="Type a message"></textarea>
-      <input id="is-snipe" type="checkbox" hidden />
-      <button id="send-message">Send</button>
-      <button id="camera-button" class="fa">&#xf030;</button>
-      <input hidden id="photo-input" type="file" accept="image/*" capture="environment">
-    </form>
   </div>
 </body>
 
