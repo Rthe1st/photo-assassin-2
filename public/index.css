@@ -128,7 +128,7 @@ input[type=checkbox] {
 
 #photo-message {
     background-color: transparent;
-    width: 100%;
+    flex-grow: 1;
 }
 
 .send-message-form {
