@@ -62,7 +62,7 @@ function processMsg(msg, isReplay){
 
 function deletePreview(){
     document.getElementById('photo-preview').hidden = true;
-    document.getElementById('messages').hidden = false;
+    document.getElementById('main-in-play').hidden = false;
     document.getElementById('photo-input').value = '';
     document.getElementById('is-snipe').checked = false;
     document.getElementById("mark-snipe-question").innerText = "Is your target in the picture?"
@@ -72,34 +72,45 @@ function deletePreview(){
 
 function cameraButton(event){
     document.getElementById('photo-input').click();
+    document.getElementById('photo-preview').hidden = false;
+    document.getElementById('main-in-play').hidden = true;
     event.preventDefault();
 }
 
 function photoInput(event){
     var img = document.getElementById('preview');
     img.src = URL.createObjectURL(event.target.files[0]);
-    document.getElementById('photo-preview').hidden = false;
     let target = game.getTarget(publicId);
     document.getElementById("mark-snipe-question").innerText = `Is ${target} in the picture?`
-    document.getElementById('messages').hidden = true;
 }
 
-function sendMessage(ev){
-    var file = document.getElementById('photo-input').files[0];
+function sendTextMessage(ev){
     let message = {
         "text": document.getElementById('message').value,
+        "position": gps.position,
+    }
+    socketEvents.chatMessage(socket, message);
+    document.getElementById('message').value = '';
+    ev.preventDefault();
+    return false;
+}
+
+function sendPhotoMessage(ev){
+    var file = document.getElementById('photo-input').files[0];
+    let message = {
+        "text": document.getElementById('photo-message').value,
         "image": file,
         "position": gps.position,
         "isSnipe": document.getElementById('is-snipe').checked,
     }
     socketEvents.chatMessage(socket, message);
-    document.getElementById('message').value = '';
+    document.getElementById('photo-message').value = '';
     document.getElementById('photo-input').value = '';
     document.getElementById('is-snipe').checked = false;
     document.getElementById("mark-snipe").innerText = "Yes"
     document.getElementById("mark-not-snipe").innerText = "No ✓"
     document.getElementById('photo-preview').hidden = true;
-    document.getElementById('messages').hidden = false;
+    document.getElementById('main-in-play').hidden = false;
     ev.preventDefault();
     return false;
 }
@@ -431,7 +442,8 @@ window.onload = function () {
         ev.preventDefault();
         return false;
     });
-    document.getElementById('send-message').addEventListener('click', sendMessage);
+    document.getElementById('send-message').addEventListener('click', sendTextMessage);
+    document.getElementById('send-photo-message').addEventListener('click', sendPhotoMessage);
 
     document.getElementById('make-targets').onclick = function (event) {
         if(confirm('Are you sure?')){

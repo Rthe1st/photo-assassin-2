@@ -51,8 +51,9 @@ https://stackoverflow.com/a/48936804 */
 }
 
 #preview-overlay {
+    text-align:center;
+    width: 100%;
     position: absolute;
-    right: 0;
     bottom: 0;
     display: flex;
     flex-direction: column;
@@ -62,6 +63,7 @@ https://stackoverflow.com/a/48936804 */
 #preview-buttons {
     display: flex;
     flex-direction: row;
+    justify-content: center;
 }
 
 #preview {
@@ -76,10 +78,6 @@ https://stackoverflow.com/a/48936804 */
 
 #send-message {
     margin: 0.25em;
-}
-
-form {
-    background: #4eb7e7;
 }
 
 #messages li:nth-child(odd) {
@@ -127,7 +125,12 @@ input[type=checkbox] {
     transform: scale(3);
 }
 
-#send-message-form {
+#photo-message {
+    background-color: transparent;
+}
+
+.send-message-form {
+    justify-content: center;
     display: flex;
     flex-direction: row;
 }
