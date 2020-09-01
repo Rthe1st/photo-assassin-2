@@ -36,8 +36,9 @@ function targetDisplay(targets) {
     return output
 }
 
-function getTarget(publicId){
-    return getUsername(game.targets[publicId][0])
+function getTarget(publicId, snipeNumber){
+    let totalTargets = game.targetsGot[publicId].concat(game.targets[publicId])
+    return getUsername(totalTargets[totalTargets.length - snipeNumber])
 }
 
 // this takes proposedTargetList as a param instead of pulling it from game

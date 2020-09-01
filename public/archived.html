@@ -256,7 +256,10 @@
                         let title = `Picture by ${sniper}`
                         if(metadata["snipeNumber"] != undefined){
                             var sniper = gameState.userList[playerPublicId].username;
-                            var target = gameState.userList[gameState.targetsGot[playerPublicId][metadata["snipeNumber"]-1]].username;
+                            //todo: simplify snipe number - its complex and stupid
+                            let totalTargets = gameState.targetsGot[playerPublicId].length + gameState.targets[playerPublicId].length
+                            let targetIndex = totalTargets - metadata["snipeNumber"]
+                            var target = gameState.userList[gameState.targetsGot[playerPublicId][targetIndex]].username;
                             title = `${sniper} got ${target}`
                         }
                         var latlng = {lat: metadata.position.latitude, lng: metadata.position.longitude};
@@ -347,13 +350,13 @@
             }
 
             prepareMapData(gameState);
-            if(publicId){
-                for(var i of gameState.positions[publicId]){
-                    var item = document.createElement('li');
-                    item.innerText = JSON.stringify(i);
-                    document.getElementById("positions").appendChild(item);
-                }
-            }
+            // if(publicId){
+            //     for(var i of gameState.positions[publicId]){
+            //         var item = document.createElement('li');
+            //         item.innerText = JSON.stringify(i);
+            //         document.getElementById("positions").appendChild(item);
+            //     }
+            // }
 
             map = new google.maps.Map(document.getElementById('map'), {
                 zoom: 17,
@@ -380,8 +383,8 @@
                 <h2>Winner</h2>
                 <p id="game-result"></p>
                 <ul id="targets-state"></ul>
-                <h3>debug data</h3>
-                <ul id="positions"></ul>
+                <!-- <h3>debug data</h3>
+                <ul id="positions"></ul> -->
             </div>
             <div id="map" hidden></div>
             <div id="options" class="options-no-map">
