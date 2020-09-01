@@ -45,11 +45,11 @@ async function gameSetup(players){
     console.log(`${domain}/game/${details["gameId"]}`);
     let gameId = details.gameId;
     let sockets = new Map();
-    let socket = hostPlayer.algo(details.gameId, details.privateId, hostPlayer);
+    let socket = hostPlayer.algo(details.gameId, details.privateId, hostPlayer, details.publicId);
     sockets.set(details.publicId, socket);
     for(let player of players){
         let details = await joinGame(player.name, gameId);
-        let socket = player.algo(details.gameId, details.privateId, player);
+        let socket = player.algo(details.gameId, details.privateId, player, details.publicId);
         sockets.set(details.publicId, socket);
     }
 }
@@ -129,7 +129,7 @@ function passivePlayer(gameId, privateId, player){
     return socket;
 }
 
-function listeningPlayer(gameId, privateId, player){
+function listeningPlayer(gameId, privateId, player, publicId){
 
     //this is incase we re-connect and miss messages
     let commandsSeen = 0;
@@ -210,11 +210,20 @@ function listeningPlayer(gameId, privateId, player){
         },
         ()=>{},
         ()=>{},
-        ()=>{},
+        (msg)=>{
+            //remove user
+            if(msg.publicId == publicId){
+                socket.close();
+            }
+        },
         (msg)=>{},
         ()=>{},
         (msg)=>{
             console.log('start')
+            console.log("start move");
+            player.position.lat += (Math.random()-0.5)*0.001;
+            player.position.long += (Math.random()-0.5)*0.001;
+            socketEvents.positionUpdate(socket, {"latitude": player.position.lat, "longitude": player.position.long});
         },
         ()=>{
             console.log("game over");

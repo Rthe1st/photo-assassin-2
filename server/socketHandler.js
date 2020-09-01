@@ -26,7 +26,7 @@ export function ioConnect(socket, games){
     logger.log("debug", "Socket connected", {publicId: publicId, gameCode: gameId});
 
     socket.emit('initialization', {gameState: Game.gameStateForClient(game), chatHistory: game.chatHistory});
-  
+
     socket.on('make targets', function(msg){
       if(game.state != Game.states.NOT_STARTED){
         return;
@@ -48,6 +48,7 @@ export function ioConnect(socket, games){
     });
   
     socket.on('remove user', function(msg){
+      //todo: kill the socket connection of the removed user
       if(game.state != Game.states.NOT_STARTED){
         return;
       }
@@ -101,7 +102,6 @@ export function ioConnect(socket, games){
 
       let snipeRes;
       if(wasSnipe){
-
         snipeRes = Game.snipe(game, publicId);
         logger.log("debug", "targets", { targets: Array.from(game.targets) });
         //todo: may send request to target for current pos?
