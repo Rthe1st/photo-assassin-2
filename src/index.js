@@ -35,6 +35,8 @@ function createChatElement(sender, message, image, snipeNumber, snipePlayer, sni
             voteButton.onclick = function(){
                 if(confirm(`Was ${targetUser} not in the picture?`)){
                     socketEvents.badSnipe(socket, snipeNumber, snipePlayer);
+                    voteButton.onclick = undefined;
+                    voteButton.disabled = true;
                 }
             };
             li.appendChild(voteButton);
