@@ -2,10 +2,35 @@
 <html>
 
 <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Photo Assassin</title>
+  <!--todo
+  * add space below .area divs, to make content more centered verticly
+  * style buttons
+  * add a bit of space between buttons and input fields
+  * make input fields slightly narrower?
+  * get subjective opinions how gross design is + why
+  -->
   <style>
     body {
+      background-image: url("/static/main_background.jpg");
+      background-size: cover;
       font-size: 3em;
+      width: 200vw;
+      height: 200vh;
+    }
+
+    .area {
+      border-radius: 2em;
+      border: 0.1em solid black;
+      background-color: rgba(255, 255, 255, 0.7);
+    }
+
+    #game-title {
+      border-radius: 2em;
+      border: 0.1em solid black;
+      background-color: rgba(255, 255, 255, 0.7);
     }
 
     button,
@@ -28,7 +53,7 @@
     }
   </style>
   <script>
-    window.onload = function(){
+    function showOnlyJoinContent() {
       urlParameters = {}
       location.search
         .substr(1)
@@ -37,43 +62,59 @@
           tmp = item.split("=");
           urlParameters[tmp[0]] = decodeURIComponent(tmp[1]);
         });
-        if(urlParameters["code"]){
-          var makeForm = document.getElementById('make-form');
-          makeForm.hidden = true;
-          var joinForm = document.getElementById('join-form');
-          var codeInput = joinForm.querySelector('input[name="code"]');
-          codeInput.value = urlParameters["code"];
-        }
-        if(urlParameters["username"]){
-          var usernameInput = joinForm.querySelector('input[name="username"]');
-          usernameInput.value = urlParameters["username"];
-        }
+      if (urlParameters["code"]) {
+        document.getElementById('make-area').hidden = true;
+        document.getElementById('area-divider').hidden = true;
+        var joinForm = document.getElementById('join-form');
+        var codeInput = joinForm.querySelector('input[name="code"]');
+        codeInput.value = urlParameters["code"];
+      } else {
+        document.getElementById('make-area').hidden = false;
+      }
+      if (urlParameters["username"]) {
+        var usernameInput = joinForm.querySelector('input[name="username"]');
+        usernameInput.value = urlParameters["username"];
+      }
+    }
+
+    // don't use onload - because that waits for background image
+    if (document.readyState === 'loading') {  // Loading hasn't finished yet
+      document.addEventListener('DOMContentLoaded', showOnlyJoinContent);
+    } else {  // `DOMContentLoaded` has already fired
+      showOnlyJoinContent();
     }
   </script>
 </head>
 
 <body>
-  <h1>Photo-assassin</h1>
-  <!-- todo: make these POSTs-->
-  <form id="make-form" action="/make">
-    <h2>New Game</h2>
-    <label>
-      Player Name
-      <input name="username" autocomplete="off"/>
-    </label>
-    <button id="make-game">New game</button>
-  </form>
-  <h2>Join game</h2>
-  <form id="join-form" action="/join" method="GET">
-    <label>
-      Player Name
-      <input name="username" autocomplete="off"/>
-    </label>
-    <label>
-      Game code
-      <input name="code" autocomplete="off" placeholder="XXXX-XXXX-X" />
-    </label>
-    <input value="Join game" type="submit"/>
-  </form>
+  <h1 id="game-title">Photo-assassin</h1>
+  <!--hide this by default, so that it does appear then disappear during page load-->
+  <div id="make-area" class="area" hidden>
+    <!-- todo: make these POSTs-->
+    <form id="make-form" action="/make">
+      <h2>New Game</h2>
+      <label>
+        Player Name
+        <input name="username" autocomplete="off" />
+      </label>
+      <button id="make-game">New game</button>
+    </form>
+  </div>
+  <hr id="area-divider" />
+  <div id="join-area" class="area">
+    <h2>Join game</h2>
+    <form id="join-form" action="/join" method="GET">
+      <label>
+        Player Name
+        <input name="username" autocomplete="off" />
+      </label>
+      <label>
+        Game code
+        <input name="code" autocomplete="off" placeholder="XXXX-XXXX-X" />
+      </label>
+      <input value="Join game" type="submit" />
+    </form>
+  </div>
 </body>
+
 </html>
