@@ -6,8 +6,12 @@ https://stackoverflow.com/a/48936804 */
     display: none !important;
 }
 
+body{
+    margin: 0px;
+}
+
 .container {
-    font-size: 2em;
+    font-size: 1em;
     height: 100%;
     width: 100%;
     position: fixed;
@@ -47,7 +51,7 @@ https://stackoverflow.com/a/48936804 */
 }
 
 #photo-preview {
-    font-size: 2em;
+    font-size: 1em;
     height: 100vh;
     width: 100vw;
     position: relative;
@@ -57,11 +61,13 @@ https://stackoverflow.com/a/48936804 */
     text-align:center;
     width: 100%;
     position: absolute;
-    bottom: 0;
+    /* not 0, becuase otherwise it overhangs bottom url in firefox*/
+    bottom: 3em;
+    /* bottom: 0; */
     display: flex;
     flex-direction: column;
     background-color: rgba(255, 255, 255, 0.5);
-    font-size: 1.5em;
+    /* font-size: 1.5em; */
 }
 
 #preview-buttons {
@@ -132,6 +138,11 @@ input[type=checkbox] {
 }
 
 #photo-message {
+    background-color: transparent;
+    flex-grow: 1;
+}
+
+#message {
     background-color: transparent;
     flex-grow: 1;
 }

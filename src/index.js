@@ -68,16 +68,18 @@ function deletePreview(){
     document.getElementById("mark-snipe-question").innerText = "Is your target in the picture?"
     document.getElementById("mark-snipe").innerText = "Yes"
     document.getElementById("mark-not-snipe").innerText = "No ✓"
+    document.getElementById('preview').src = '/static/shitty_loader.jpg';
 }
 
 function cameraButton(event){
     document.getElementById('photo-input').click();
-    document.getElementById('photo-preview').hidden = false;
-    document.getElementById('main-in-play').hidden = true;
+    document.getElementById('preview').src = '/static/shitty_loader.jpg';
     event.preventDefault();
 }
 
 function photoInput(event){
+    document.getElementById('photo-preview').hidden = false;
+    document.getElementById('main-in-play').hidden = true;
     var img = document.getElementById('preview');
     img.src = URL.createObjectURL(event.target.files[0]);
     let target = game.getTarget(publicId);
