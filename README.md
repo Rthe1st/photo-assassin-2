@@ -16,14 +16,44 @@ CNAME'd to Cloudflare for forcing https and for caching under photo-assassin.pra
 
 ## Run locally
 
-build browser js
+build browser js:
 
 ```bash
-npm build
+npm run-script build
 ```
+
+test:
+
+```bash
+npm test
+```
+
+spin up server:
 
 ```bash
 nodejs ./server.js
 ```
 
+spin up game with robot players:
+
+```bash
+# add --prod to run the game on prod instead
+node ./server/start.js --clients listen
+```
+
 It'll be running on [localhost](http://localhost:3000/)
+
+### Phone browser remote debugging
+
+https://developer.mozilla.org/en-US/docs/Tools/about:debugging
+
+* Run adb - [no install needed, just download and run it](https://askubuntu.com/a/964987)
+
+```bash
+sudo ./adb devices`
+```
+
+* [enable dev options on phone](https://developer.android.com/studio/debug/dev-options)
+* plug phone in usb, aurthise debug, etc
+* Find the device on about:debugging in firefox and connect
+* connect to server using local network IP, like: http://192.168.8.117:3000
