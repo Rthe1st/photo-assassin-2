@@ -27,23 +27,3 @@ nodejs ./server.js
 ```
 
 It'll be running on [localhost](http://localhost:3000/)
-
-### Selenium
-
-You need [geckodriver](https://github.com/mozilla/geckodriver/releases/)
-
-```bash
-wget https://github.com/mozilla/geckodriver/releases/download/v0.24.0/geckodriver-v0.24.0-linux64.tar.gz
-tar -xvzf geckodriver*
-mv geckodriver /usr/local/bin/
-```
-
-To run test:
-
-```bash
-nodejs selenium_test.js
-```
-
-## Acknowledgements
-
-All emojis designed by OpenMoji – the open-source emoji and icon project. License: CC BY-SA 4.0
