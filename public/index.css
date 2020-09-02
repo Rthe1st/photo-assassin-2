@@ -47,6 +47,9 @@ https://stackoverflow.com/a/48936804 */
 }
 
 #photo-preview {
+    font-size: 2em;
+    /* height: 100%;
+    width: 100%; */
     position: relative;
 }
 
@@ -68,8 +71,8 @@ https://stackoverflow.com/a/48936804 */
 }
 
 #preview {
-    height: 100%;
-    object-fit: cover;
+    width: 100%;
+    /* object-fit: contain; */
 }
 
 #camera-button {
