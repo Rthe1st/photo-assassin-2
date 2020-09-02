@@ -73,7 +73,7 @@ https://stackoverflow.com/a/48936804 */
 }
 
 #preview {
-    width: 100%;
+    /* width: 100%; */
     /* should we make this contans?
     means sometimes photo wont fill screen (looks worse)
     but if it goes wrong, contains wont clip content (impact game play)*/
