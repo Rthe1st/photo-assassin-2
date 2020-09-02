@@ -3,6 +3,7 @@
 
 <head>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Photo Assassin</title>
     <style>
         /*hack so that elments with display:flex can still be hidden
@@ -18,9 +19,9 @@
             height: 100%;
             margin: 0;
             padding: 0;
+            font-size: 1em;
         }
         .container {
-            font-size: 2em;
             height: 100%;
             width: 100%;
             position: fixed;
@@ -28,9 +29,6 @@
             flex-direction: column;
         }
 
-        button, input, label[type=text], textarea {
-            font-size: 150%;
-        }
         .top {
             display: grid;
             grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -42,28 +40,31 @@
             width: 100%;
             height: 100%;
             flex: 1;
-            display: flex;
-            flex-direction: row;
+            position: relative;
         }
 
-        .options-no-map {
-            flex: 1;
+        #info {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 100%;
+            background-color: rgba(255, 255, 255, 0.7);
         }
 
         .options-map-overlay {
             position: absolute;
             left: 0;
             bottom: 0;
-            background-color: rgba(255, 255, 255, 0.5);
-        }
-
-        label {
-            font-size: 150%;
-            margin-right: 1em;
+            list-style-type: none;
+            background-color: rgba(255, 255, 255, 0.7);
+            padding: 1em;
+            margin: 1em;
         }
 
         input[type=checkbox] {
-            transform: scale(3);
+            transform: scale(2);
+            margin-left: 1em;
         }
 
         #photo-overlay {
@@ -81,11 +82,15 @@
     </script>
     <!--should be coded on the assumption that viewer might not be a player-->
     <script>
-        Sentry.init({ dsn: 'https://0622ee38668548dcb4af966730298b31@o428868.ingest.sentry.io/5374680' });
-        //todo: when we have a build process for this page
-        // if(process.env.SENTRY_TESTS == "true"){
-        Sentry.captureException(new Error("sentry test archieved.html"));
-        //}
+        // Sentry is on adblocker lists, so we can't depend on it working
+        // https://github.com/getsentry/sentry-javascript/issues/668
+        if(typeof variable !== 'undefined'){
+            Sentry.init({ dsn: 'https://0622ee38668548dcb4af966730298b31@o428868.ingest.sentry.io/5374680' });
+            //todo: when we have a build process for this page
+            // if(process.env.SENTRY_TESTS == "true"){
+            Sentry.captureException(new Error("sentry test archieved.html"));
+            //}
+        }
         const cookieGameId = decodeURIComponent(document.cookie.replace(/(?:(?:^|.*;\s*)gameId\s*\=\s*([^;]*).*$)|^.*$/, "$1"));
 
         let urlGameId = window.location.href.split('/').pop()
@@ -138,6 +143,7 @@
             console.log(gameState);
             setUpPage(gameState);
             initMap();
+            annotateMap();
         }
 
         function setUpPage(gameState) {
@@ -179,19 +185,24 @@
 
             var options = document.getElementById("options");
             for(const [playerPublicId, player] of Object.entries(gameState.userList)){
+                var labelItem = document.createElement("li");
+                let inputId = `show-player-${player.username}`
+                var label = document.createElement("label");
+                label.innerText = player.username;
+                label.setAttribute('for', inputId)
+                let playerColour = getPlayerColor(playerPublicId);
+                label.setAttribute('style', `background-color: ${playerColour}`);
+                options.appendChild(label);
                 var input = document.createElement("input");
                 input.setAttribute("type", "checkbox");
                 input.setAttribute("checked", true);
                 input.addEventListener('change', () => {
                     annotateMap();
                 });
-                input.setAttribute("id", `show-player-${player.username}`);
-                var label = document.createElement("label");
-                label.innerText = player.username;
-                label.appendChild(input);
-                let playerColour = getPlayerColor(playerPublicId);
-                label.setAttribute('style', `background-color: ${playerColour}`);
-                options.appendChild(label);
+                input.setAttribute("id", inputId);
+                labelItem.appendChild(label);
+                labelItem.appendChild(input);
+                options.appendChild(labelItem);
             }
         }
 
@@ -199,12 +210,21 @@
             getData();
             document.getElementById('show-map').onclick = function(){
                 document.getElementById('info').hidden = !document.getElementById('info').hidden;
-                document.getElementById('map').hidden = !document.getElementById('map').hidden;
+                document.getElementById('options').hidden = !document.getElementById('options').hidden;
                 if(!document.getElementById('map').hidden){
-                    annotateMap();
-                    document.getElementById('options').setAttribute('class', 'options-map-overlay');
+                    map.setOptions({
+                        zoomControl: true,
+                        gestureHandling: 'greedy',
+                        // changing the option doesn't seem to quite be working
+                        // disableDefaultUI: false,
+                    });
                 }else{
-                    document.getElementById('options').setAttribute('class', 'options-no-map');
+                    document.getElementById('options').hidden = true;
+                    map.setOptions({
+                        zoomControl: false,
+                        gestureHandling: 'none',
+                        // disableDefaultUI: true,
+                    });
                 }
             }
             document.getElementById('photo-back').onclick = function(){
@@ -361,17 +381,10 @@
             }
 
             prepareMapData(gameState);
-            // if(publicId){
-            //     for(var i of gameState.positions[publicId]){
-            //         var item = document.createElement('li');
-            //         item.innerText = JSON.stringify(i);
-            //         document.getElementById("positions").appendChild(item);
-            //     }
-            // }
 
             map = new google.maps.Map(document.getElementById('map'), {
                 zoom: 17,
-                mapTypeId: 'satellite'
+                mapTypeId: 'satellite',
             });
         }
     </script>
@@ -390,17 +403,15 @@
             <a id="next-game-link" style="grid-column: 3;grid-row: 1;">Next game</a>
         </div>
         <div class="middle-2">
-            <div id="info" style="flex: 1;">
+            <div id="map"></div>
+            <div id="info">
                 <h2>Winner</h2>
                 <p id="game-result"></p>
                 <ul id="targets-state"></ul>
-                <!-- <h3>debug data</h3>
-                <ul id="positions"></ul> -->
             </div>
-            <div id="map" hidden></div>
-            <div id="options" class="options-no-map">
-                    <!--insert checkboxes for each player in the game-->
-            </div>
+            <ul id="options" class="options-map-overlay" hidden>
+                <!--insert checkboxes for each player in the game-->
+            </ul>
         </div>
     </div>
     <div id="photo-div" hidden>
