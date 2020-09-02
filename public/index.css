@@ -48,8 +48,8 @@ https://stackoverflow.com/a/48936804 */
 
 #photo-preview {
     font-size: 2em;
-    height: 100%;
-    width: 100%;
+    height: 100vh;
+    width: 100vw;
     position: relative;
 }
 
@@ -72,6 +72,7 @@ https://stackoverflow.com/a/48936804 */
 
 #preview {
     width: 100%;
+    height: 100%;
     object-fit: contain;
 }
 
