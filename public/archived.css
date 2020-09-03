@@ -1,0 +1,101 @@
+/*hack so that elments with display:flex can still be hidden
+https://stackoverflow.com/a/48936804*/
+[hidden]{
+    display:none !important;
+}
+#map {
+    height: 100%;
+    width: 100%;
+}
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    font-size: 1em;
+}
+
+.area {
+    border-radius: 2em;
+    border: 0.1em solid black;
+    background-color: rgba(255, 255, 255, 0.7);
+    margin-top: 1em;
+}
+
+.target-list {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+}
+
+.player-area{
+    /* border-radius: 2em; */
+    border: 0.1em solid black;
+    /*todo: shrink to content instead*/
+    margin-left: 20%;
+    margin-right: 20%;
+}
+
+.container {
+    height: 100%;
+    width: 100%;
+    position: fixed;
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+}
+
+.top {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.middle-2 {
+    list-style-type: none;
+    overflow-y: auto;
+    width: 100%;
+    height: 100%;
+    flex: 1;
+    position: relative;
+}
+
+ul, ol{
+    list-style-type: none;
+    padding: 0;
+}
+
+#info {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    background-color: rgba(255, 255, 255, 0.7);
+    display: flex;
+    flex-direction: column;
+}
+
+.options-map-overlay {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    list-style-type: none;
+    background-color: rgba(255, 255, 255, 0.7);
+    padding: 1em;
+    margin: 1em;
+}
+
+input[type=checkbox] {
+    transform: scale(2);
+    margin-left: 1em;
+}
+
+#photo-overlay {
+    position: absolute;
+    left: 0;
+    top: 0;
+}
+
+#photo {
+    width: 100%;
+    object-fit: contain;
+}
