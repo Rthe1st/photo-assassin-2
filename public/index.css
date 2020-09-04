@@ -8,6 +8,7 @@ https://stackoverflow.com/a/48936804 */
 
 body{
     margin: 0px;
+    font-size: 1em;
 }
 
 .container {
@@ -42,6 +43,19 @@ body{
     flex-direction: row;
 }
 
+.user-joined-text {
+    flex-grow: 1;
+}
+
+.user-info-area {
+    display: flex;
+    flex-direction: row;
+}
+
+.look-disabled {
+    background-color: rgb(226, 226, 226);
+}
+
 .right {
     flex: 1;
 }
@@ -61,7 +75,7 @@ body{
     text-align:center;
     width: 100%;
     position: absolute;
-    /* not 0, becuase otherwise it overhangs bottom url in firefox*/
+    /* not 0, because otherwise it overhangs bottom url in firefox*/
     bottom: 3em;
     /* bottom: 0; */
     display: flex;
@@ -102,14 +116,6 @@ body{
 
 #message {
     width: 100%;
-}
-
-button, input, label[type=text], textarea {
-    font-size: 150%;
-}
-
-button, label, textarea {
-    display: block;
 }
 
 /* this is needed to make undotext's absoulte position relative to the containing li*/

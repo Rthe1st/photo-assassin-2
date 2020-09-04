@@ -7,7 +7,6 @@
   <title>Photo Assassin</title>
   <link rel="stylesheet" href="/static/index.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.dev.js"></script>
   <script src="/static/index.js"></script>
 </head>
 
@@ -16,32 +15,22 @@
   <div class="container" id="not-started" hidden>
     <div class="top">
       <p class="username current-username" style="grid-column: 1;grid-row: 1;"></p>
-      <button id="make-targets" style="grid-column: 3;grid-row: 1;" disabled>Make targets</button>
-    </div>
-    <div class="middle-2">
-      <ul id="user-list" class="left"></ul>
-      <div class="right">
-        <!--https://stackoverflow.com/questions/29661058/how-do-i-add-text-based-units-like-lbs-floated-to-right-inside-of-an-input-ele-->
-        <label>Game Length (sec)<input id="game-length" value="300"></label>
-        <label>Countdown (sec)<input id="count-down" value="60"></label>
-        <button id="shuffle-targets">Redo targets</button>
-        <ul id="proposed-target-list"></ul>
-      </div>
-    </div>
-  </div>
-  <div class="container" id="targets-made" hidden>
-    <div class="top">
-      <p class="username current-username" style="grid-column: 1;grid-row: 1;"></p>
       <button id="undo-make-targets">Back</button>
-      <button id="start-game" style="grid-column: 3;grid-row: 1;">Start</button>
+      <button id="make-targets" style="grid-column: 3;grid-row: 1;" disabled>Lock settings?</button>
     </div>
     <div class="middle-2">
-      <ul id="target-list" class="left"></ul>
-      <!--todo: can we reuse the div between targets-made and not-started-->
+      <div class="left">
+        <h3>Settings</h3>
+        <!--todo: https://stackoverflow.com/questions/29661058/how-do-i-add-text-based-units-like-lbs-floated-to-right-inside-of-an-input-ele-->
+        <label>Hiding Time (minutes)<input id="count-down" type="number" value="5"></label>
+        <label>Searching Time (minutes)<input id="game-length" type="number" value="25"></label>
+        <h4>Target List</h4>
+        <ul id="proposed-target-list"></ul>
+        <button id="shuffle-targets">Redo targets</button>
+      </div>
       <div class="right">
-        <!--https://stackoverflow.com/questions/29661058/how-do-i-add-text-based-units-like-lbs-floated-to-right-inside-of-an-input-ele-->
-        <label>Game Length (sec)<p id="game-length-ro"></p></label>
-        <label>Countdown (sec)<p id="count-down-ro"></p></label>
+        <h3>Players</h3>
+        <ul id="user-list"></ul>
       </div>
     </div>
   </div>

@@ -71,12 +71,12 @@ function saveSettings(game, gameLength, countDown, proposedTargetList){
   // todo: return errors if invalid options are supplied
   // for now - choose sensible values because its easy
   if (!isNaN(parseInt(gameLength))) {
-    game.chosenSettings.gameLength = parseInt(gameLength) * 1000;
+    game.chosenSettings.gameLength = parseInt(gameLength);
   } else {
     game.chosenSettings.gameLength = 1000 * 60 * 5; // 5 min game by default
   }
   if (!isNaN(parseInt(countDown))) {
-    game.chosenSettings.countDown = parseInt(countDown) * 1000;
+    game.chosenSettings.countDown = parseInt(countDown);
   } else {
     game.chosenSettings.countDown = 1000 * 60;// 1 min countdown by default
   }

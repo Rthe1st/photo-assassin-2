@@ -164,7 +164,7 @@ function markSnipe(event){
 function inPlayView(){
     updateTimeLeft();
     setCurrentTarget();
-    document.getElementById('targets-made').hidden = true;
+    document.getElementById('not-started').hidden = true;
     document.getElementById('in-play').hidden = false;
     document.getElementById('sub-state').innerText = game.game.subState;
     document.getElementById('time-left').innerText = game.game.timeLeft / 1000;
@@ -174,22 +174,22 @@ function inPlayView(){
 }
 
 function targetsMadeView(){
-    document.getElementById('targets-made').hidden = false;
-    document.getElementById('not-started').hidden = true;
-
-    var targetsElement = document.getElementById('target-list');
-    targetsElement.innerHTML = '';
-    var li = document.createElement('li');
-    li.innerText = "Targets:";
-    targetsElement.append(li);
-    for (var [sniper, target] of game.getProposedTargetPairs(game.getSettings().proposedTargetList)) {
-        var element = document.createElement('li');
-        var text = `${sniper} -> ${target}`;
-        element.innerText = text;
-        targetsElement.appendChild(element);
+    refreshProposedTargets(game.getSettings().proposedTargetList);
+    document.getElementById('make-targets').removeAttribute('disabled');
+    document.getElementById('make-targets').innerText = "Start";
+    document.getElementById('undo-make-targets').hidden = false;
+    document.getElementById('game-length').value = game.game.gameLength / 1000 / 60;
+    document.getElementById('game-length').setAttribute('readonly', '');
+    document.getElementById('game-length').setAttribute('class', 'look-disabled');
+    document.getElementById('count-down').value = game.game.countDown / 1000 / 60;
+    document.getElementById('count-down').setAttribute('readonly', '');
+    document.getElementById('count-down').setAttribute('class', 'look-disabled');
+    document.getElementById('shuffle-targets').disabled = true;
+    resetUserList(game.game.userList);
+    let deleteButtons = document.getElementsByClassName('delete-user-button');
+    for(let i=0; i < deleteButtons.length; i++){
+        deleteButtons[i].disabled= true;
     }
-    document.getElementById('game-length-ro').innerText = game.game.gameLength / 1000;
-    document.getElementById('count-down-ro').innerText = game.game.countDown / 1000;
 }
 
 function markSnipesAsBad(undoneSnipes){
@@ -208,12 +208,9 @@ function markSnipesAsBad(undoneSnipes){
     }
 }
 
-function refreshProposedTargets(){
+function refreshProposedTargets(proposedTargetList){
     let targetList = document.getElementById('proposed-target-list');
     targetList.innerHTML = '';
-    var li = document.createElement('li');
-    li.innerText = "Targets:";
-    targetList.append(li);
     for (var [sniper, target] of game.getProposedTargetPairs(proposedTargetList)){
         var element = document.createElement('li');
         var text = `${sniper} -> ${target}`;
@@ -237,13 +234,19 @@ function initialization(msg){
     }else if(game.game.state == game.states.NOT_STARTED){
         proposedTargetList = game.getSettings().proposedTargetList;
         document.getElementById('not-started').hidden = false;
-        refreshProposedTargets();
+        document.getElementById('undo-make-targets').hidden = true;
+        refreshProposedTargets(proposedTargetList);
         // todo: move into game as isGameReady()
         if(Object.entries(game.game.userList).length > 1){
             document.getElementById('make-targets').removeAttribute('disabled');
         }
         resetUserList(game.game.userList);
+        let deleteButtons = document.getElementsByClassName('delete-user-button');
+        for(let i=0; i < deleteButtons.length; i++){
+            deleteButtons[i].hidden = false;
+        }
     }else if(game.game.state == game.states.TARGETS_MADE){
+        document.getElementById('not-started').hidden = false;
         targetsMadeView();
     }
 };
@@ -260,9 +263,6 @@ function badSnipe(msg){
 function resetUserList(userList){
     var userListElement = document.getElementById('user-list');
     userListElement.innerHTML = '';
-    var li = document.createElement('li');
-    li.innerText = "Players:";
-    userListElement.append(li);
     for (const [publicId, user] of Object.entries(userList)) {
         userListElement.append(createUserElement(user.username, publicId));
     }
@@ -270,11 +270,14 @@ function resetUserList(userList){
 
 function createUserElement(username, publicId){
     var li = document.createElement('li');
+    li.setAttribute('class', 'user-info-area')
     var text = document.createElement('p');
+    text.setAttribute('class', 'user-joined-text')
     text.innerText = username;
     li.appendChild(text);
     var remove = document.createElement('button');
     remove.setAttribute('id', `delete-user-${publicId}`);
+    remove.setAttribute('class', 'delete-user-button')
     remove.innerText = 'Remove';
     remove.onclick = function(){
         if(confirm(`Remove ${username} from the game?`)){
@@ -288,7 +291,7 @@ function createUserElement(username, publicId){
 function newUser(msg) {
     game.update(msg.gameState);
     proposedTargetList = game.getSettings().proposedTargetList;
-    refreshProposedTargets();
+    refreshProposedTargets(proposedTargetList);
     if(Object.entries(game.game.userList).length > 1){
         document.getElementById('make-targets').removeAttribute('disabled');
     }
@@ -300,7 +303,7 @@ function newUser(msg) {
 function removeUser(msg){
     game.update(msg.gameState);
     proposedTargetList = game.getSettings().proposedTargetList;
-    refreshProposedTargets();
+    refreshProposedTargets(proposedTargetList);
     resetUserList(game.game.userList);
     if(publicId == msg.publicId){
         //delete our cookie and reload
@@ -319,12 +322,22 @@ function undoMakeTargets(msg) {
     game.update(msg.gameState);
     //resetting values isn't needed
     // because they should already be in their from the make-targets message
-    document.getElementById('game-length').value = game.getSettings().gameLength /1000;
-    document.getElementById('count-down').value = game.getSettings().countDown /1000;
-    document.getElementById('targets-made').hidden = true;
-    document.getElementById('not-started').hidden = false;
+    document.getElementById('game-length').value = game.getSettings().gameLength  / 1000 / 60;
+    document.getElementById('count-down').value = game.getSettings().countDown / 1000 / 60;
+    document.getElementById('undo-make-targets').hidden = true;
+    document.getElementById('game-length').removeAttribute('readonly');
+    document.getElementById('game-length').removeAttribute('class');
+    document.getElementById('count-down').removeAttribute('readonly');
+    document.getElementById('count-down').removeAttribute('class');
+    document.getElementById('shuffle-targets').disabled = false;
+    document.getElementById('make-targets').innerText = "Lock settings?";
+    let deleteButtons = document.getElementsByClassName('delete-user-button');
+    for(let i=0; i < deleteButtons.length; i++){
+        deleteButtons[i].disabled = false;
+    }
+
     proposedTargetList = game.getSettings().proposedTargetList;
-    refreshProposedTargets();
+    refreshProposedTargets(proposedTargetList);
 };
 
 function start(msg) {
@@ -356,7 +369,7 @@ function chatMessage(msg) {
 
 function shuffleTargets(){
     proposedTargetList = shuffle(proposedTargetList);
-    refreshProposedTargets();
+    refreshProposedTargets(proposedTargetList);
 }
 
 function hideSnipedScreen(){
@@ -448,23 +461,19 @@ window.onload = function () {
     document.getElementById('send-photo-message').addEventListener('click', sendPhotoMessage);
 
     document.getElementById('make-targets').onclick = function (event) {
-        if(confirm('Are you sure?')){
-            var gameLength = document.getElementById('game-length').value;
-            var countDown = document.getElementById('count-down').value;
+        if(game.game.state == game.states.TARGETS_MADE){
+            if(confirm('Start the game?')){
+                socketEvents.startGame(socket);
+            }
+        }else{
+            var gameLength = document.getElementById('game-length').value * 1000 * 60;
+            var countDown = document.getElementById('count-down').value * 1000 * 60;
             socketEvents.makeTargets(socket, gameLength, countDown, proposedTargetList);
         }
     }
 
     document.getElementById('undo-make-targets').onclick = function (event) {
-        if(confirm('Back to game setup?')){
-            socketEvents.undoMakeTargets(socket);
-        }
-    }
-
-    document.getElementById('start-game').onclick = function (event) {
-        if(confirm('Start the game?')){
-            socketEvents.startGame(socket);
-        }
+        socketEvents.undoMakeTargets(socket);
     }
 
     document.getElementById('stop-game').onclick = function (event) {
