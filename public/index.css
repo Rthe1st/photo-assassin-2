@@ -9,7 +9,16 @@ https://stackoverflow.com/a/48936804 */
 body{
     margin: 0px;
     font-size: 1em;
+    background-image: url("/static/main_background.jpg");
+    background-size: cover;
 }
+
+.area {
+    border-radius: 2em;
+    border: 0.1em solid black;
+    background-color: rgba(255, 255, 255, 0.7);
+    margin: 1em;
+  }
 
 .container {
     font-size: 1em;
@@ -22,6 +31,7 @@ body{
 
 .top {
     display: grid;
+    text-align: center;
     grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
@@ -43,6 +53,22 @@ body{
     flex-direction: row;
 }
 
+#make-targets, #undo-make-targets {
+    margin: 1em;
+}
+
+#user-list {
+    padding-left: 0;
+    list-style-type: none;
+}
+
+#proposed-target-list {
+    padding-left: 0;
+    text-align: left;
+    padding-left: 1em;
+    list-style-type: none;
+}
+
 .user-joined-text {
     flex-grow: 1;
 }
@@ -58,10 +84,12 @@ body{
 
 .right {
     flex: 1;
+    text-align: center;
 }
 
 .left {
     flex: 1;
+    text-align: center;
 }
 
 #photo-preview {

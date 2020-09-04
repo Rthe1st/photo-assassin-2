@@ -13,22 +13,22 @@
 <body>
   <!--todo: use semantic elements-->
   <div class="container" id="not-started" hidden>
-    <div class="top">
+    <div class="top area">
       <p class="username current-username" style="grid-column: 1;grid-row: 1;"></p>
       <button id="undo-make-targets">Back</button>
       <button id="make-targets" style="grid-column: 3;grid-row: 1;" disabled>Lock settings?</button>
     </div>
     <div class="middle-2">
-      <div class="left">
+      <div class="left area">
         <h3>Settings</h3>
         <!--todo: https://stackoverflow.com/questions/29661058/how-do-i-add-text-based-units-like-lbs-floated-to-right-inside-of-an-input-ele-->
         <label>Hiding Time (minutes)<input id="count-down" type="number" value="5"></label>
         <label>Searching Time (minutes)<input id="game-length" type="number" value="25"></label>
         <h4>Target List</h4>
         <ul id="proposed-target-list"></ul>
-        <button id="shuffle-targets">Redo targets</button>
+        <button id="shuffle-targets">Reshuffle</button>
       </div>
-      <div class="right">
+      <div class="right area">
         <h3>Players</h3>
         <ul id="user-list"></ul>
       </div>
