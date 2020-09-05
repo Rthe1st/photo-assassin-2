@@ -6,6 +6,11 @@ https://stackoverflow.com/a/48936804 */
     display: none !important;
 }
 
+textarea, button {
+    /*todo: make responsive*/
+    font-size: 16px;
+}
+
 body{
     margin: 0px;
     font-size: 1em;
@@ -94,21 +99,22 @@ body{
 
 #photo-preview {
     font-size: 1em;
+    /* this has a gap at the bottom of the screen that isn't covered
+    might be due to URL bar in firefox mobile - think it might go away if scroll bar does*/
     height: 100vh;
     width: 100vw;
     position: relative;
+    background-color: black;
 }
 
 #preview-overlay {
     text-align:center;
     width: 100%;
     position: absolute;
-    /* not 0, because otherwise it overhangs bottom url in firefox*/
-    bottom: 3em;
-    /* bottom: 0; */
+    bottom: 0;
     display: flex;
     flex-direction: column;
-    background-color: rgba(255, 255, 255, 0.5);
+    background-color: rgba(255, 255, 255, 0.75);
     /* font-size: 1.5em; */
 }
 
@@ -119,10 +125,9 @@ body{
 }
 
 #preview {
-    width: 100%;
-    height: 100%;
+    height: 100vh;
+    width: 100vw;
     object-fit: contain;
-    display: inline;
 }
 
 #camera-button {
@@ -134,8 +139,9 @@ body{
     margin: 0.25em;
 }
 
-#messages li:nth-child(odd) {
-    background: #eee;
+#messages {
+    padding-left: 1em;
+    list-style-type: none;
 }
 
 .username {
@@ -143,28 +149,73 @@ body{
 }
 
 #message {
-    width: 100%;
+    flex-grow: 1;
+    margin-left: 1.5em;
 }
 
 /* this is needed to make undotext's absoulte position relative to the containing li*/
 .message-li {
     position: relative;
+    float: left;
+    clear: both;
+    padding-left: 1em;
+    padding-right: 1em;
+    padding-top: 0.5em;
+    padding-bottom: 0.5em;
+    margin: 0.5em;
+    border: 0.1em solid black;
+    background-color: rgba(255, 255, 255);
+    max-width: 50%;
 }
 
-.undotext { 
+.message-li > p {
+    width: max-content;
+    padding-right: 1em;
+    margin-top: 0.5em;
+}
+
+.own-message {
+    position: relative;
+    text-align: right;
+    float: right;
+    clear: both;
+    padding-left: 1em;
+    padding-right: 1em;
+    padding-top: 0.5em;
+    padding-bottom: 0.5em;
+    margin: 0.5em;
+    border: 0.1em solid black;
+    background-color: rgba(0, 221, 0);
+    max-width: 50%;
+}
+
+.own-message > p {
+    width: max-content;
+    float: right;
+    clear: right;
+}
+
+.undotext {
     position: absolute; 
     top: 50%; 
-    left: 0; 
+    left: 0;
     width: 100%;
     color: crimson;
     font-size: 5em;
     font-weight: 20;
  }
 
+ .own-message > .message-image {
+    float: right;
+    clear: right;
+ }
+
 .message-image {
-    width: 100%;
-    object-fit: contain;
-    display: inline;
+    /*todo: force this to be square
+    https://stackoverflow.com/a/55966300*/
+    max-width: 100%;
+    max-height: 50vh;
+    object-fit: cover;
 }
 
 input[type=checkbox] {

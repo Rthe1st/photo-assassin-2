@@ -57,21 +57,24 @@
       </div>
     </div>
     <div id="main-in-play" class="container">
-      <div class="top">
+      <div class="top area">
         <p class="username current-username" style="grid-column: 1;grid-row: 1;"></p>
         <p id="sub-state" style="grid-column: 2;grid-row: 1;"></p>
         <button id="show-game-info" style="grid-column: 3;grid-row: 1;">info</button>
-        <p id="target" style="grid-column: 1;grid-row: 2;"></p>
+        <div style="grid-column: 1;grid-row: 2;">
+          <span style="font-weight: bold;">Target:</span>
+          <p id="target" style="display: inline;"></p>
+        </div>
         <p id="time-left" style="grid-column: 2;grid-row: 2;"></p>
         <button id="stop-game" style="grid-column: 3;grid-row: 2;">Stop</button>
       </div>
-      <div id="game-info" hidden>
+      <div id="game-info" class="area" hidden>
         <ul id="player-progress"></ul>
       </div>
       <div class="middle">
         <ul id="messages"></ul>
       </div>
-      <form id="send-message-form" action="" class="send-message-form">
+      <form id="send-message-form" action="" class="send-message-form area">
         <textarea id="message" placeholder="Type a message"></textarea>
         <button id="send-message">Send</button>
         <button id="camera-button" class="fa">&#xf030;</button>

@@ -11,15 +11,28 @@ if(process.env.SENTRY_TESTS == "true"){
 }
 function createChatElement(sender, message, image, snipeNumber, snipePlayer, snipeCount) {
     var li = document.createElement('li');
-    li.setAttribute('class', 'message-li');
-    var span = document.createElement('span');
-    span.innerText = sender;
-
-    span.classList.add("username");
-    li.appendChild(span);
-    let paragraph = document.createElement('p');
-    paragraph.innerText = message;
-    li.appendChild(paragraph);
+    document.getElementById('messages').appendChild(li);
+    let previousMessage = document.getElementById('messages').lastElementChild;
+    let previousSender;
+    if(previousMessage.getElementsByTagName('span').length > 0){
+        // todo: get this from gamestate instead
+        previousSender = previousMessage.getElementsByTagName('span')[0].innerText;
+    }
+    if(game.getUsername(publicId) == sender){
+        li.setAttribute('class', 'own-message');
+    }else if(previousSender != sender){
+        //only show username if previous message was from someone else
+        li.setAttribute('class', 'message-li');
+        var span = document.createElement('span');
+        span.innerText = sender;
+        span.classList.add("username");
+        li.appendChild(span);
+    }
+    if(message != ''){
+        let paragraph = document.createElement('p');
+        paragraph.innerText = message;
+        li.appendChild(paragraph);
+    }
     if (image) {
         var blob = new Blob([image], { type: 'image/png' });
         var url = URL.createObjectURL(blob);
@@ -42,7 +55,6 @@ function createChatElement(sender, message, image, snipeNumber, snipePlayer, sni
             li.appendChild(voteButton);
         }
     }
-    document.getElementById('messages').appendChild(li);
 }
 
 function processMsg(msg, isReplay){
@@ -80,6 +92,7 @@ function cameraButton(event){
 function photoInput(event){
     document.getElementById('photo-preview').hidden = false;
     document.getElementById('main-in-play').hidden = true;
+    document.getElementById('photo-message').value = document.getElementById('message').value;
     var img = document.getElementById('preview');
     img.src = URL.createObjectURL(event.target.files[0]);
     let target = game.getTarget(publicId);
@@ -87,6 +100,9 @@ function photoInput(event){
 }
 
 function sendTextMessage(ev){
+    if(document.getElementById('message').value == ''){
+        return;
+    }
     let message = {
         "text": document.getElementById('message').value,
         "position": gps.position,
@@ -94,6 +110,8 @@ function sendTextMessage(ev){
     socketEvents.chatMessage(socket, message);
     document.getElementById('message').value = '';
     ev.preventDefault();
+    // keep the keyboard open, incase user wants to send another message
+    document.getElementById('message').focus();
     return false;
 }
 
@@ -106,6 +124,7 @@ function sendPhotoMessage(ev){
         "isSnipe": document.getElementById('is-snipe').checked,
     }
     socketEvents.chatMessage(socket, message);
+    document.getElementById('message').value = '';
     document.getElementById('photo-message').value = '';
     document.getElementById('photo-input').value = '';
     document.getElementById('is-snipe').checked = false;
@@ -119,7 +138,7 @@ function sendPhotoMessage(ev){
 
 function setCurrentTarget(){
     var targetElement = document.getElementById('target');
-    targetElement.innerText = "Target: " + game.getTarget(publicId);
+    targetElement.innerText = game.getTarget(publicId);
 }
 
 function updateTimeLeft(){
@@ -461,6 +480,7 @@ window.onload = function () {
     document.getElementById('send-photo-message').addEventListener('click', sendPhotoMessage);
 
     document.getElementById('make-targets').onclick = function (event) {
+        console.log(game.game.state)
         if(game.game.state == game.states.TARGETS_MADE){
             if(confirm('Start the game?')){
                 socketEvents.startGame(socket);
