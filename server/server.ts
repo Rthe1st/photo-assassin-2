@@ -10,7 +10,7 @@ import Sentry from '@sentry/node';
 import cookieParser from 'cookie-parser';
 import express from 'express';
 
-import * as socketIo from 'socket.io'
+import socketIo from 'socket.io'
 import * as httpServer from 'http'
 
 import * as Game from './game.js';
@@ -34,7 +34,7 @@ export function createServer(useSentry=true,port=process.env.PORT || 3000){
 
   //io needs to be accessablrwhen we setup game - pass it in
   // https://github.com/socketio/socket.io/issues/2276
-  var io = socketIo.default(http, {
+  var io = socketIo(http, {
     cookie: false,
     // todo: this is a hack to prevent our connection being terminated
     // during large file uploads because we're blocking and can't reply to pongs
@@ -87,7 +87,7 @@ function root(req, res, games){
 function addUserToGame(code, res, username, games){
     var game = games.get(code);
 
-    const [privateId, publicId] = Game.addPlayer(game, username);
+    const {privateId: privateId, publicId: publicId} = Game.addPlayer(game, username);
     
     socketHandler.addUser(publicId, game);
 
