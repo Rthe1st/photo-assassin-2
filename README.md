@@ -16,12 +16,6 @@ CNAME'd to Cloudflare for forcing https and for caching under photo-assassin.pra
 
 ## Run locally
 
-build browser js:
-
-```bash
-npm run-script build
-```
-
 test:
 
 ```bash
@@ -31,14 +25,14 @@ npm test
 spin up server:
 
 ```bash
-nodejs ./server.js
+npm start
 ```
 
 spin up game with robot players:
 
 ```bash
 # add --prod to run the game on prod instead
-node ./server/start.js --clients listen
+npm start -- --clients listen
 ```
 
 It'll be running on [localhost](http://localhost:3000/)

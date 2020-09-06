@@ -1,0 +1,12 @@
+{
+    "compilerOptions": {
+        "outDir": "./server_dist",
+        "allowJs": true,
+        "target": "es2019",
+        "moduleResolution": "node",
+        "allowSyntheticDefaultImports": true
+    },
+    "include": [
+        "./server/**/*"
+    ]
+}

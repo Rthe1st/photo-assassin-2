@@ -1,5 +1,5 @@
 import winston from 'winston';
-import stream from 'stream'
+import * as stream from 'stream';
 var Writable = stream.Writable;
 export let logger;
 
@@ -8,9 +8,9 @@ export function setupTestLogging(filePrefix){
     // what's been logger without looking in a log file
     setUpLogging(filePrefix);
     var logsForTests = [];
-    var ws = Writable({objectMode: true});
+    var ws = new Writable({objectMode: true});
     ws._write = function (chunk, enc, next) {
-        logsForTests.pus;h(chunk);
+        logsForTests.push(chunk);
         next();
     };
     logger.add(new winston.transports.Stream({stream: ws, level: 'verbose'}));

@@ -12,9 +12,6 @@
     "realtime",
     "websocket"
   ],
-  "scripts": {
-    "postinstall": "webpack --config webpack.config.cjs"
-  },
   "addons": [
   ],
   "env": {
