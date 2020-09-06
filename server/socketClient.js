@@ -63,7 +63,7 @@ function activePlayer(gameId, privateId, player){
         (msg)=>{
             console.log('init');
             if(Object.entries(msg.gameState.userList).length > 1){
-                socketEvents.makeTargets(socket, 60, 0, msg.gameState.chosenSettings.proposedTargetList);
+                socketEvents.makeTargets(socket, 60000, 0, msg.gameState.chosenSettings.proposedTargetList);
             }
         },
         ()=>{},

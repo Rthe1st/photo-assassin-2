@@ -22,6 +22,12 @@ test:
 npm test
 ```
 
+build:
+
+```bash
+npm run prepublish
+```
+
 spin up server:
 
 ```bash
