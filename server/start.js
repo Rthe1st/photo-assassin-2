@@ -24,8 +24,11 @@ if(process.env.NODE_ENV == "production"){
             Server.createServer();
         }
 
-        let clientTypeIndex = process.argv.indexOf("--clients") + 1
-
+        let clientsSpecified = process.argv.indexOf("--clients")
+        if(clientsSpecified == -1){
+            return;
+        }
+        let clientTypeIndex = clientsSpecified + 1
         if(clientTypeIndex < process.argv.length){
             switch(process.argv[clientTypeIndex]){
                 case "active":
