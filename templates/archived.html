@@ -6,16 +6,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Photo Assassin</title>
     <link rel="stylesheet" href="/static/archived.css">
-    <script src="https://browser.sentry-cdn.com/5.20.1/bundle.min.js"
-        integrity="sha384-O8HdAJg1h8RARFowXd2J/r5fIWuinSBtjhwQoPesfVILeXzGpJxvyY/77OaPPXUo" crossorigin="anonymous">
-        </script>
-    <script src="/static/archived.js"></script>
-    <!--should be coded on the assumption that viewer might not be a player-->
-    <script async defer
-        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDpVE1utBPfvtw9Y0b6LVAIWBJGxr7POUQ&callback=initMap">
+    <!-- we're not giving google maps a callback because the JS to call back is in another file, and this breaks it
+    so we must load the google maps script first (and not async) to make sure it's already loaded before hitting our code-->
+    <script
+        src="https://maps.googleapis.com/maps/api/js?key=<%= key %>">
         </script>
 </head>
-
 <body>
     <div class="container" id="main">
         <div class="top">

@@ -1,12 +1,9 @@
-// Sentry is on adblocker lists, so we can't depend on it working
-// https://github.com/getsentry/sentry-javascript/issues/668
-if(typeof variable !== 'undefined'){
-    Sentry.init({ dsn: 'https://0622ee38668548dcb4af966730298b31@o428868.ingest.sentry.io/5374680' });
-    //todo: when we have a build process for this page
-    // if(process.env.SENTRY_TESTS == "true"){
-    Sentry.captureException(new Error("sentry test archieved.html"));
-    //}
+import * as Sentry from '@sentry/browser';
+Sentry.init({ dsn: 'https://0622ee38668548dcb4af966730298b31@o428868.ingest.sentry.io/5374680' });
+if(process.env.SENTRY_TESTS == "true"){
+    Sentry.captureException(new Error("sentry test archived.html"));
 }
+
 const cookieGameId = decodeURIComponent(document.cookie.replace(/(?:(?:^|.*;\s*)gameId\s*\=\s*([^;]*).*$)|^.*$/, "$1"));
 
 let urlGameId = window.location.href.split('/').pop()
@@ -64,7 +61,12 @@ const getData = async () => {
     gameState = await response.json();
     console.log(gameState);
     setUpPage(gameState);
-    initMap();
+    prepareMapData(gameState);
+
+    map = new google.maps.Map(document.getElementById('map'), {
+        zoom: 17,
+        mapTypeId: 'satellite',
+    });
     annotateMap();
 }
 
@@ -84,16 +86,16 @@ function setUpPage(gameState) {
     document.getElementById('game-result').innerText = `🎉🎉${winner}🎉🎉`
     var targetsState = document.getElementById('targets-state');
     let players = Object.keys(gameState.targetsGot)
-    players.sort((a, b) => gameState.targetsGot[a].length < gameState.targetsGot[b].length)
+    players.sort((a, b) => gameState.targetsGot[b].length - gameState.targetsGot[a].length)
     for (var key of players) {
         var outerLi = document.createElement('li');
         outerLi.setAttribute('class', 'player-area')
-        var innerLi = document.createElement('p');
+        var summaryStats = document.createElement('p');
         let username = gameState.userList[key].username;
         let total = gameState.targetsGot[key].length + gameState.targets[key].length;
         let got = gameState.targetsGot[key].length;
-        innerLi.innerText = `${username}: ${got}/${total}`
-        outerLi.appendChild(innerLi);
+        summaryStats.innerText = `${username}: ${got}/${total}`
+        outerLi.appendChild(summaryStats);
         var ul = document.createElement('ul');
         ul.setAttribute('class', 'target-list')
         outerLi.appendChild(ul);
@@ -120,16 +122,16 @@ function setUpPage(gameState) {
     var options = document.getElementById("options");
     for(const [playerPublicId, player] of Object.entries(gameState.userList)){
         var labelItem = document.createElement("li");
-        let inputId = `show-player-${player.username}`
+        let inputId = `show-player-${player["username"]}`
         var label = document.createElement("label");
-        label.innerText = player.username;
+        label.innerText = player["username"];
         label.setAttribute('for', inputId)
         let playerColour = getPlayerColor(playerPublicId);
         label.setAttribute('style', `background-color: ${playerColour}`);
         options.appendChild(label);
         var input = document.createElement("input");
         input.setAttribute("type", "checkbox");
-        input.setAttribute("checked", true);
+        input.setAttribute("checked", "true");
         input.addEventListener('change', () => {
             annotateMap();
         });
@@ -164,7 +166,7 @@ window.onload = function () {
     document.getElementById('photo-back').onclick = function(){
         document.getElementById('photo-div').hidden = true;
         document.getElementById('main').hidden = false;
-        document.getElementById('photo').src = window.location.href + "/shitty_loader.jpg";
+        (<HTMLImageElement>document.getElementById('photo')).src = window.location.href + "/shitty_loader.jpg";
 
     }
 };
@@ -268,7 +270,7 @@ function showPhoto(text, playerPublicId, index){
     document.getElementById('photo-div').hidden = false;
     document.getElementById('main').hidden = true;
     document.getElementById('photo-text').innerText = text;
-    document.getElementById('photo').src = window.location.href + "?format=json&publicId="+playerPublicId+"&index="+index;
+    (<HTMLImageElement>document.getElementById('photo')).src = window.location.href + "?format=json&publicId="+playerPublicId+"&index="+index;
 }
 
 var map;
@@ -279,7 +281,7 @@ function annotateMap(){
     // but this is more flexable for now
 
     for(const [playerPublicId, player] of Object.entries(gameState.userList)){
-        var checkbox = document.getElementById(`show-player-${player.username}`);
+        var checkbox = (<HTMLInputElement>document.getElementById(`show-player-${player["username"]}`));
         if(checkbox.checked){
             mapData["playerPaths"][playerPublicId].setMap(map);
             for(var snipe of mapData["playerSnipes"][playerPublicId]){
@@ -307,21 +309,4 @@ function annotateMap(){
     }else{
         map.setCenter(mapData["playerPaths"][0].getPath().getAt(0));
     }
-}
-
-var ready = false;
-function initMap() {
-    //hack to check that both google maps is loaded
-    // and game data has been fetched
-    if (!ready) {
-        ready = true;
-        return;
-    }
-
-    prepareMapData(gameState);
-
-    map = new google.maps.Map(document.getElementById('map'), {
-        zoom: 17,
-        mapTypeId: 'satellite',
-    });
 }

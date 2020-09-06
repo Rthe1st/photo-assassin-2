@@ -1,7 +1,8 @@
 node_modules
 api_key
 logs/
-public/index.js
+public/*.js
+public/*.html
 public/*.js.map
 .env
 server_dist/
