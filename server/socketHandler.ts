@@ -115,10 +115,10 @@ export function ioConnect(socket, games){
           return;
         }
   
-        outgoing_msg.snipeNumber = snipeRes.snipeNumber;
-        outgoing_msg.snipePlayer = publicId;
-        outgoing_msg.snipeCount = snipeRes.snipeCount;
-        outgoing_msg.botMessage = snipeRes.botMessage;
+        outgoing_msg["snipeNumber"] = snipeRes.snipeNumber;
+        outgoing_msg["snipePlayer"] = publicId;
+        outgoing_msg["snipeCount"] = snipeRes.snipeCount;
+        outgoing_msg["botMessage"] = snipeRes.botMessage;
       }
 
       if(msg.image){
@@ -136,7 +136,7 @@ export function ioConnect(socket, games){
   
       game.chatHistory.push(outgoing_msg);
   
-      outgoing_msg.gameState = Game.gameStateForClient(game);
+      outgoing_msg["gameState"] = Game.gameStateForClient(game);
       
       socket.nsp.emit('chat message', outgoing_msg);
     });

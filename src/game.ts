@@ -27,15 +27,6 @@ function getPlayerProgress(publicId){
     return [got, remaining];
 }
 
-function targetDisplay(targets) {
-    users = Object.keys(targets);
-    output = "";
-    for (var i = 0; i < users.length; i++) {
-        output += users[i] + "-> " + targets[users[i]] + "\n";
-    }
-    return output
-}
-
 function getTarget(publicId, snipeNumber){
     if(snipeNumber == undefined){
         snipeNumber = game.targets[publicId].length;

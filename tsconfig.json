@@ -1,8 +1,9 @@
 {
     "compilerOptions": {
         "outDir": "./server_dist",
+        "module": "ESNext",
         "allowJs": true,
-        "target": "es2019",
+        "target": "ESNext",
         "moduleResolution": "node",
         "allowSyntheticDefaultImports": true
     },

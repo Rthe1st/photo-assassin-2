@@ -95,7 +95,7 @@ function photoInput(event){
     (<HTMLInputElement>document.getElementById('photo-message')).value = (<HTMLInputElement>document.getElementById('message')).value;
     let img = (<HTMLImageElement>document.getElementById('preview'));
     img.src = URL.createObjectURL(event.target.files[0]);
-    let target = game.getTarget(publicId);
+    let target = game.getTarget(publicId, undefined);
     document.getElementById("mark-snipe-question").innerText = `Is ${target} in the picture?`
 }
 
@@ -139,7 +139,7 @@ function sendPhotoMessage(ev){
 
 function setCurrentTarget(){
     var targetElement = document.getElementById('target');
-    targetElement.innerText = game.getTarget(publicId);
+    targetElement.innerText = game.getTarget(publicId, undefined);
 }
 
 function updateTimeLeft(){
@@ -419,7 +419,7 @@ function showGameInfo(){
         for (const [publicId, user] of Object.entries(game.game.userList)) {
             let playerElement = document.createElement('li');
             let [got, remaining] = game.getPlayerProgress(publicId);
-            playerElement.innerText = user['username'] + ", current target: " + game.getTarget(publicId) + ', ' + got + '/' + remaining;
+            playerElement.innerText = user['username'] + ", current target: " + game.getTarget(publicId, undefined) + ', ' + got + '/' + remaining;
             playerProgressList.appendChild(playerElement);
         }
     }else{

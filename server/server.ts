@@ -5,7 +5,7 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const staticDir = path.join(__dirname, '../../public/')
-import * as Sentry from '@sentry/node';
+import Sentry from '@sentry/node';
 
 import cookieParser from 'cookie-parser';
 import express from 'express';
@@ -30,7 +30,7 @@ export function createServer(useSentry=true,port=process.env.PORT || 3000){
   app.get('/', (req, res) => root(req, res, games));
   app.get('/game/:code', (req, res) => gamePage(req, res, games));
 
-  var http = httpServer.Server(app);
+  var http = new httpServer.Server(app);
 
   //io needs to be accessablrwhen we setup game - pass it in
   // https://github.com/socketio/socket.io/issues/2276
@@ -55,14 +55,14 @@ export function createServer(useSentry=true,port=process.env.PORT || 3000){
 }
 
 function addSentry(app){
-  Sentry.default.init({ dsn: process.env.NODE_SENTRY});
+  Sentry.init({ dsn: process.env.NODE_SENTRY});
   if(process.env.SENTRY_TESTS == "true"){
-    Sentry.default.captureException(new Error("sentry test server.js"));
+    Sentry.captureException(new Error("sentry test server.js"));
   }
   // The request handler must be the first middleware on the app
-  app.use(Sentry.default.Handlers.requestHandler());
+  app.use(Sentry.Handlers.requestHandler());
 // The error handler must be before any other error middleware and after all controllers
-  app.use(Sentry.default.Handlers.errorHandler());
+  app.use(Sentry.Handlers.errorHandler());
 
 }
 
