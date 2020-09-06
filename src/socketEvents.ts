@@ -53,7 +53,7 @@ export function setup(
     return socket;
 }
 
-interface Message {
+export interface Message {
     text: string,
     image: File | Buffer,
     position: serverGame.Position,

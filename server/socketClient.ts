@@ -6,6 +6,7 @@ import * as socketEvents from '../src/socketEvents.js';
 import fetch from 'node-fetch';
 import fs from 'fs';
 import randomSeed from 'random-seed';
+import { Game, Position } from './game.js';
 
 let domain = "http://localhost:3000";
 
@@ -38,7 +39,13 @@ function joinGame(username: string, gameId: string){
     return getData(url);
 }
 
-async function gameSetup(players){
+interface Player {
+    name: string;
+    algo: (gameId: string, privateId: string, player: Player, publicId: number) => SocketIOClient.Socket;
+    position: Position;
+}
+
+async function gameSetup(players: Player[]){
     let hostPlayer = players.shift();
     let details = await makeGame(hostPlayer.name);
     console.log(details);
@@ -54,7 +61,7 @@ async function gameSetup(players){
     }
 }
 
-function activePlayer(gameId: string, privateId: string, player){
+function activePlayer(gameId: string, privateId: string, player: Player){
     var randomGenerator = randomSeed.create("seedvalue");
 
     let socket = socketEvents.setup(
@@ -80,7 +87,7 @@ function activePlayer(gameId: string, privateId: string, player){
             let message = {
                 "text": "gotya",
                 "image": file,
-                "position": {"latitude": player.position.lat, "longitude": player.position.long},
+                "position": {"latitude": player.position.latitude, "longitude": player.position.longitude},
                 "isSnipe": true,
             }
             socketEvents.chatMessage(socket, message);
@@ -90,13 +97,13 @@ function activePlayer(gameId: string, privateId: string, player){
         },
         ()=>{},
         (msg)=>{
-            player.position.lat += (Math.random()-0.5)*0.001;
-            player.position.long += (Math.random()-0.5)*0.001;
+            player.position.latitude += (Math.random()-0.5)*0.001;
+            player.position.longitude += (Math.random()-0.5)*0.001;
             let file = fs.readFileSync('./server/sample_snipe_image.jpeg');
             let message = {
                 "text": "gotya",
                 "image": file,
-                "position": {"latitude": player.position.lat, "longitude": player.position.long},
+                "position": {"latitude": player.position.latitude, "longitude": player.position.longitude},
                 "isSnipe": randomGenerator(100) > 50,
             }
             socketEvents.chatMessage(socket, message);
@@ -106,7 +113,7 @@ function activePlayer(gameId: string, privateId: string, player){
     return socket;
 }
 
-function passivePlayer(gameId, privateId, player){
+function passivePlayer(gameId: string, privateId: string, player: Player){
     let socket = socketEvents.setup(
         gameId,
         privateId,
@@ -120,23 +127,23 @@ function passivePlayer(gameId, privateId, player){
         ()=>{},
         ()=>{},
         (msg)=>{
-            player.position.lat += (Math.random()-0.5)*0.001;
-            player.position.long += (Math.random()-0.5)*0.001;
-            socketEvents.positionUpdate(socket, {"latitude": player.position.lat, "longitude": player.position.long});
+            player.position.latitude += (Math.random()-0.5)*0.001;
+            player.position.longitude += (Math.random()-0.5)*0.001;
+            socketEvents.positionUpdate(socket, {"latitude": player.position.latitude, "longitude": player.position.longitude});
         },
         domain
     );
     return socket;
 }
 
-function listeningPlayer(gameId, privateId, player, publicId){
+function listeningPlayer(gameId: string, privateId: string, player:Player, publicId: number){
 
     //this is incase we re-connect and miss messages
     let commandsSeen = 0;
 
-    function processCommand(msg){
-        player.position.lat += (Math.random()-0.5)*0.001;
-        player.position.long += (Math.random()-0.5)*0.001;
+    function processCommand(msg: any){
+        player.position.latitude += (Math.random()-0.5)*0.001;
+        player.position.longitude += (Math.random()-0.5)*0.001;
         let parts = msg.text.split(" ");
         let command = parts[0];
         let name = parts[1];
@@ -149,30 +156,30 @@ function listeningPlayer(gameId, privateId, player, publicId){
                 let message = {
                     "text": "gotya",
                     "image": file,
-                    "position": {"latitude": player.position.lat, "longitude": player.position.long},
+                    "position": {"latitude": player.position.latitude, "longitude": player.position.longitude},
                     "isSnipe": true,
                 }
                 socketEvents.chatMessage(socket, message);
             }else if(command == "move"){
                 console.log("moving");
-                player.position.lat += (Math.random()-0.5)*0.001;
-                player.position.long += (Math.random()-0.5)*0.001;
-                socketEvents.positionUpdate(socket, {"latitude": player.position.lat, "longitude": player.position.long});
+                player.position.latitude += (Math.random()-0.5)*0.001;
+                player.position.longitude += (Math.random()-0.5)*0.001;
+                socketEvents.positionUpdate(socket, {"latitude": player.position.latitude, "longitude": player.position.longitude});
             }else if(command == "picture"){
                 console.log("pictureing");
                 let file = fs.readFileSync('./server/sample_snipe_image.jpeg');
                 let message = {
                     "text": "gotya",
                     "image": file,
-                    "position": {"latitude": player.position.lat, "longitude": player.position.long},
+                    "position": {"latitude": player.position.latitude, "longitude": player.position.longitude},
                     "isSnipe": false,
                 }
                 socketEvents.chatMessage(socket, message);
             }else if(command == "message"){
                 console.log("messging");
-                let message = {
+                let message: socketEvents.Message = {
                     text: "blahblah",
-                    position: {"latitude": player.position.lat, "longitude": player.position.long},
+                    position: {"latitude": player.position.latitude, "longitude": player.position.longitude},
                     image: undefined,
                     isSnipe: undefined,
                 }
@@ -223,9 +230,9 @@ function listeningPlayer(gameId, privateId, player, publicId){
         (msg)=>{
             console.log('start')
             console.log("start move");
-            player.position.lat += (Math.random()-0.5)*0.001;
-            player.position.long += (Math.random()-0.5)*0.001;
-            socketEvents.positionUpdate(socket, {"latitude": player.position.lat, "longitude": player.position.long});
+            player.position.latitude += (Math.random()-0.5)*0.001;
+            player.position.longitude += (Math.random()-0.5)*0.001;
+            socketEvents.positionUpdate(socket, {"latitude": player.position.latitude, "longitude": player.position.longitude});
         },
         ()=>{
             console.log("game over");
@@ -242,21 +249,21 @@ export function activeGame(){
         {
             name:'p1',
             algo: passivePlayer,
-            position: {lat: 51.389, long: 0.012}
+            position: {latitude: 51.389, longitude: 0.012}
         },
         {
             name:'p2',
             algo: passivePlayer,
-            position: {lat: 51.389, long: 0.012}
+            position: {latitude: 51.389, longitude: 0.012}
         },
         {
             name:'p3',
             algo: passivePlayer,
-            position: {lat: 51.389, long: 0.012}
+            position: {latitude: 51.389, longitude: 0.012}
         }, {
             name: 'simpleSloth',
             algo: activePlayer,
-            position: {lat: 51.389, long: 0.012}
+            position: {latitude: 51.389, longitude: 0.012}
         }]);
 }
 
@@ -265,21 +272,21 @@ export function passiveGame(){
         {
             name:'p1',
             algo: passivePlayer,
-            position: {lat: 51.389, long: 0.012}
+            position: {latitude: 51.389, longitude: 0.012}
         },
         {
             name:'p2',
             algo: passivePlayer,
-            position: {lat: 51.389, long: 0.012}
+            position: {latitude: 51.389, longitude: 0.012}
         },
         {
             name:'p3',
             algo: passivePlayer,
-            position: {lat: 51.389, long: 0.012}
+            position: {latitude: 51.389, longitude: 0.012}
         }, {
             name: 'simpleSloth',
             algo: passivePlayer,
-            position: {lat: 51.389, long: 0.012}
+            position: {latitude: 51.389, longitude: 0.012}
         }]);
 }
 
@@ -288,20 +295,20 @@ export function listenGame(){
         {
             name:'p1',
             algo: listeningPlayer,
-            position: {lat: 51.389, long: 0.012}
+            position: {latitude: 51.389, longitude: 0.012}
         },
         {
             name:'p2',
             algo: listeningPlayer,
-            position: {lat: 51.389, long: 0.012}
+            position: {latitude: 51.389, longitude: 0.012}
         },
         {
             name:'p3',
             algo: listeningPlayer,
-            position: {lat: 51.389, long: 0.012}
+            position: {latitude: 51.389, longitude: 0.012}
         }, {
             name: 'simpleSloth',
             algo: listeningPlayer,
-            position: {lat: 51.389, long: 0.012}
+            position: {latitude: 51.389, longitude: 0.012}
         }]);
 }

@@ -6,7 +6,7 @@
         "target": "ESNext",
         "moduleResolution": "node",
         "allowSyntheticDefaultImports": true,
-        // "noImplicitAny": true
+        "noImplicitAny": true
     },
     "include": [
         "./server/**/*"
