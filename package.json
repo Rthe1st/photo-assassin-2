@@ -1,27 +1,23 @@
 {
   "name": "photo-assassin",
   "version": "0.0.1",
-  "description": "my first socket.io app",
+  "description": "",
   "dependencies": {
     "@sentry/browser": "^5.20.1",
     "@sentry/node": "^5.20.1",
-    "@types/node": "^14.6.4",
-    "awesome-typescript-loader": "^5.2.1",
     "cookie-parser": "^1.4.5",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "socket.io": "^2.3.0",
     "socket.io-client": "^2.3.0",
-    "source-map-loader": "^1.1.0",
-    "typescript": "^4.0.2",
     "winston": "^3.3.3"
   },
   "type": "module",
   "scripts": {
     "start": "node ./server_dist/server/start.js",
     "build-server": "tsc",
-    "build-client": "npx webpack --config webpack.config.cjs",
-    "prestart": "npm run build-server && npm run build-client",
+    "build-client": "webpack --config webpack.config.cjs",
+    "prepublish": "npm run build-server && npm run build-client",
     "pretest": "npm run build-server && npm run build-client",
     "test": "node ./server_dist/server/test.js"
   },
@@ -30,6 +26,10 @@
     "npm": "6.14.x"
   },
   "devDependencies": {
+    "@types/node": "^14.6.4",
+    "awesome-typescript-loader": "^5.2.1",
+    "source-map-loader": "^1.1.0",
+    "typescript": "^4.0.2",
     "@sentry/webpack-plugin": "^1.12.0",
     "node-fetch": "^2.6.0",
     "random-seed": "^0.3.0",
