@@ -18,7 +18,7 @@ import * as socketHandler from './socketHandler.js';
 import { logger } from './logging.js';
 
 export function createServer(useSentry=true,port=process.env.PORT || 3000){
-  var games = new Map();
+  var games: Map<string, Game.Game> = new Map();
   var app = express();
   if(useSentry){
     addSentry(app);
@@ -54,7 +54,7 @@ export function createServer(useSentry=true,port=process.env.PORT || 3000){
   setInterval(() => {socketHandler.checkGameTiming(io, games)}, 1000);
 }
 
-function addSentry(app){
+function addSentry(app: express.Application){
   Sentry.init({ dsn: process.env.NODE_SENTRY});
   if(process.env.SENTRY_TESTS == "true"){
     Sentry.captureException(new Error("sentry test server.js"));
@@ -66,8 +66,9 @@ function addSentry(app){
 
 }
 
-function root(req, res, games){
-  var code = req.query.code;
+function root(req: express.Request, res: express.Response, games: Map<string, Game.Game>){
+  var code = req.query.code.toString();
+  
   if(code != undefined && !games.has(code)){
     logger.log("verbose", `/ Accessing invalid game: ${code}`);
     res.redirect(`/static/game_doesnt_exist.html`);
@@ -84,7 +85,7 @@ function root(req, res, games){
   res.sendFile(staticDir + 'lobby.html');
 };
 
-function addUserToGame(code, res, username, games){
+function addUserToGame(code: string, res: express.Response, username: string, games: Map<string, Game.Game>){
     var game = games.get(code);
 
     const {privateId: privateId, publicId: publicId} = Game.addPlayer(game, username);
@@ -100,7 +101,7 @@ function addUserToGame(code, res, username, games){
     return [privateId, publicId];
 }
 
-function make(req, res, games, io){
+function make(req: express.Request, res: express.Response, games: Map<string, Game.Game>, io: socketIo.Server){
   if(!req.query.username){
     res.redirect('/');
     return;
@@ -112,7 +113,7 @@ function make(req, res, games, io){
   // register connection after setting game space to prevent race condition
   // where ioConnect relies on game.namespace
   namespace.on('connection', (socket) => socketHandler.ioConnect(socket, games));
-  var [privateId, publicId] = addUserToGame(code, res, req.query.username, games);
+  var [privateId, publicId] = addUserToGame(code, res, req.query.username.toString(), games);
   if(req.query.format == 'json'){
     res.json({publicId: publicId, privateId: privateId, gameId: code});
   }else{
@@ -120,7 +121,7 @@ function make(req, res, games, io){
   }
 };
 
-function join(req, res, games){
+function join(req: express.Request, res: express.Response, games: Map<string, Game.Game>){
   logger.log("verbose", "join game redirect");
   //todo: convey errors to user
   if(!(req.query.code)){
@@ -128,20 +129,20 @@ function join(req, res, games){
     res.redirect('/static/game_doesnt_exist.html');
     return;
   }
-  var code = req.query.code;
-  if(!games.has(req.query.code)){
+  var code = req.query.code.toString();
+  if(!games.has(code)){
     logger.log("verbose", `Accessing invalid game: ${req.query.code}`);
     res.redirect(`/static/game_doesnt_exist.html`);
     return;
   }
-  var game = games.get(req.query.code);
+  var game = games.get(req.query.code.toString());
   if(game.state != Game.states.NOT_STARTED){
     logger.log("verbose", "Attempt to join game " + req.query.code + " that has already started");
     res.redirect(`/static/game_in_progress.html`);
     return;
   }
   logger.log("debug", 'adding to game');
-  var [privateId, publicId] = addUserToGame(req.query.code, res, req.query.username, games);
+  var [privateId, publicId] = addUserToGame(code, res, req.query.username.toString(), games);
 
   if(req.query.format == 'json'){
     res.json({publicId: publicId, privateId: privateId, gameId: code});
@@ -150,7 +151,7 @@ function join(req, res, games){
   }
 };
 
-function gamePage(req, res, games){
+function gamePage(req: express.Request, res: express.Response, games: Map<string, Game.Game>){
   //todo: convey errors to user (template error page?)
   logger.log("debug", `Accessing game: ${req.params.code}`);
   if(!games.has(req.params.code)){
@@ -162,7 +163,7 @@ function gamePage(req, res, games){
 
   if(req.query.format == "json"){
     if(req.query.publicId && req.query.index){
-      res.write(Game.getImage(game, req.query.publicId, req.query.index));
+      res.write(Game.getImage(game, parseInt(req.query.publicId.toString()), parseInt(req.query.index.toString())));
     }else{
       res.json(Game.gameStateForClient(game));
     }

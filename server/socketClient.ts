@@ -5,7 +5,7 @@
 import * as socketEvents from '../src/socketEvents.js';
 import fetch from 'node-fetch';
 import fs from 'fs';
-import * as randomSeed from 'random-seed';
+import randomSeed from 'random-seed';
 
 let domain = "http://localhost:3000";
 
@@ -13,10 +13,10 @@ export function useProd(){
     domain = "https://photo-assassin.prangten.com";
 }
 
-function makeGame(username){
+function makeGame(username: string){
     const url = `${domain}/make?username=${username}&format=json`;
     
-    const getData = async url => {
+    const getData = async (url:string) => {
         const response = await fetch(url);
         const json = await response.json();
         return json;
@@ -26,10 +26,10 @@ function makeGame(username){
     
 }
 
-function joinGame(username, gameId){
+function joinGame(username: string, gameId: string){
     const url = `${domain}/join?code=${gameId}&username=${username}&format=json`;
     
-    const getData = async url => {
+    const getData = async (url:string) => {
         const response = await fetch(url);
         const json = await response.json();
         return json;
@@ -54,8 +54,8 @@ async function gameSetup(players){
     }
 }
 
-function activePlayer(gameId, privateId, player){
-    var randomGenerator = randomSeed.default.create("seedvalue");
+function activePlayer(gameId: string, privateId: string, player){
+    var randomGenerator = randomSeed.create("seedvalue");
 
     let socket = socketEvents.setup(
         gameId,
@@ -171,8 +171,10 @@ function listeningPlayer(gameId, privateId, player, publicId){
             }else if(command == "message"){
                 console.log("messging");
                 let message = {
-                    "text": "blahblah",
-                    "position": {"latitude": player.position.lat, "longitude": player.position.long},
+                    text: "blahblah",
+                    position: {"latitude": player.position.lat, "longitude": player.position.long},
+                    image: undefined,
+                    isSnipe: undefined,
                 }
                 socketEvents.chatMessage(socket, message);
             }else if(command == "badsnipe" && parts.length == 4){

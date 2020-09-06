@@ -1,7 +1,19 @@
 import {logger} from './logging.js'
 import * as Game from './game.js'
+import socketIo from 'socket.io'
 
-export function ioConnect(socket, games){
+export interface OutgoingMsg {
+  publicId: number,
+  text: string,
+  image: Buffer,
+  snipeNumber: number,
+  snipePlayer: number,
+  snipeCount: number,
+  botMessage: string,
+  gameState: Game.ClientGame
+}
+
+export function ioConnect(socket: socketIo.Socket, games: Map<string, Game.Game>){
 
     var gameId = socket.nsp.name.substr('/game/'.length);
   
@@ -15,7 +27,7 @@ export function ioConnect(socket, games){
     let privateId = socket.handshake.query.privateId;
     
     //todo: allow sockets to connect in "view only" mode if they're not players
-    var publicId;
+    var publicId: number;
     if(game.idMapping.has(privateId)){
       publicId = game.idMapping.get(privateId);
     }else{
@@ -32,7 +44,6 @@ export function ioConnect(socket, games){
         return;
       }
       Game.makeTargets(game, msg.gameLength, msg.countDown, msg.proposedTargetList);
-      logger.log("debug", "targets when made", {targets: Array.from(game.targets)});
       logger.log("verbose", "Making targets", {gameCode: gameId, gameState: game.state});
       // todo: say who made the targets
       socket.nsp.emit('make targets', {gameState: Game.gameStateForClient(game)});
@@ -77,7 +88,7 @@ export function ioConnect(socket, games){
     socket.on('positionUpdate', function(position){
       Game.updatePosition(game, publicId, position);
     });
-  
+
     socket.on('chat message', function(msg){
       if(game.state != Game.states.IN_PLAY){
         logger.log("debug", "chat message while not IN_PLAY");
@@ -89,10 +100,15 @@ export function ioConnect(socket, games){
 
       logger.log("verbose", "Chat message", {gameCode: gameId, publicId: publicId, chatMessage: msg.text});
   
-      var outgoing_msg = {
+      var outgoing_msg: OutgoingMsg = {
         publicId: publicId,
         text: msg.text,
         image: msg.image,
+        snipeNumber: undefined,
+        snipePlayer: undefined,
+        snipeCount: undefined,
+        botMessage: undefined,
+        gameState: undefined
       }
   
       // snipes must contain an image
@@ -103,15 +119,13 @@ export function ioConnect(socket, games){
       let snipeRes;
       if(wasSnipe){
         snipeRes = Game.snipe(game, publicId);
-        logger.log("debug", "targets", { targets: Array.from(game.targets) });
         //todo: may send request to target for current pos?
         msg.position["snipeInfo"] = snipeRes.snipeInfo;
 
-        logger.log("debug", "targets post", {targets: Array.from(game.targets)});
         logger.log("verbose", "Snipe", {gameCode: gameId, gameState: game.state});
         if(snipeRes.gameOver){
           Game.updatePosition(game, publicId, msg.position);
-          finishGame(game, publicId, games);
+          finishGame(game, publicId.toString(), games);
           return;
         }
   
@@ -156,19 +170,18 @@ export function ioConnect(socket, games){
 
 }
 
-export function addUser(publicId, game){
+export function addUser(publicId: number, game: Game.Game){
   game.namespace.emit('New user', {publicId: publicId, gameState: Game.gameStateForClient(game)});
 }
 
-function finishGame(game, winner, games){
+function finishGame(game: Game.Game, winner:string, games: Map<string, Game.Game>){
     var nextCode = Game.generateGame(games);
     Game.finishGame(game, nextCode, winner);
     game.namespace.emit('game finished', {nextCode: nextCode, winner: winner});
 }
 
-export function checkGameTiming(io, games){
+export function checkGameTiming(io: socketIo.Server, games: Map<string, Game.Game>){
     for (let [gameId, game] of games.entries()) {
-      // let namespace = io.of(`/${gameId}`)
       let namespace = game.namespace;
       let now = Date.now();
       //todo: need a record when we're in count down vs real game
@@ -194,7 +207,6 @@ export function checkGameTiming(io, games){
         var forClient = {gameState: Game.gameStateForClient(game)};
         if(game.subState == Game.inPlaySubStates.COUNTDOWN && timeLeft < game.gameLength){
           game.subState = Game.inPlaySubStates.PLAYING;
-          forClient["countdownOver"] = true;
         }
         namespace.emit('timeLeft', forClient);
       }

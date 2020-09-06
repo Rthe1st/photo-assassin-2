@@ -1,17 +1,19 @@
 import * as crypto from 'crypto';
 import { shuffle } from '../src/shuffle.js'
 
+import socketIo from 'socket.io'
+
 import { logger } from './logging.js'
 
 const states = Object.freeze({ "FINISHED": "FINISHED", "NOT_STARTED": "NOT STARTED", "IN_PLAY": "IN PLAY", "TARGETS_MADE": "TARGETS MADE" })
 
 const inPlaySubStates = Object.freeze({ COUNTDOWN: "COUNTDOWN", PLAYING: "PLAYING" })
 
-interface Game {
+export interface Game {
     // this is the settings chosen by the users before maketargets
     // useful for settings that are now easy to derive from gamestate
     // list proposed target list
-    chosenSettings: any,
+    chosenSettings: {gameLength: number, countDown: number, proposedTargetList: number[]},
     code: string,
     // todo: make enum
     state: string,
@@ -46,13 +48,17 @@ interface Game {
     // say, when user clicks marker in map after game is over
     //todo: store references to the snipes seperatly
     // so we can look up snipe N effecitnly
-    images: Map<number,any>,  
+    images: Map<number,any>,
+    // this is set after the game is created, because we need to know the
+    // game code in order to define the namespace
+    // used to communicate with the sockets where we don't have easy access to the namespace
+    namespace: socketIo.Namespace
 }
 
 // this is game, but stripped of any info players shouldn't know
 // and using types we can send of socketio (no Map)
-interface ClientGame {
-  chosenSettings: any,
+export interface ClientGame {
+  chosenSettings: {gameLength: number, countDown: number, proposedTargetList: number[]},
   state: string,
   subState: string,
   userList: {[key: number]: any},
@@ -71,7 +77,7 @@ interface ClientGame {
 
 function newGame(code: string):Game{
   return {
-    chosenSettings: {},
+    chosenSettings: {gameLength: undefined, countDown: undefined, proposedTargetList: undefined},
     code: code,
     state: states.NOT_STARTED,
     subState: undefined,
@@ -90,12 +96,13 @@ function newGame(code: string):Game{
     undoneSnipes: new Map(),
     chatHistory: [],
     images: new Map(),
-    winner: undefined
+    winner: undefined,
+    namespace: undefined
   };
 
 }
 
-interface Position {
+export interface Position {
   longitude: number,
   latitude: number
 }
@@ -131,7 +138,7 @@ function saveSettings(game: Game, gameLength: string, countDown: string, propose
     game.chosenSettings.countDown = 1000 * 60;// 1 min countdown by default
   }
   //todo: validate
-  game.chosenSettings.proposedTargetList = proposedTargetList;
+  game.chosenSettings.proposedTargetList = proposedTargetList.map((v) => parseInt(v));
 }
 
 function makeTargets(game: Game, gameLength: string, countDown: string, proposedTargetList: string[]) {
@@ -139,8 +146,8 @@ function makeTargets(game: Game, gameLength: string, countDown: string, proposed
   game.gameLength = game.chosenSettings.gameLength;
   game.countDown = game.chosenSettings.countDown;
   for (var i = 0; i < proposedTargetList.length; i++) {
-    game.targets[proposedTargetList[i]] = proposedTargetList.slice(i + 1).concat(proposedTargetList.slice(0, i));
-    game.targetsGot[proposedTargetList[i]] = [];
+    game.targets[game.chosenSettings.proposedTargetList[i]] = game.chosenSettings.proposedTargetList.slice(i + 1).concat(game.chosenSettings.proposedTargetList.slice(0, i));
+    game.targetsGot[game.chosenSettings.proposedTargetList[i]] = [];
   }
   game.state = states.TARGETS_MADE;
 }
@@ -189,7 +196,7 @@ function snipe(game: Game, sniperId: number) {
   return { gameOver: gameOver, snipeNumber: snipeNumber, snipeInfo: snipeInfo, botMessage: botMessage, snipeCount };
 }
 
-function undoSnipe(game: Game, sniperId: number, snipeNumber: number) {
+function undoSnipe(game: Game, sniperId: number, snipeNumber: number): number[] {
   game.badSnipeVotes.get(sniperId).delete(snipeNumber);
   // snipe number is index of the target list the snipe was for
   // at the start of the game
@@ -263,7 +270,7 @@ function gameStateForClient(game: Game) {
 }
 
 // public ID cannot change, username might be changed by user
-function addPlayer(game: Game, username: string) {
+function addPlayer(game: Game, username: string): {privateId: string, publicId: number} {
   var randomness = crypto.randomBytes(256).toString('hex');
   var publicId = game.nextId;
   // because people can leave the game, we cannot use the current number of players to work out the max id
@@ -275,7 +282,7 @@ function addPlayer(game: Game, username: string) {
   game.positions.set(publicId, []);
   game.badSnipeVotes.set(publicId, new Map());
   let proposedTargetList = shuffle(Array.from(game.userList.keys()));
-  saveSettings(game, undefined, undefined, proposedTargetList);
+  saveSettings(game, undefined, undefined, proposedTargetList.map((v) => v.toString()));
   return {privateId: privateId, publicId: publicId};
 }
 
@@ -289,7 +296,7 @@ function removePlayer(game: Game, publicId: number) {
   game.userList.delete(publicId);
   game.positions.delete(publicId);
   let proposedTargetList = shuffle(Array.from(game.userList.keys()));
-  saveSettings(game, undefined, undefined, proposedTargetList);
+  saveSettings(game, undefined, undefined, proposedTargetList.map((v) => v.toString()));
 }
 
 /*

@@ -1,4 +1,4 @@
-export function shuffle(userList){
+export function shuffle(userList: number[]){
     // inside-out fisher-yates
     // https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle
     // note: wiki says multiplying a float and rounding down can give bias

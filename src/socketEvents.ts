@@ -1,22 +1,24 @@
 import io from 'socket.io-client';
+import * as serverGame from '../server/game'
+import * as serverSocketHandler from '../server/socketHandler'
 
-function setup(
-    gameId,
-    privateId,
-    initialization,
-    badSnipe,
-    newUser,
-    removeUser,
-    makeTargets,
-    undoMakeTargets,
-    start,
-    finished,
-    timeLeft,
-    chatMessage,
+export function setup(
+    gameId: string,
+    privateId: string,
+    initialization: (msg: {gameState: serverGame.ClientGame, chatHistory: any[]}) => void,
+    badSnipe: (msg: {gameState: serverGame.ClientGame, snipePlayer: number, undoneSnipes: number[]}) => void,
+    newUser: (msg: {publicId: number, gameState: serverGame.ClientGame}) => void,
+    removeUser: (msg: {publicId: number, gameState: serverGame.ClientGame}) => void,
+    makeTargets: (msg: {gameState:serverGame.ClientGame}) => void,
+    undoMakeTargets: (msg: {publicId: number, gameState: serverGame.ClientGame}) => void,
+    start: (msg: {gameState: serverGame.ClientGame}) => void,
+    finished: (msg: {nextCode: string, winner: string}) => void,
+    timeLeft: (msg: {gameState: serverGame.ClientGame}) => void,
+    chatMessage: (msg: {message: serverSocketHandler.OutgoingMsg}) => void,
     // this only needs to be supplied when not in a browser
     // otherwise window.location is used
     hostname = ''
-){
+): SocketIOClient.Socket{
     let socket = io(
         // leading slash is needed so IO nows we're giving it a path
         // otherwise it uses it as a domain
@@ -44,43 +46,48 @@ function setup(
     socket.on('bad snipe', badSnipe);
     socket.on('timeLeft', timeLeft);
     socket.on('game finished', finished);
-    socket.on('error', (err) => console.log(err));
-    socket.on('disconnect', (reason) => console.log(reason));
-    socket.on('disconnecting', (reason) => console.log(reason));
+    socket.on('error', (err: any) => console.log(err));
+    socket.on('disconnect', (reason: any) => console.log(reason));
+    socket.on('disconnecting', (reason: any) => console.log(reason));
 
     return socket;
 }
 
-function chatMessage(socket, message){
+interface Message {
+    text: string,
+    image: File | Buffer,
+    position: serverGame.Position,
+    isSnipe: boolean,
+}
+
+export function chatMessage(socket: SocketIOClient.Socket, message: Message){
     socket.emit('chat message', message);
 }
 
-function badSnipe(socket, snipeNumber, snipePlayer){
+export function badSnipe(socket: SocketIOClient.Socket, snipeNumber: number, snipePlayer: number){
     socket.emit('bad snipe', {snipeNumber: snipeNumber, snipePlayer: snipePlayer});
 }
 
-function makeTargets(socket, gameLength, countDown, proposedTargetList){
+export function makeTargets(socket: SocketIOClient.Socket, gameLength: number, countDown: number, proposedTargetList: number[]){
     socket.emit('make targets', { gameLength: gameLength, countDown: countDown, proposedTargetList: proposedTargetList });
 }
 
-function undoMakeTargets(socket){
+export function undoMakeTargets(socket: SocketIOClient.Socket){
     socket.emit('undo make targets');
 }
 
-function startGame(socket){
+export function startGame(socket: SocketIOClient.Socket){
     socket.emit('start game');
 }
 
-function positionUpdate(socket, position){
+export function positionUpdate(socket: SocketIOClient.Socket, position: serverGame.Position){
     socket.emit('positionUpdate', position);
 }
 
-function stopGame(socket){
+export function stopGame(socket: SocketIOClient.Socket){
     socket.emit('stop game');
 }
 
-function removeUser(socket, publicId){
+export function removeUser(socket: SocketIOClient.Socket, publicId: number){
     socket.emit('remove user', { publicId: publicId });
 }
-
-export { setup, makeTargets, badSnipe, chatMessage, undoMakeTargets, startGame, stopGame, removeUser, positionUpdate }

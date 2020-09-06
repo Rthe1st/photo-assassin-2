@@ -105,8 +105,10 @@ function sendTextMessage(ev){
         return;
     }
     let message = {
-        "text": messageElement.value,
-        "position": gps.position,
+        text: messageElement.value,
+        position: gps.position,
+        image: undefined,
+        isSnipe: undefined,
     }
     socketEvents.chatMessage(socket, message);
     messageElement.value = '';
