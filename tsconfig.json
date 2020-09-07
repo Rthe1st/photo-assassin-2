@@ -1,14 +1,11 @@
 {
     "compilerOptions": {
-        "outDir": "./server_dist",
         "module": "ESNext",
-        "allowJs": true,
         "target": "ESNext",
         "moduleResolution": "node",
         "allowSyntheticDefaultImports": true,
         "noImplicitAny": true
     },
-    "include": [
-        "./server/**/*"
-    ]
+    "include": ["server/*"],
+    "exclude": ["client/*"]
 }

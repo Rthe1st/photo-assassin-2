@@ -1,6 +1,7 @@
 import * as dev from './dev'
+import * as SharedGame from '../shared/game'
 
-var position = { latitude: null, longitude: null };
+var position: SharedGame.Position = { latitude: null, longitude: null };
 
 // try https://github.com/2gis/mock-geolocation
 //set up timer, change the gps every X secondsa, to trigger the normal gps watcher
@@ -9,7 +10,7 @@ function mockCords(){
     position.longitude += (Math.random()-0.5)*0.0001;
 }
 
-function setup(callback){
+function setup(callback: (position: SharedGame.Position) => void){
     if (dev.testMode()){
         console.log("set fake start pos");
         position.latitude = 51.389;
@@ -29,7 +30,7 @@ function setup(callback){
     );
 }
 
-function updatePosition(geolocationPosition, callback) {
+function updatePosition(geolocationPosition: Position, callback: (position: SharedGame.Position) => void) {
     if(dev.testMode()){
         console.log("mock pos update");
         mockCords();
@@ -40,10 +41,10 @@ function updatePosition(geolocationPosition, callback) {
     }
     callback(position);
 }
-function dontUpdatePosition(a) {
+function dontUpdatePosition(err: PositionError): void {
     alert("geo faild");
     console.log("geo loc failed");
-    console.log(a);
+    console.log(err);
 }
 
 export { setup, position }

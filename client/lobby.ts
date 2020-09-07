@@ -1,5 +1,5 @@
 function showOnlyJoinContent() {
-    let urlParameters = {}
+    let urlParameters: {[key: string]: string} = {}
     location.search
       .substr(1)
       .split("&")

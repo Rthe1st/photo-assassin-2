@@ -14,12 +14,12 @@
   },
   "type": "module",
   "scripts": {
-    "start": "node ./server_dist/server/start.js",
+    "start": "node ./server/start.js",
     "build-server": "tsc",
     "build-client": "webpack --config webpack.config.ts",
     "prepublish": "npm run build-server && npm run build-client",
     "pretest": "npm run build-server && npm run build-client",
-    "test": "node ./server_dist/server/test.js"
+    "test": "node ./server/test.js"
   },
   "engines": {
     "node": "14.6.x",

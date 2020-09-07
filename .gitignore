@@ -5,4 +5,4 @@ public/*.js
 public/*.html
 public/*.js.map
 .env
-server_dist/
+server/**/*.js

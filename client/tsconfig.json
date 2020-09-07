@@ -1,14 +1,12 @@
 {
     "compilerOptions": {
-        "allowJs": true,
+        "outDir": "../public",
         "target": "ES2019",
         "moduleResolution": "node",
         "types": ["googlemaps", "node"],
         // this hack is needed because we import some server files in order to get type definitions
         // fix: pull the type defs into their own file
-        "allowSyntheticDefaultImports": true
+        "allowSyntheticDefaultImports": true,
+        // "noImplicitAny": true
     },
-    "include": [
-        "./src/**/*"
-    ]
 }

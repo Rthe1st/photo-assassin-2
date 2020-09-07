@@ -1,10 +1,12 @@
+import * as SharedGame from '../shared/game'
+
 const states = Object.freeze({ "NOT_STARTED": "NOT STARTED", "IN_PLAY": "IN PLAY", "TARGETS_MADE": "TARGETS MADE" })
 
 const inPlaySubStates = Object.freeze({ COUNTDOWN: "COUNTDOWN", PLAYING: "PLAYING" })
 
-let game;
+let game: SharedGame.ClientGame;
 
-function update(updatedGame){
+function update(updatedGame: SharedGame.ClientGame){
     game = updatedGame;
 }
 
@@ -12,22 +14,22 @@ function getSettings(){
     return game.chosenSettings;
 }
 
-function getUsername(publicId){
+function getUsername(publicId: number){
     return game.userList[publicId].username;
 }
 
-export function getLastSnipedPlayerId(publicId){
+export function getLastSnipedPlayerId(publicId: number){
     let targetsGot = game.targetsGot[publicId];
     return targetsGot[targetsGot.length - 1];
 }
 
-function getPlayerProgress(publicId){
+function getPlayerProgress(publicId: number){
     let got = game.targetsGot[publicId].length;
     let remaining = got + game.targets[publicId].length;
     return [got, remaining];
 }
 
-function getTarget(publicId, snipeNumber){
+function getTarget(publicId: number, snipeNumber: number){
     if(snipeNumber == undefined){
         snipeNumber = game.targets[publicId].length;
     }
@@ -39,11 +41,11 @@ function getTarget(publicId, snipeNumber){
 // for when a player reshuffles locally
 // because we want the game object to accurately reflect the server's view of the state
 // (so don't save the local reshuffle to the game)
-export function getProposedTargetPairs(proposedTargetList){
+export function getProposedTargetPairs(proposedTargetList: number[]){
     let pairs = [];
     for (var i=0; i<proposedTargetList.length; i++) {
-        let sniper = parseInt(proposedTargetList[i]);
-        let target = parseInt(proposedTargetList[(i+1)%proposedTargetList.length]);
+        let sniper = proposedTargetList[i];
+        let target = proposedTargetList[(i+1)%proposedTargetList.length];
         pairs.push([
             getUsername(sniper),
             getUsername(target)

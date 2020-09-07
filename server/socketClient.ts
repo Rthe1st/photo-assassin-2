@@ -2,11 +2,11 @@
 // and allowing AI opponents
 // without the need for a browser
 
-import * as socketEvents from '../src/socketEvents.js';
+import * as socketEvents from '../shared/socketEvents.js';
 import fetch from 'node-fetch';
 import fs from 'fs';
 import randomSeed from 'random-seed';
-import { Game, Position } from './game.js';
+import * as SharedGame from '../shared/game.js';
 
 let domain = "http://localhost:3000";
 
@@ -42,7 +42,7 @@ function joinGame(username: string, gameId: string){
 interface Player {
     name: string;
     algo: (gameId: string, privateId: string, player: Player, publicId: number) => SocketIOClient.Socket;
-    position: Position;
+    position: SharedGame.Position;
 }
 
 async function gameSetup(players: Player[]){

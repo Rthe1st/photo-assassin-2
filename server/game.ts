@@ -1,5 +1,6 @@
 import * as crypto from 'crypto';
-import { shuffle } from '../src/shuffle.js'
+import { shuffle } from '../shared/shuffle.js'
+import * as SharedGame from '../shared/game.js'
 
 import socketIo from 'socket.io'
 
@@ -55,26 +56,6 @@ export interface Game {
     namespace: socketIo.Namespace
 }
 
-// this is game, but stripped of any info players shouldn't know
-// and using types we can send of socketio (no Map)
-export interface ClientGame {
-  chosenSettings: {gameLength: number, countDown: number, proposedTargetList: number[]},
-  state: string,
-  subState: string,
-  userList: {[key: number]: any},
-  targets: {[key:number]: number[]},
-  targetsGot: {[key:number]: number[]},
-  positions: {[key: number]: any},
-  gameLength: number,
-  countDown: number,
-  timeLeft: number,
-  nextCode: string,
-  badSnipeVotes: {[key: number]: any},
-  undoneSnipes: {[key: number]: any},
-  winner: string,
-  imageMetadata: ImageMetadata
-}
-
 function newGame(code: string):Game{
   return {
     chosenSettings: {gameLength: undefined, countDown: undefined, proposedTargetList: undefined},
@@ -100,11 +81,6 @@ function newGame(code: string):Game{
     namespace: undefined
   };
 
-}
-
-export interface Position {
-  longitude: number,
-  latitude: number
 }
 
 export function saveImage(game: Game, image: Buffer, publicId: number, snipeNumber: number, position: Position, targetPosition: Position){
@@ -220,10 +196,8 @@ function undoneSnipesForClient(undoneSnipes: Map<number, any>) {
   return list;
 }
 
-interface ImageMetadata {[key:number]: {snipeNumber: number, position: Position, targetPosition: Position}[]}
-
-function imageMetadata(game: Game): ImageMetadata {
-  let result:ImageMetadata = {};
+function imageMetadata(game: Game): SharedGame.ImageMetadata {
+  let result:SharedGame.ImageMetadata = {};
   for(let [publicId, images] of game.images.entries()){
     result[publicId] = []
     for(let image of images){
@@ -238,7 +212,7 @@ function imageMetadata(game: Game): ImageMetadata {
 }
 
 function gameStateForClient(game: Game) {
-  var state: ClientGame = {
+  var state: SharedGame.ClientGame = {
     chosenSettings: game.chosenSettings,
     userList: Object.fromEntries(game.userList),
     targets: game.targets,
@@ -309,7 +283,7 @@ function finishGame(game: Game, nextCode: string, winner: string) {
   game.nextCode = nextCode;
 }
 
-function updatePosition(game: Game, publicId: number, position: Position) {
+function updatePosition(game: Game, publicId: number, position: SharedGame.Position) {
   if (
     position.hasOwnProperty('longitude')
     && position.hasOwnProperty('latitude')

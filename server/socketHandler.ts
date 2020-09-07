@@ -1,5 +1,6 @@
 import {logger} from './logging.js'
 import * as Game from './game.js'
+import * as SharedGame from '../shared/game'
 import socketIo from 'socket.io'
 
 export interface OutgoingMsg {
@@ -10,7 +11,7 @@ export interface OutgoingMsg {
   snipePlayer: number,
   snipeCount: number,
   botMessage: string,
-  gameState: Game.ClientGame
+  gameState: SharedGame.ClientGame
 }
 
 export function ioConnect(socket: socketIo.Socket, games: Map<string, Game.Game>){

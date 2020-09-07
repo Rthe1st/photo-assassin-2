@@ -1,9 +1,9 @@
 import * as gps from './gps'
 import * as game from './game'
-import * as socketEvents from './socketEvents'
+import * as socketEvents from '../shared/socketEvents'
 
 import * as Sentry from '@sentry/browser';
-import { shuffle } from './shuffle';
+import { shuffle } from '../shared/shuffle';
 
 Sentry.init({ dsn: process.env.BROWSER_SENTRY });
 if(process.env.SENTRY_TESTS == "true"){
@@ -418,7 +418,8 @@ function showGameInfo(){
         middle.hidden = true;
         let playerProgressList = document.getElementById('player-progress');
         playerProgressList.innerHTML = '';
-        for (const [publicId, user] of Object.entries(game.game.userList)) {
+        for (let [publicIdString, user] of Object.entries(game.game.userList)) {
+            let publicId = parseInt(publicIdString)
             let playerElement = document.createElement('li');
             let [got, remaining] = game.getPlayerProgress(publicId);
             playerElement.innerText = user['username'] + ", current target: " + game.getTarget(publicId, undefined) + ', ' + got + '/' + remaining;
@@ -436,7 +437,7 @@ function showGameInfo(){
 const gameId = decodeURIComponent(document.cookie.replace(/(?:(?:^|.*;\s*)gameId\s*\=\s*([^;]*).*$)|^.*$/, "$1"));
 console.log(gameId);
 const privateId = document.cookie.replace(/(?:(?:^|.*;\s*)privateId\s*\=\s*([^;]*).*$)|^.*$/, "$1");
-const publicId = document.cookie.replace(/(?:(?:^|.*;\s*)publicId\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+const publicId = parseInt(document.cookie.replace(/(?:(?:^|.*;\s*)publicId\s*\=\s*([^;]*).*$)|^.*$/, "$1"));
 
 let socket;
 let proposedTargetList;
