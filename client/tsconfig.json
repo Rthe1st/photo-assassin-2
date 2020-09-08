@@ -7,6 +7,6 @@
         // this hack is needed because we import some server files in order to get type definitions
         // fix: pull the type defs into their own file
         "allowSyntheticDefaultImports": true,
-        // "noImplicitAny": true
+        "noImplicitAny": true
     },
 }

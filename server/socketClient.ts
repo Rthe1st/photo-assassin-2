@@ -138,7 +138,7 @@ function passivePlayer(gameId: string, privateId: string, player: Player){
 
 function listeningPlayer(gameId: string, privateId: string, player:Player, publicId: number){
 
-    //this is incase we re-connect and miss messages
+    //this is incase we re-connect and miss messagesfile
     let commandsSeen = 0;
 
     function processCommand(msg: any){
@@ -177,7 +177,7 @@ function listeningPlayer(gameId: string, privateId: string, player:Player, publi
                 socketEvents.chatMessage(socket, message);
             }else if(command == "message"){
                 console.log("messging");
-                let message: socketEvents.Message = {
+                let message: socketEvents.UploadMessage = {
                     text: "blahblah",
                     position: {"latitude": player.position.latitude, "longitude": player.position.longitude},
                     image: undefined,
