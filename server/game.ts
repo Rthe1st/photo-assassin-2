@@ -11,54 +11,54 @@ const states = Object.freeze({ "FINISHED": "FINISHED", "NOT_STARTED": "NOT START
 const inPlaySubStates = Object.freeze({ COUNTDOWN: "COUNTDOWN", PLAYING: "PLAYING" })
 
 export interface Game {
-    // this is the settings chosen by the users before maketargets
-    // useful for settings that are now easy to derive from gamestate
-    // list proposed target list
-    chosenSettings: {gameLength: number, countDown: number, proposedTargetList: number[]},
-    code: string,
-    // todo: make enum
-    state: string,
-    //substate is used for dividing the in play state in countdown and playing, for example
-    subState: string,
-    // this maps the private ID given to a client via a cookie
-    // to an ID that is shown to other players
-    // if other players learn your private ID, they can impersonate you
-    idMapping: Map<string,number>
-    nextId: 0,//includes old users - used to get a historically unique id for a user
-    userList: Map<number,any>,
-    targets: {[key:number]: number[]},
-    targetsGot: {[key:number]: number[]},
-    positions: Map<number, any>,
-    startTime: number,
-    gameLength: number,
-    countDown: number,
-    timeLeft: number,
-    nextCode: string,
-    badSnipeVotes: Map<number,any>,
-    undoneSnipes: Map<number, any>,
-    winner: string,
-    // this includes images and so will get huge
-    // todo: make client smart so it only requests those its missing
-    // / saves what its already seen to local storage
-    // and consider off loading images to cdn
-    // todo: instead of saving images directly in here, we should point
-    // to those in the images key
-    // (and even that should just be a ref to images stored not in memory)
-    chatHistory: any[],
-    // we need to track images so we can reference them later
-    // say, when user clicks marker in map after game is over
-    //todo: store references to the snipes seperatly
-    // so we can look up snipe N effecitnly
-    images: Map<number,any>,
-    // this is set after the game is created, because we need to know the
-    // game code in order to define the namespace
-    // used to communicate with the sockets where we don't have easy access to the namespace
-    namespace: socketIo.Namespace
+  // this is the settings chosen by the users before maketargets
+  // useful for settings that are now easy to derive from gamestate
+  // list proposed target list
+  chosenSettings: { gameLength?: number, countDown?: number, proposedTargetList: number[] },
+  code: string,
+  // todo: make enum
+  state: string,
+  //substate is used for dividing the in play state in countdown and playing, for example
+  subState: string | undefined,
+  // this maps the private ID given to a client via a cookie
+  // to an ID that is shown to other players
+  // if other players learn your private ID, they can impersonate you
+  idMapping: Map<string, number>
+  nextId: 0,//includes old users - used to get a historically unique id for a user
+  userList: Map<number, any>,
+  targets: { [key: number]: number[] },
+  targetsGot: { [key: number]: number[] },
+  positions: Map<number, any>,
+  startTime: number | undefined,
+  gameLength: number | undefined,
+  countDown: number | undefined,
+  timeLeft: number | undefined,
+  nextCode: string | undefined,
+  badSnipeVotes: Map<number, any>,
+  undoneSnipes: Map<number, any>,
+  winner: string | undefined,
+  // this includes images and so will get huge
+  // todo: make client smart so it only requests those its missing
+  // / saves what its already seen to local storage
+  // and consider off loading images to cdn
+  // todo: instead of saving images directly in here, we should point
+  // to those in the images key
+  // (and even that should just be a ref to images stored not in memory)
+  chatHistory: any[],
+  // we need to track images so we can reference them later
+  // say, when user clicks marker in map after game is over
+  //todo: store references to the snipes separately
+  // so we can look up snipe N efficiently
+  images: Map<number, any>,
+  // this is set after the game is created, because we need to know the
+  // game code in order to define the namespace
+  // used to communicate with the sockets where we don't have easy access to the namespace
+  namespace: socketIo.Namespace | undefined
 }
 
-function newGame(code: string):Game{
+function newGame(code: string): Game {
   return {
-    chosenSettings: {gameLength: undefined, countDown: undefined, proposedTargetList: undefined},
+    chosenSettings: { proposedTargetList: [] },
     code: code,
     state: states.NOT_STARTED,
     subState: undefined,
@@ -68,6 +68,7 @@ function newGame(code: string):Game{
     targets: {},
     targetsGot: {},
     positions: new Map(),
+    // we could avoid a lot of undefined if we put them on another type like `ingamestate`
     startTime: undefined,
     gameLength: undefined,
     countDown: undefined,
@@ -83,8 +84,8 @@ function newGame(code: string):Game{
 
 }
 
-export function saveImage(game: Game, image: Buffer, publicId: number, snipeNumber: number, position: Position, targetPosition: Position){
-  if(!game.images.has(publicId)){
+export function saveImage(game: Game, image: Buffer, publicId: number, snipeNumber?: number, position?: SharedGame.Position, targetPosition?: SharedGame.Position) {
+  if (!game.images.has(publicId)) {
     game.images.set(publicId, []);
   }
   game.images.get(publicId).push({
@@ -96,34 +97,21 @@ export function saveImage(game: Game, image: Buffer, publicId: number, snipeNumb
 
 }
 
-export function getImage(game: Game, publicId: number, index: number){
+export function getImage(game: Game, publicId: number, index: number) {
   return game.images.get(publicId)[index].image;
 }
 
-function saveSettings(game: Game, gameLength: string, countDown: string, proposedTargetList: string[]){
-  // todo: return errors if invalid options are supplied
-  // for now - choose sensible values because its easy
-  if (!isNaN(parseInt(gameLength))) {
-    game.chosenSettings.gameLength = parseInt(gameLength);
-  } else {
-    game.chosenSettings.gameLength = 1000 * 60 * 5; // 5 min game by default
-  }
-  if (!isNaN(parseInt(countDown))) {
-    game.chosenSettings.countDown = parseInt(countDown);
-  } else {
-    game.chosenSettings.countDown = 1000 * 60;// 1 min countdown by default
-  }
-  //todo: validate
-  game.chosenSettings.proposedTargetList = proposedTargetList.map((v) => parseInt(v));
-}
-
-function makeTargets(game: Game, gameLength: string, countDown: string, proposedTargetList: string[]) {
-  saveSettings(game, gameLength, countDown, proposedTargetList);
-  game.gameLength = game.chosenSettings.gameLength;
-  game.countDown = game.chosenSettings.countDown;
+function makeTargets(game: Game, gameLength: number, countDown: number, proposedTargetList: number[]) {
+  game.chosenSettings = { gameLength: gameLength, countDown: countDown, proposedTargetList: proposedTargetList };
+  game.gameLength = gameLength;
+  game.countDown = countDown;
+  let chosenSettings = game.chosenSettings;
   for (var i = 0; i < proposedTargetList.length; i++) {
-    game.targets[game.chosenSettings.proposedTargetList[i]] = game.chosenSettings.proposedTargetList.slice(i + 1).concat(game.chosenSettings.proposedTargetList.slice(0, i));
-    game.targetsGot[game.chosenSettings.proposedTargetList[i]] = [];
+    let targetsBeforePlayer = chosenSettings.proposedTargetList.slice(i + 1);
+    let targetsAfterPlayer = chosenSettings.proposedTargetList.slice(0, i);
+    let player = chosenSettings.proposedTargetList[i]
+    game.targets[player] = targetsBeforePlayer.concat(targetsAfterPlayer);
+    game.targetsGot[player] = [];
   }
   game.state = states.TARGETS_MADE;
 }
@@ -159,7 +147,7 @@ function snipe(game: Game, sniperId: number) {
   var snipeNumber = targets.length;
   //targets[0] becomes the new target
   game.badSnipeVotes.get(sniperId).set(snipeNumber, 0);
-  game.targetsGot[sniperId].push(targets.shift());
+  game.targetsGot[sniperId].push(targets.shift()!);
   var gameOver = (targets.length == 0);
 
   var snipeCount;
@@ -176,11 +164,11 @@ function undoSnipe(game: Game, sniperId: number, snipeNumber: number): number[] 
   game.badSnipeVotes.get(sniperId).delete(snipeNumber);
   // snipe number is index of the target list the snipe was for
   // at the start of the game
-  // so push @got@ targets back onto the target list until it's snipeNumber+1 long
+  // so push @got@ targets back onto the target list until it's snipeNgumber+1 long
   var undoneSnipes = []
   while (game.targets[sniperId].length < snipeNumber) {
     game.badSnipeVotes.get(sniperId).delete(game.targets[sniperId].length);
-    game.targets[sniperId].unshift(game.targetsGot[sniperId].pop());
+    game.targets[sniperId].unshift(game.targetsGot[sniperId].pop()!);
     undoneSnipes.push(game.targets[sniperId].length);
   }
   return undoneSnipes;
@@ -197,10 +185,10 @@ function undoneSnipesForClient(undoneSnipes: Map<number, any>) {
 }
 
 function imageMetadata(game: Game): SharedGame.ImageMetadata {
-  let result:SharedGame.ImageMetadata = {};
-  for(let [publicId, images] of game.images.entries()){
+  let result: SharedGame.ImageMetadata = {};
+  for (let [publicId, images] of game.images.entries()) {
     result[publicId] = []
-    for(let image of images){
+    for (let image of images) {
       result[publicId].push({
         snipeNumber: image.snipeNumber,
         position: image.position,
@@ -231,8 +219,7 @@ function gameStateForClient(game: Game) {
     // send often
     // we don't include raw images for same reason
     // but metadata about them, so client can decide to reques the raw later
-    imageMetadata: imageMetadata(game),
-    positions: undefined
+    imageMetadata: imageMetadata(game)
   }
 
   if (game.state == states.FINISHED) {
@@ -244,7 +231,7 @@ function gameStateForClient(game: Game) {
 }
 
 // public ID cannot change, username might be changed by user
-function addPlayer(game: Game, username: string): {privateId: string, publicId: number} {
+function addPlayer(game: Game, username: string): { privateId: string, publicId: number } {
   var randomness = crypto.randomBytes(256).toString('hex');
   var publicId = game.nextId;
   // because people can leave the game, we cannot use the current number of players to work out the max id
@@ -256,8 +243,8 @@ function addPlayer(game: Game, username: string): {privateId: string, publicId: 
   game.positions.set(publicId, []);
   game.badSnipeVotes.set(publicId, new Map());
   let proposedTargetList = shuffle(Array.from(game.userList.keys()));
-  saveSettings(game, undefined, undefined, proposedTargetList.map((v) => v.toString()));
-  return {privateId: privateId, publicId: publicId};
+  game.chosenSettings.proposedTargetList = proposedTargetList;
+  return { privateId: privateId, publicId: publicId };
 }
 
 function removePlayer(game: Game, publicId: number) {
@@ -270,7 +257,7 @@ function removePlayer(game: Game, publicId: number) {
   game.userList.delete(publicId);
   game.positions.delete(publicId);
   let proposedTargetList = shuffle(Array.from(game.userList.keys()));
-  saveSettings(game, undefined, undefined, proposedTargetList.map((v) => v.toString()));
+  game.chosenSettings.proposedTargetList = proposedTargetList;
 }
 
 /*
@@ -324,16 +311,16 @@ function badSnipe(game: Game, snipePlayer: number, snipeNumber: number, publicId
   return;
 }
 
-function generateGame(games: Map<string, Game>){
+function generateGame(numberOfGames: number) {
   var first_part = crypto.randomBytes(2).toString('hex');
   var second_part = crypto.randomBytes(2).toString('hex');
   // used number of games as a guarantee prevent collisions
   // (even though collisions must be unlikely anyway for the code to provide security)
-  var third_part = (games.size + 1).toString(16);
+  var third_part = (numberOfGames + 1).toString(16);
   const code = `${first_part}-${second_part}-${third_part}`;
-  games.set(code, newGame(code));
-  logger.log("verbose", "making game", {gameCode: code});
-  return code;
+  let game = newGame(code)
+  logger.log("verbose", "making game", { gameCode: code });
+  return game;
 }
 
 export { newGame, makeTargets, states, undoMakeTargets, start, inPlaySubStates, snipe, gameStateForClient, addPlayer, removePlayer, finishGame, updatePosition, badSnipe, generateGame };

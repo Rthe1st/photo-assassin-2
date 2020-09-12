@@ -17,10 +17,10 @@ import * as Game from './game.js';
 import * as socketHandler from './socketHandler.js';
 import { logger } from './logging.js';
 
-export function createServer(useSentry=true,port=process.env.PORT || 3000){
+export function createServer(useSentry = true, port = process.env.PORT || 3000) {
   var games: Map<string, Game.Game> = new Map();
   var app = express();
-  if(useSentry){
+  if (useSentry) {
     addSentry(app);
   }
   app.use(cookieParser());
@@ -50,128 +50,140 @@ export function createServer(useSentry=true,port=process.env.PORT || 3000){
   app.get('/join', (req, res) => join(req, res, games));
 
   http.listen(port);
-  
-  setInterval(() => {socketHandler.checkGameTiming(io, games)}, 1000);
+
+  setInterval(() => { socketHandler.checkGameTiming(games) }, 1000);
 }
 
-function addSentry(app: express.Application){
-  Sentry.init({ dsn: process.env.NODE_SENTRY});
-  if(process.env.SENTRY_TESTS == "true"){
+function addSentry(app: express.Application) {
+  Sentry.init({ dsn: process.env.NODE_SENTRY });
+  if (process.env.SENTRY_TESTS == "true") {
     Sentry.captureException(new Error("sentry test server.js"));
   }
   // The request handler must be the first middleware on the app
   app.use(Sentry.Handlers.requestHandler());
-// The error handler must be before any other error middleware and after all controllers
+  // The error handler must be before any other error middleware and after all controllers
   app.use(Sentry.Handlers.errorHandler());
 
 }
 
-function root(req: express.Request, res: express.Response, games: Map<string, Game.Game>){
-  var code = req.query.code.toString();
-  
-  if(code != undefined && !games.has(code)){
-    logger.log("verbose", `/ Accessing invalid game: ${code}`);
-    res.redirect(`/static/game_doesnt_exist.html`);
+function root(req: express.Request, res: express.Response, games: Map<string, Game.Game>) {
+
+  if (req.query.code == undefined) {
+    res.sendFile(staticDir + 'lobby.html');
     return;
-  }else if(games.has(code)){
-    var game = games.get(code);
-    if(game.state != Game.states.NOT_STARTED){
+  }
+
+  let code = req.query.code.toString();
+
+  if (games.has(code)) {
+    var game = games.get(code)!;
+    if (game.state != Game.states.NOT_STARTED) {
       logger.log("verbose", "/ Attempt to join game " + code + " that has already started");
       res.redirect(`/static/game_in_progress.html`);
       return;
+    } else {
+      res.sendFile(staticDir + 'lobby.html');
+      return;
     }
+  } else {
+    logger.log("verbose", `/ Accessing invalid game: ${code}`);
+    res.redirect(`/static/game_doesnt_exist.html`);
+    return;
   }
-
-  res.sendFile(staticDir + 'lobby.html');
 };
 
-function addUserToGame(code: string, res: express.Response, username: string, games: Map<string, Game.Game>){
-    var game = games.get(code);
+function addUserToGame(game: Game.Game, res: express.Response, username: string) {
 
-    const {privateId: privateId, publicId: publicId} = Game.addPlayer(game, username);
-    
-    socketHandler.addUser(publicId, game);
+  const { privateId: privateId, publicId: publicId } = Game.addPlayer(game, username);
 
-    // todo: set good settings (https only, etc)
-    res.cookie("gameId", code, {sameSite: "strict"});
-    res.cookie("privateId", privateId, {sameSite: "strict"});
-    res.cookie("publicId", publicId, {sameSite: "strict"});
-    logger.log("verbose", "Adding user to game", {publicId: publicId, gameCode: code});
+  socketHandler.addUser(publicId, game);
 
-    return [privateId, publicId];
+  // todo: set good settings (https only, etc)
+  res.cookie("gameId", game.code, { sameSite: "strict" });
+  res.cookie("privateId", privateId, { sameSite: "strict" });
+  res.cookie("publicId", publicId, { sameSite: "strict" });
+  logger.log("verbose", "Adding user to game", { publicId: publicId, gameCode: game.code });
+
+  return [privateId, publicId];
 }
 
-function make(req: express.Request, res: express.Response, games: Map<string, Game.Game>, io: socketIo.Server){
-  if(!req.query.username){
+function make(req: express.Request, res: express.Response, games: Map<string, Game.Game>, io: socketIo.Server) {
+  if (!req.query.username) {
     res.redirect('/');
     return;
   }
-  var code = Game.generateGame(games);
-  var namespace = io.of(`/game/${code}`);
+  var game = Game.generateGame(games.size);
+  games.set(game.code, game);
+  var namespace = io.of(`/game/${game.code}`);
   // I don't like namespace getting registered on game after game is already made
-  games.get(code).namespace = namespace;
+  game.namespace = namespace;
   // register connection after setting game space to prevent race condition
   // where ioConnect relies on game.namespace
   namespace.on('connection', (socket) => socketHandler.ioConnect(socket, games));
-  var [privateId, publicId] = addUserToGame(code, res, req.query.username.toString(), games);
-  if(req.query.format == 'json'){
-    res.json({publicId: publicId, privateId: privateId, gameId: code});
-  }else{
-    res.redirect(`/game/${code}`);
+  var [privateId, publicId] = addUserToGame(game, res, req.query.username.toString());
+  if (req.query.format == 'json') {
+    res.json({ publicId: publicId, privateId: privateId, gameId: game.code });
+  } else {
+    res.redirect(`/game/${game.code}`);
   }
 };
 
-function join(req: express.Request, res: express.Response, games: Map<string, Game.Game>){
+function join(req: express.Request, res: express.Response, games: Map<string, Game.Game>) {
   logger.log("verbose", "join game redirect");
   //todo: convey errors to user
-  if(!(req.query.code)){
+  if (req.query.code == undefined) {
     logger.log("debug", 'no code supplied');
     res.redirect('/static/game_doesnt_exist.html');
     return;
   }
   var code = req.query.code.toString();
-  if(!games.has(code)){
+  let game = games.get(code)
+  if (game == undefined) {
     logger.log("verbose", `Accessing invalid game: ${req.query.code}`);
     res.redirect(`/static/game_doesnt_exist.html`);
     return;
   }
-  var game = games.get(req.query.code.toString());
-  if(game.state != Game.states.NOT_STARTED){
-    logger.log("verbose", "Attempt to join game " + req.query.code + " that has already started");
+  if (game.state != Game.states.NOT_STARTED) {
+    logger.log("verbose", "Attempt to join game " + code + " that has already started");
     res.redirect(`/static/game_in_progress.html`);
     return;
   }
   logger.log("debug", 'adding to game');
-  var [privateId, publicId] = addUserToGame(code, res, req.query.username.toString(), games);
+  if (req.query.username == undefined) {
+    logger.log("verbose", "Attempt to join game " + code + " without a username");
+    // todo: redirect them back to game join screen
+    return;
+  }
+  var [privateId, publicId] = addUserToGame(game, res, req.query.username.toString());
 
-  if(req.query.format == 'json'){
-    res.json({publicId: publicId, privateId: privateId, gameId: code});
-  }else{
+  if (req.query.format == 'json') {
+    res.json({ publicId: publicId, privateId: privateId, gameId: code });
+  } else {
     res.redirect(`/game/${code}`);
   }
 };
 
-function gamePage(req: express.Request, res: express.Response, games: Map<string, Game.Game>){
+function gamePage(req: express.Request, res: express.Response, games: Map<string, Game.Game>) {
   //todo: convey errors to user (template error page?)
   logger.log("debug", `Accessing game: ${req.params.code}`);
-  if(!games.has(req.params.code)){
+  var game = games.get(req.params.code);
+  if (game == undefined) {
     logger.log("verbose", `Accessing invalid game: ${req.params.code}`);
     res.redirect(`/static/game_doesnt_exist.html`);
     return;
   }
-  var game = games.get(req.params.code);
 
-  if(req.query.format == "json"){
-    if(req.query.publicId && req.query.index){
+  if (req.query.format == "json") {
+    if (req.query.publicId && req.query.index) {
       res.write(Game.getImage(game, parseInt(req.query.publicId.toString()), parseInt(req.query.index.toString())));
-    }else{
+    } else {
       res.json(Game.gameStateForClient(game));
     }
     return;
-  }else if(game.state == Game.states.FINISHED){
-      res.sendFile(staticDir + 'archived.html');    
-      return;  
-  }else if(!(game.idMapping.has(req.cookies["privateId"]))){
+  } else if (game.state == Game.states.FINISHED) {
+    res.sendFile(staticDir + 'archived.html');
+    return;
+  } else if (!(game.idMapping.has(req.cookies["privateId"]))) {
 
     res.redirect(`/?code=${req.params.code}`);
     return;

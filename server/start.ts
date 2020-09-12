@@ -5,32 +5,32 @@ import * as fs from 'fs'
 
 // .env file doesn't exist in prod
 if (fs.existsSync('.env')) {
-  dotenv.config()
+    dotenv.config()
 }
 
-if(process.env.NODE_ENV == "production"){
+if (process.env.NODE_ENV == "production") {
     Logging.setUpLogging('realGame');
     Server.createServer();
-}else{
+} else {
     // wrap in an async so we can dynamically import socketClient
     // which means we don't need to install dev dependencies in production
     // where socketclient is never used
     (async () => {
         let socketClient = await import('./socketClient.js');
-        if(process.argv.includes("--prod")){
+        if (process.argv.includes("--prod")) {
             socketClient.useProd();
-        }else{
+        } else {
             Logging.setUpLogging('realGame');
             Server.createServer();
         }
 
         let clientsSpecified = process.argv.indexOf("--clients")
-        if(clientsSpecified == -1){
+        if (clientsSpecified == -1) {
             return;
         }
         let clientTypeIndex = clientsSpecified + 1
-        if(clientTypeIndex < process.argv.length){
-            switch(process.argv[clientTypeIndex]){
+        if (clientTypeIndex < process.argv.length) {
+            switch (process.argv[clientTypeIndex]) {
                 case "active":
                     socketClient.activeGame();
                     break;
@@ -41,10 +41,10 @@ if(process.env.NODE_ENV == "production"){
                     socketClient.listenGame();
                     break;
                 default:
-                    console.log('unrecognized arguments');                    
+                    console.log('unrecognized arguments');
                     break;
             }
-        }else{
+        } else {
             console.log('no client type');
         }
     })();

@@ -3,24 +3,24 @@ import * as stream from 'stream';
 var Writable = stream.Writable;
 export let logger: winston.Logger;// & {nextLog():string};
 
-export function setupTestLogging(filePrefix: string){
-    // this is used in tests where you want to assert
-    // what's been logger without looking in a log file
-    setUpLogging(filePrefix);
-    var logsForTests: string[] = [];
-    var ws = new Writable({objectMode: true});
-    ws._write = function (chunk, enc, next) {
-        logsForTests.push(chunk);
-        next();
-    };
-    logger.add(new winston.transports.Stream({stream: ws, level: 'verbose'}));
-    // disabled because it's not used yet and hard to make work with typescript
-    // logger.nextLog = function(){
-    //     return logsForTests.shift()
-    // }
+export function setupTestLogging(filePrefix: string) {
+  // this is used in tests where you want to assert
+  // what's been logger without looking in a log file
+  setUpLogging(filePrefix);
+  var logsForTests: string[] = [];
+  var ws = new Writable({ objectMode: true });
+  ws._write = function (chunk, _, next) {
+    logsForTests.push(chunk);
+    next();
+  };
+  logger.add(new winston.transports.Stream({ stream: ws, level: 'verbose' }));
+  // disabled because it's not used yet and hard to make work with typescript
+  // logger.nextLog = function(){
+  //     return logsForTests.shift()
+  // }
 }
 
-export function setUpLogging(filePrefix: string){
+export function setUpLogging(filePrefix: string) {
   let config = {
     level: 'info',
     format: winston.format.json(),

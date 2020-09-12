@@ -1,6 +1,5 @@
 import io from 'socket.io-client';
 import * as SharedGame from '../shared/game'
-import * as serverSocketHandler from '../server/socketHandler'
 
 export interface InitializationMsg {
     gameState: SharedGame.ClientGame,
@@ -15,35 +14,48 @@ export interface RemoveUserMsg {
     publicId: number, gameState: SharedGame.ClientGame
 }
 
-export interface UndoMakeTargetsMsg {publicId: number, gameState: SharedGame.ClientGame}
+export interface ServerUndoMakeTargetsMsg { publicId: number, gameState: SharedGame.ClientGame }
 
-export interface MakeTargetsMsg {gameState:SharedGame.ClientGame}
+export interface ServerMakeTargetsMsg { gameState: SharedGame.ClientGame }
 
-export interface BadSnipeMsg {gameState: SharedGame.ClientGame, snipePlayer: number, undoneSnipes: number[]}
+export interface ServerBadSnipeMsg { gameState: SharedGame.ClientGame, snipePlayer: number, undoneSnipes: number[] }
 
-export interface FinishedMsg {nextCode: string, winner: string}
+export interface ServerFinishedMsg { nextCode: string, winner: string }
 
-export interface TimeLeftMsg {gameState: SharedGame.ClientGame}
+export interface ServerTimeLeftMsg { gameState: SharedGame.ClientGame }
 
-export interface StartMsg {gameState: SharedGame.ClientGame} 
+export interface ServerStartMsg { gameState: SharedGame.ClientGame }
+
+export interface ServerChatMessage {
+    gameState: SharedGame.ClientGame,
+    text: string,
+    image: ArrayBuffer,
+    position: SharedGame.Position,
+    isSnipe: boolean,
+    botMessage: string,
+    publicId: number,
+    snipeNumber: number,
+    snipeCount: number,
+    snipePlayer: number,
+}
 
 export function setup(
     gameId: string,
     privateId: string,
     initialization: (msg: InitializationMsg) => void,
-    badSnipe: (msg: BadSnipeMsg) => void,
+    badSnipe: (msg: ServerBadSnipeMsg) => void,
     newUser: (msg: NewUserMsg) => void,
     removeUser: (msg: RemoveUserMsg) => void,
-    makeTargets: (msg: MakeTargetsMsg) => void,
-    undoMakeTargets: (msg: UndoMakeTargetsMsg) => void,
-    start: (msg: StartMsg) => void,
-    finished: (msg: FinishedMsg) => void,
-    timeLeft: (msg: TimeLeftMsg) => void,
-    chatMessage: (msg: DownloadMessage) => void,
+    makeTargets: (msg: ServerMakeTargetsMsg) => void,
+    undoMakeTargets: (msg: ServerUndoMakeTargetsMsg) => void,
+    start: (msg: ServerStartMsg) => void,
+    finished: (msg: ServerFinishedMsg) => void,
+    timeLeft: (msg: ServerTimeLeftMsg) => void,
+    chatMessage: (msg: ServerChatMessage) => void,
     // this only needs to be supplied when not in a browser
     // otherwise window.location is used
     hostname = ''
-): SocketIOClient.Socket{
+): SocketIOClient.Socket {
     let socket = io(
         // leading slash is needed so IO nows we're giving it a path
         // otherwise it uses it as a domain
@@ -78,55 +90,59 @@ export function setup(
     return socket;
 }
 
-export interface UploadMessage {
+export interface ClientChatMessage {
     text: string,
-    image: File | ArrayBuffer,
-    position: SharedGame.Position,
-    isSnipe: boolean
+    image?: File | ArrayBuffer,
+    position?: SharedGame.Position,
+    isSnipe?: boolean
 }
 
-export interface DownloadMessage {
-    gameState: SharedGame.ClientGame,
-    text: string,
-    image: ArrayBuffer,
-    position: SharedGame.Position,
-    isSnipe: boolean,
-    botMessage: string,
-    publicId: number,
+export interface ClientBadSnipe {
     snipeNumber: number,
-    snipeCount: number,
-    snipePlayer: number,
-
+    sniperPlayer: number
 }
 
-export function chatMessage(socket: SocketIOClient.Socket, message: UploadMessage){
+export interface ClientMakeTargets {
+    gameLength: number,
+    countDown: number,
+    proposedTargetList: number[]
+}
+
+export interface ClientRemoveUser {
+    publicId: number
+}
+
+export function chatMessage(socket: SocketIOClient.Socket, message: ClientChatMessage) {
     socket.emit('chat message', message);
 }
 
-export function badSnipe(socket: SocketIOClient.Socket, snipeNumber: number, snipePlayer: number){
-    socket.emit('bad snipe', {snipeNumber: snipeNumber, snipePlayer: snipePlayer});
+export function badSnipe(socket: SocketIOClient.Socket, msg: ClientBadSnipe) {
+    socket.emit('bad snipe', msg);
 }
 
-export function makeTargets(socket: SocketIOClient.Socket, gameLength: number, countDown: number, proposedTargetList: number[]){
-    socket.emit('make targets', { gameLength: gameLength, countDown: countDown, proposedTargetList: proposedTargetList });
+export function makeTargets(socket: SocketIOClient.Socket, msg: ClientMakeTargets) {
+    socket.emit('make targets', msg);
 }
 
-export function undoMakeTargets(socket: SocketIOClient.Socket){
+export function undoMakeTargets(socket: SocketIOClient.Socket) {
     socket.emit('undo make targets');
 }
 
-export function startGame(socket: SocketIOClient.Socket){
+export function startGame(socket: SocketIOClient.Socket) {
     socket.emit('start game');
 }
 
-export function positionUpdate(socket: SocketIOClient.Socket, position: SharedGame.Position){
+export type ClientPositionUpdate = SharedGame.Position
+
+export function positionUpdate(socket: SocketIOClient.Socket, position: ClientPositionUpdate) {
     socket.emit('positionUpdate', position);
 }
 
-export function stopGame(socket: SocketIOClient.Socket){
+export function stopGame(socket: SocketIOClient.Socket) {
     socket.emit('stop game');
 }
 
-export function removeUser(socket: SocketIOClient.Socket, publicId: number){
-    socket.emit('remove user', { publicId: publicId });
+export function removeUser(socket: SocketIOClient.Socket, publicId: number) {
+    let msg: ClientRemoveUser = { publicId: publicId }
+    socket.emit('remove user', msg);
 }

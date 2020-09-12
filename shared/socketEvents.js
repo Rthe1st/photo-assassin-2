@@ -35,11 +35,11 @@ hostname = '') {
 export function chatMessage(socket, message) {
     socket.emit('chat message', message);
 }
-export function badSnipe(socket, snipeNumber, snipePlayer) {
-    socket.emit('bad snipe', { snipeNumber: snipeNumber, snipePlayer: snipePlayer });
+export function badSnipe(socket, msg) {
+    socket.emit('bad snipe', msg);
 }
-export function makeTargets(socket, gameLength, countDown, proposedTargetList) {
-    socket.emit('make targets', { gameLength: gameLength, countDown: countDown, proposedTargetList: proposedTargetList });
+export function makeTargets(socket, msg) {
+    socket.emit('make targets', msg);
 }
 export function undoMakeTargets(socket) {
     socket.emit('undo make targets');
@@ -54,5 +54,6 @@ export function stopGame(socket) {
     socket.emit('stop game');
 }
 export function removeUser(socket, publicId) {
-    socket.emit('remove user', { publicId: publicId });
+    let msg = { publicId: publicId };
+    socket.emit('remove user', msg);
 }

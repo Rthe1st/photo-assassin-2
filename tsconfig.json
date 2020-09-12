@@ -4,7 +4,11 @@
         "target": "ESNext",
         "moduleResolution": "node",
         "allowSyntheticDefaultImports": true,
-        "noImplicitAny": true
+        "strict": true,
+        "noEmitOnError": true,
+        "noUnusedParameters": true,
+        "forceConsistentCasingInFileNames": true,
+        "noUnusedLocals": true
     },
     "include": ["server/*"],
     "exclude": ["client/*"]

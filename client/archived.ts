@@ -2,56 +2,29 @@ import * as SharedGame from '../shared/game'
 
 import * as Sentry from '@sentry/browser';
 Sentry.init({ dsn: 'https://0622ee38668548dcb4af966730298b31@o428868.ingest.sentry.io/5374680' });
-if(process.env.SENTRY_TESTS == "true"){
+if (process.env.SENTRY_TESTS == "true") {
     Sentry.captureException(new Error("sentry test archived.html"));
 }
 
 const cookieGameId = decodeURIComponent(document.cookie.replace(/(?:(?:^|.*;\s*)gameId\s*\=\s*([^;]*).*$)|^.*$/, "$1"));
 
 let urlGameId = window.location.href.split('/').pop()
-let privateId: string;
 let publicId: number;
+//todo: use to let people download results
+// let privateId: string;
 // we only let users have cookies for one game at a time at the moment
 // so check they're for the current and treat the as observer if not
-if(cookieGameId == urlGameId){
-    privateId = document.cookie.replace(/(?:(?:^|.*;\s*)privateId\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+if (cookieGameId == urlGameId) {
+    // privateId = document.cookie.replace(/(?:(?:^|.*;\s*)privateId\s*\=\s*([^;]*).*$)|^.*$/, "$1");
     publicId = parseInt(document.cookie.replace(/(?:(?:^|.*;\s*)publicId\s*\=\s*([^;]*).*$)|^.*$/, "$1"));
 }
 
-function getPlayerColor(playerPublicId: number){
+function getPlayerColor(playerPublicId: number) {
     //todo: let player choose and store in game
-    return playerColours[playerPublicId%playerColours.length];
+    return playerColours[playerPublicId % playerColours.length];
 }
 
-let playerEmojis = [
-    "😀",
-    "😗",
-    "🕶",
-    "🐵",
-    "🐶",
-    "🦄",
-    "🦋",
-    "🐌",
-    "🦠",
-    "🦃",
-    "🦆",
-    "🦉",
-    "🦜",
-    "🐋",
-    "🐡",
-    "🦈",
-    "🐙",
-    "🌻",
-    "🌵",
-    "☘"
-];
-
-function getPlayerEmoji(playerPublicId: number){
-    //todo: let player choose and store in game
-    return playerEmojis[playerPublicId%playerEmojis.length];
-}
-
-function getIndexForTarget(playerPublicId: number, targetGotIndex: number){
+function getIndexForTarget(_playerPublicId: number, _targetGotIndex: number) {
     // todo: store the mapping on the gmestate so we don't have to do this crap
     // todo: handle undos
     return 0;
@@ -65,7 +38,7 @@ const getData = async () => {
     setUpPage(gameState);
     prepareMapData(gameState);
 
-    map = new google.maps.Map(document.getElementById('map'), {
+    map = new google.maps.Map(document.getElementById('map')!, {
         zoom: 17,
         mapTypeId: 'satellite',
     });
@@ -73,39 +46,39 @@ const getData = async () => {
 }
 
 function setUpPage(gameState: SharedGame.ClientGame) {
-    if(publicId){
+    if (publicId) {
         const username = gameState.userList[publicId].username;
-        document.getElementById("username").innerText = username;
-    }else{
-        document.getElementById("username").innerText = "observer";
+        document.getElementById("username")!.innerText = username;
+    } else {
+        document.getElementById("username")!.innerText = "observer";
     }
     let winner;
-    if (gameState.userList[parseInt(gameState.winner)]) {
-        winner = gameState.userList[parseInt(gameState.winner)].username;
+    if (gameState.userList[parseInt(gameState.winner!)]) {
+        winner = gameState.userList[parseInt(gameState.winner!)].username;
     } else {
         winner = gameState.winner;
     }
-    document.getElementById('game-result').innerText = `🎉🎉${winner}🎉🎉`
-    var targetsState = document.getElementById('targets-state');
-    let players = Object.keys(gameState.targetsGot)
-    players.sort((a, b) => gameState.targetsGot[parseInt(b)].length - gameState.targetsGot[parseInt(a)].length)
+    document.getElementById('game-result')!.innerText = `🎉🎉${winner}🎉🎉`
+    var targetsState = document.getElementById('targets-state')!;
+    let players = Object.keys(gameState.targetsGot!)
+    players.sort((a, b) => gameState.targetsGot![parseInt(b)].length - gameState.targetsGot![parseInt(a)].length)
     for (var key of players) {
         var playerPublicId = parseInt(key)
         var outerLi = document.createElement('li');
         outerLi.setAttribute('class', 'player-area')
         var summaryStats = document.createElement('p');
         let username = gameState.userList[playerPublicId].username;
-        let total = gameState.targetsGot[playerPublicId].length + gameState.targets[playerPublicId].length;
-        let got = gameState.targetsGot[playerPublicId].length;
+        let total = gameState.targetsGot![playerPublicId].length + gameState.targets![playerPublicId].length;
+        let got = gameState.targetsGot![playerPublicId].length;
         summaryStats.innerText = `${username}: ${got}/${total}`
         outerLi.appendChild(summaryStats);
         var ul = document.createElement('ul');
         ul.setAttribute('class', 'target-list')
         outerLi.appendChild(ul);
-        for(let [index, got] of gameState.targetsGot[playerPublicId].entries()){
+        for (let [index, got] of gameState.targetsGot![playerPublicId].entries()) {
             var innerLi = document.createElement('li');
             var targetButton = document.createElement('button');
-            targetButton.onclick = function(){
+            targetButton.onclick = function () {
                 showPhoto("wip", playerPublicId, getIndexForTarget(parseInt(key), index));
             }
             targetButton.innerText = gameState.userList[got].username;
@@ -114,16 +87,16 @@ function setUpPage(gameState: SharedGame.ClientGame) {
         }
         targetsState.appendChild(outerLi);
     }
-    if(publicId){
+    if (publicId) {
         const username = gameState.userList[publicId].username;
         console.log(username)
-        document.getElementById('next-game-link').setAttribute('href', `/?code=${gameState.nextCode}&username=${username}`);
-    }else{
-        document.getElementById('next-game-link').hidden = true
+        document.getElementById('next-game-link')!.setAttribute('href', `/?code=${gameState.nextCode}&username=${username}`);
+    } else {
+        document.getElementById('next-game-link')!.hidden = true
     }
 
-    var options = document.getElementById("options");
-    for(const [playerPublicId, player] of Object.entries(gameState.userList)){
+    var options = document.getElementById("options")!;
+    for (const [playerPublicId, player] of Object.entries(gameState.userList)) {
         var labelItem = document.createElement("li");
         let inputId = `show-player-${player["username"]}`
         var label = document.createElement("label");
@@ -147,18 +120,18 @@ function setUpPage(gameState: SharedGame.ClientGame) {
 
 window.onload = function () {
     getData();
-    document.getElementById('show-map').onclick = function(){
-        document.getElementById('info').hidden = !document.getElementById('info').hidden;
-        document.getElementById('options').hidden = !document.getElementById('options').hidden;
-        if(!document.getElementById('map').hidden){
+    document.getElementById('show-map')!.onclick = function () {
+        document.getElementById('info')!.hidden = !document.getElementById('info')!.hidden;
+        document.getElementById('options')!.hidden = !document.getElementById('options')!.hidden;
+        if (!document.getElementById('map')!.hidden) {
             map.setOptions({
                 zoomControl: true,
                 gestureHandling: 'greedy',
                 // changing the option doesn't seem to quite be working
                 // disableDefaultUI: false,
             });
-        }else{
-            document.getElementById('options').hidden = true;
+        } else {
+            document.getElementById('options')!.hidden = true;
             map.setOptions({
                 zoomControl: false,
                 gestureHandling: 'none',
@@ -166,9 +139,9 @@ window.onload = function () {
             });
         }
     }
-    document.getElementById('photo-back').onclick = function(){
-        document.getElementById('photo-div').hidden = true;
-        document.getElementById('main').hidden = false;
+    document.getElementById('photo-back')!.onclick = function () {
+        document.getElementById('photo-div')!.hidden = true;
+        document.getElementById('main')!.hidden = false;
         (<HTMLImageElement>document.getElementById('photo')).src = window.location.href + "/shitty_loader.jpg";
 
     }
@@ -176,10 +149,10 @@ window.onload = function () {
 
 interface PlayerSnipe {
     marker: google.maps.Marker,
-    arrow: google.maps.Polyline
+    arrow?: google.maps.Polyline
 }
 
-var mapData: {playerPaths: {[key: number]: google.maps.Polyline}, playerSnipes: {[key: number]: PlayerSnipe[]}} = {
+var mapData: { playerPaths: { [key: number]: google.maps.Polyline }, playerSnipes: { [key: number]: PlayerSnipe[] } } = {
     playerPaths: [],
     playerSnipes: [],
 };
@@ -211,13 +184,13 @@ var playerColours = [
     "#232C16",  //Dark Olive Green
 ];
 
-function prepareMapData(gameState: SharedGame.ClientGame){
-    for(const [playerPublicIdString, player] of Object.entries(gameState.userList)){
+function prepareMapData(gameState: SharedGame.ClientGame) {
+    for (const [playerPublicIdString,] of Object.entries(gameState.userList)) {
         var path = [];
         let playerPublicId = parseInt(playerPublicIdString)
         mapData["playerSnipes"][playerPublicId] = [];
-        for(var position of gameState.positions[playerPublicId]){
-            var latlng: google.maps.ReadonlyLatLngLiteral = {lat: position.latitude, lng: position.longitude};
+        for (var position of gameState.positions![playerPublicId]) {
+            var latlng: google.maps.ReadonlyLatLngLiteral = { lat: position.latitude, lng: position.longitude };
             path.push(latlng);
         }
         var polyLine = new google.maps.Polyline({
@@ -227,35 +200,35 @@ function prepareMapData(gameState: SharedGame.ClientGame){
             strokeOpacity: 1.0,
             strokeWeight: 2
         });
-        if(gameState.imageMetadata[playerPublicId]){
-            for(const [index, metadata] of gameState.imageMetadata[playerPublicId].entries()){
+        if (gameState.imageMetadata[playerPublicId]) {
+            for (const [index, metadata] of gameState.imageMetadata[playerPublicId].entries()) {
                 let title = `Picture by ${sniper}`
-                if(metadata["snipeNumber"] != undefined){
+                if (metadata["snipeNumber"] != undefined) {
                     var sniper = gameState.userList[playerPublicId].username;
                     //todo: simplify snipe number - its complex and stupid
-                    let totalTargets = gameState.targetsGot[playerPublicId].length + gameState.targets[playerPublicId].length
+                    let totalTargets = gameState.targetsGot![playerPublicId].length + gameState.targets![playerPublicId].length
                     let targetIndex = totalTargets - metadata["snipeNumber"]
-                    var target = gameState.userList[gameState.targetsGot[playerPublicId][targetIndex]].username;
+                    var target = gameState.userList[gameState.targetsGot![playerPublicId][targetIndex]].username;
                     title = `${sniper} got ${target}`
                 }
-                var latlng: google.maps.ReadonlyLatLngLiteral = {lat: metadata.position.latitude, lng: metadata.position.longitude};
+                var latlng: google.maps.ReadonlyLatLngLiteral = { lat: metadata.position.latitude!, lng: metadata.position.longitude! };
                 var marker = new google.maps.Marker({
                     position: latlng,
                     title: title
                 });
-                marker.addListener('click', function() {
+                marker.addListener('click', function () {
                     showPhoto(title, playerPublicId, index);
                 });
 
-                var obj: PlayerSnipe = {marker: marker, arrow: undefined};
+                var obj: PlayerSnipe = { marker: marker, arrow: undefined };
 
-                if(metadata["targetPosition"]){
+                if (metadata["targetPosition"]) {
                     var lineSymbol = {
                         path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW
                     };
                     var targetLatLng = {
-                        lat: metadata["targetPosition"].latitude,
-                        lng: metadata["targetPosition"].longitude,
+                        lat: metadata["targetPosition"].latitude!,
+                        lng: metadata["targetPosition"].longitude!,
                     };
                     var arrow = new google.maps.Polyline({
                         path: [latlng, targetLatLng],
@@ -275,37 +248,37 @@ function prepareMapData(gameState: SharedGame.ClientGame){
     }
 }
 
-function showPhoto(text: string, playerPublicId: number, index: number){
-    document.getElementById('photo-div').hidden = false;
-    document.getElementById('main').hidden = true;
-    document.getElementById('photo-text').innerText = text;
-    (<HTMLImageElement>document.getElementById('photo')).src = window.location.href + "?format=json&publicId="+playerPublicId+"&index="+index;
+function showPhoto(text: string, playerPublicId: number, index: number) {
+    document.getElementById('photo-div')!.hidden = false;
+    document.getElementById('main')!.hidden = true;
+    document.getElementById('photo-text')!.innerText = text;
+    (<HTMLImageElement>document.getElementById('photo')).src = window.location.href + "?format=json&publicId=" + playerPublicId + "&index=" + index;
 }
 
 var map: google.maps.Map;
 
-function annotateMap(){
+function annotateMap() {
     // it's more efficient if we just add/remove the relevant bits when
     // for a specific option that's been changed
-    // but this is more flexable for now
+    // but this is more flexible for now
 
-    for(const [playerPublicIdString, player] of Object.entries(gameState.userList)){
+    for (const [playerPublicIdString, player] of Object.entries(gameState.userList)) {
         let playerPublicId = parseInt(playerPublicIdString)
         var checkbox = (<HTMLInputElement>document.getElementById(`show-player-${player["username"]}`));
-        if(checkbox.checked){
+        if (checkbox.checked) {
             mapData["playerPaths"][playerPublicId].setMap(map);
-            for(var snipe of mapData["playerSnipes"][playerPublicId]){
+            for (var snipe of mapData["playerSnipes"][playerPublicId]) {
                 snipe["marker"].setMap(map);
                 //this might not be set if the target never sent a position
-                if(snipe["arrow"]){
+                if (snipe["arrow"]) {
                     snipe["arrow"].setMap(map);
                 }
             }
-        }else{
+        } else {
             mapData["playerPaths"][playerPublicId].setMap(null);
-            for(var snipe of mapData["playerSnipes"][playerPublicId]){
+            for (var snipe of mapData["playerSnipes"][playerPublicId]) {
                 snipe["marker"].setMap(null);
-                if(snipe["arrow"]){
+                if (snipe["arrow"]) {
                     snipe["arrow"].setMap(null);
                 }
             }
@@ -314,9 +287,9 @@ function annotateMap(){
     //center on when they started
     //instead we should capture the agreed starting point of the game and use that
     //current approach also breaks for observers without a publicId
-    if(publicId){
+    if (publicId) {
         map.setCenter(mapData["playerPaths"][publicId].getPath().getAt(0));
-    }else{
+    } else {
         map.setCenter(mapData["playerPaths"][0].getPath().getAt(0));
     }
 }

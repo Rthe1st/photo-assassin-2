@@ -19,21 +19,21 @@ function getUsername(publicId: number){
 }
 
 export function getLastSnipedPlayerId(publicId: number){
-    let targetsGot = game.targetsGot[publicId];
+    let targetsGot = game.targetsGot![publicId];
     return targetsGot[targetsGot.length - 1];
 }
 
 function getPlayerProgress(publicId: number){
-    let got = game.targetsGot[publicId].length;
-    let remaining = got + game.targets[publicId].length;
+    let got = game.targetsGot![publicId].length;
+    let remaining = got + game.targets![publicId].length;
     return [got, remaining];
 }
 
-function getTarget(publicId: number, snipeNumber: number){
+function getTarget(publicId: number, snipeNumber?: number){
     if(snipeNumber == undefined){
-        snipeNumber = game.targets[publicId].length;
+        snipeNumber = game.targets![publicId].length;
     }
-    let totalTargets = game.targetsGot[publicId].concat(game.targets[publicId])
+    let totalTargets = game.targetsGot![publicId].concat(game.targets![publicId])
     return getUsername(totalTargets[totalTargets.length - snipeNumber])
 }
 
@@ -57,9 +57,9 @@ export function getProposedTargetPairs(proposedTargetList: number[]){
 function timeLeft(){
     //returns in seconds
     if(game.subState == inPlaySubStates.COUNTDOWN){
-        return (game.timeLeft - game.gameLength) / 1000;
+        return (game.timeLeft! - game.gameLength!) / 1000;
     }else if(game.subState == inPlaySubStates.PLAYING){
-        return (game.timeLeft) / 1000;
+        return (game.timeLeft!) / 1000;
     }else{
         console.log("error, timeleft called in invalid substate " + game.subState)
     }
