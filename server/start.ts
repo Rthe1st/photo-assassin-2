@@ -16,7 +16,7 @@ if (process.env.NODE_ENV == "production") {
     // which means we don't need to install dev dependencies in production
     // where socketclient is never used
     (async () => {
-        let socketClient = await import('./socketClient.js');
+        let socketClient = await import('../client/socketClient.js');
         if (process.argv.includes("--prod")) {
             socketClient.useProd();
         } else {

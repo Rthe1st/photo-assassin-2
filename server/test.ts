@@ -1,5 +1,5 @@
 import * as gameTest from './game_test.js'
-import * as socketClient from './socketClient.js'
+import * as socketClient from '../client/socketClient.js'
 import * as Server from './server.js';
 import * as Logging from './logging.js';
 
