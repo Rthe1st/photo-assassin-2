@@ -39,6 +39,14 @@ function createChatElement(sender: string, message: string, imageId?: number, sn
         var img = new Image;
         img.classList.add('message-image');
         img.src = window.location.href + `/images/${imageId}`;
+        let snipeScreenText = `From: ${sender}`
+        if(snipeInfo != undefined){
+            snipeScreenText += `target: ${game.getUsername(snipeInfo.target)}`
+        }
+        if(message != ""){
+            snipeScreenText += `, '${message}'`
+        }
+        img.onclick = () => showSnipedScreen(snipeScreenText, imageId);
         li.appendChild(img);
         if (snipeInfo != undefined) {
             img.setAttribute('id', `snipe-${snipeInfo.index}`)
@@ -72,8 +80,8 @@ function processMsg(msg: socketClient.ServerChatMessage, isReplay: boolean) {
     if (isReplay) {
         return;
     }
-    if (publicId == game.getLastSnipedPlayerId(msg.publicId)) {
-        showSnipedScreen(game.getUsername(msg.publicId) + " sniped you!");
+    if (publicId == game.getLastSnipedPlayerId(msg.publicId) && msg.imageId != undefined) {
+        showSnipedScreen(game.getUsername(msg.publicId) + " sniped you!", msg.imageId, true);
     }
 }
 
@@ -401,12 +409,15 @@ function hideSnipedScreen() {
     document.getElementById('sniped-screen')!.hidden = true;
 }
 
-function showSnipedScreen(msg: string) {
+function showSnipedScreen(msg: string, imageId: number, shouldVibrate = false) {
     document.getElementById('main-in-play')!.hidden = true;
     document.getElementById('sniped-screen')!.hidden = false;
     document.getElementById('sniped-alert-text')!.innerText = msg;
+    (<HTMLImageElement>document.getElementById('snipe-image')).src = window.location.href + `/images/${imageId}`;
     // todo: this broken on firefox mobile
-    window.navigator.vibrate([100, 50, 100]);
+    if(shouldVibrate){
+        window.navigator.vibrate([100, 50, 100]);
+    }
 }
 
 function showGameInfo() {
