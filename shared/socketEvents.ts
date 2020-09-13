@@ -17,7 +17,7 @@ export interface ServerUndoMakeTargetsMsg { gameState: SharedGame.ClientGame }
 
 export interface ServerMakeTargetsMsg { gameState: SharedGame.ClientGame }
 
-export interface ServerBadSnipeMsg { gameState: SharedGame.ClientGame, snipePlayer: number, undoneSnipes: number[] }
+export interface ServerBadSnipeMsg { gameState: SharedGame.ClientGame, undoneSnipeIndexes: number[] }
 
 export interface ServerFinishedMsg { nextCode: string, winner: string }
 
@@ -25,17 +25,12 @@ export interface ServerTimeLeftMsg { gameState: SharedGame.ClientGame }
 
 export interface ServerStartMsg { gameState: SharedGame.ClientGame }
 
-export interface SnipeInfo {
-    snipeNumber: number,
-    snipePlayer: number,
-    snipeCount: number
-}
+export type SnipeInfo = SharedGame.SnipeInfo
 
 export interface ServerChatMessage {
     publicId: number,
     text: string,
     imageId?: number,
-    image?: Buffer,
     snipeInfo?: SnipeInfo,
     botMessage?: string,
     gameState: SharedGame.ClientGame
@@ -51,8 +46,7 @@ export interface ClientChatMessage {
 }
 
 export interface ClientBadSnipe {
-    snipeNumber: number,
-    sniperPlayer: number
+    snipeInfosIndex: number
 }
 
 export interface ClientMakeTargets {

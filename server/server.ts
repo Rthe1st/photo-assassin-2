@@ -190,11 +190,11 @@ function gamePage(req: express.Request, res: express.Response, games: Map<string
   }
 
   if (req.query.format == "json") {
-    if (req.query.publicId && req.query.index) {
-      res.write(Game.getImage(game, parseInt(req.query.publicId.toString()), parseInt(req.query.index.toString())));
-    } else {
-      res.json(Game.gameStateForClient(game));
-    }
+    // if (req.query.publicId && req.query.index) {
+    //   res.write(Game.getImage(game, parseInt(req.query.publicId.toString()), parseInt(req.query.index.toString())));
+    // } else {
+    res.json(Game.gameStateForClient(game));
+    // }
     return;
   } else if (game.state == Game.states.FINISHED) {
     res.sendFile(staticDir + 'archived.html');

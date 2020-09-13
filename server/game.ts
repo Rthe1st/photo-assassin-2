@@ -35,8 +35,9 @@ export interface Game {
   countDown: number | undefined,
   timeLeft: number | undefined,
   nextCode: string | undefined,
-  badSnipeVotes: Map<number, any>,
-  undoneSnipes: Map<number, any>,
+  // this is used to look up the current head of a players snipeInfos
+  latestSnipeIndexes: { [key: number]: number | undefined }
+  snipeInfos: SharedGame.SnipeInfo[],
   winner: string | undefined,
   // this includes images and so will get huge
   // todo: make client smart so it only requests those its missing
@@ -46,11 +47,6 @@ export interface Game {
   // to those in the images key
   // (and even that should just be a ref to images stored not in memory)
   chatHistory: SocketEvents.ServerChatMessage[],
-  // we need to track images so we can reference them later
-  // say, when user clicks marker in map after game is over
-  //todo: store references to the snipes separately
-  // so we can look up snipe N efficiently
-  images: Map<number, any>,
   actualImages: Buffer[],
   // this is set after the game is created, because we need to know the
   // game code in order to define the namespace
@@ -76,10 +72,9 @@ function newGame(code: string): Game {
     countDown: undefined,
     timeLeft: undefined,
     nextCode: undefined,
-    badSnipeVotes: new Map(),
-    undoneSnipes: new Map(),
+    latestSnipeIndexes: [],
+    snipeInfos: [],
     chatHistory: [],
-    images: new Map(),
     actualImages: [],
     winner: undefined,
     namespace: undefined
@@ -91,29 +86,14 @@ export function getActualImage(game: Game, id: number){
   return game.actualImages[id]
 }
 
-export function saveImage(game: Game, image: Buffer, publicId: number, snipeNumber?: number, position?: SharedGame.Position, targetPosition?: SharedGame.Position) {
+export function saveImage(game: Game, image: Buffer): number {
 
   let imageId = game.actualImages.length
 
   game.actualImages.push(image);
 
-  if (!game.images.has(publicId)) {
-    game.images.set(publicId, []);
-  }
-  game.images.get(publicId).push({
-    imageId: imageId,
-    image: image,
-    snipeNumber: snipeNumber,
-    position: position,
-    targetPosition: targetPosition
-  })
-
   return imageId;
 
-}
-
-export function getImage(game: Game, publicId: number, index: number) {
-  return game.images.get(publicId)[index].image;
 }
 
 function makeTargets(game: Game, gameLength: number, countDown: number, proposedTargetList: number[]) {
@@ -149,69 +129,72 @@ function start(game: Game) {
   }
 }
 
-function snipe(game: Game, sniperId: number) {
-  var snipedId = game.targets[sniperId][0];
+function snipe(game: Game, sniperPublicId: number, imageId: number, position?: SharedGame.Position): {gameOver: boolean, snipeInfo: SharedGame.SnipeInfo, botMessage: string | undefined} {
+  var snipedId = game.targets[sniperPublicId][0];
 
-  var snipeInfo = { "target": snipedId, "targetPosition": game.positions.get(snipedId)[game.positions.get(snipedId).length - 1] };
-  var usernameWhoDidSniping = game.userList.get(sniperId).username;
-  var usernameThatGotSniped = game.userList.get(game.targets[sniperId][0]).username;
+  let targetPosition = game.positions.get(snipedId)[game.positions.get(snipedId).length - 1]
+
+  var usernameWhoDidSniping = game.userList.get(sniperPublicId).username;
+  var usernameThatGotSniped = game.userList.get(game.targets[sniperPublicId][0]).username;
+  //todo: move botmessage computation to client side
   var botMessage = usernameWhoDidSniping + " sniped " + usernameThatGotSniped;
 
-  //todo: let people vote on wether this is a valid snipe
-  var targets = game.targets[sniperId];
-  var snipeNumber = targets.length;
+  var targets = game.targets[sniperPublicId];
+
   //targets[0] becomes the new target
-  game.badSnipeVotes.get(sniperId).set(snipeNumber, 0);
-  game.targetsGot[sniperId].push(targets.shift()!);
+  game.targetsGot[sniperPublicId].push(targets.shift()!);
   var gameOver = (targets.length == 0);
 
-  var snipeCount;
-  if (game.undoneSnipes.has(sniperId) && game.undoneSnipes.get(sniperId).has(snipeNumber)) {
-    snipeCount = game.undoneSnipes.get(sniperId).get(snipeNumber) + 1;
-  } else {
-    snipeCount = 1;
+  let snipeInfo = {
+    index: game.snipeInfos.length,
+    snipePlayer: sniperPublicId,
+    target: snipedId,
+    votes: [],
+    imageId: imageId!,
+    targetPosition: targetPosition,
+    position: position,
+    previousSnipe: game.latestSnipeIndexes[sniperPublicId],
+    nextSnipe: undefined,
+    undoneNextSnipes: [],
+    undone: false
   }
 
-  return { gameOver: gameOver, snipeNumber: snipeNumber, snipeInfo: snipeInfo, botMessage: botMessage, snipeCount };
+  game.snipeInfos.push(snipeInfo)
+
+  game.latestSnipeIndexes[sniperPublicId] = snipeInfo.index
+
+  return { gameOver: gameOver, snipeInfo: snipeInfo, botMessage: botMessage};
 }
 
-function undoSnipe(game: Game, sniperId: number, snipeNumber: number): number[] {
-  game.badSnipeVotes.get(sniperId).delete(snipeNumber);
-  // snipe number is index of the target list the snipe was for
-  // at the start of the game
-  // so push @got@ targets back onto the target list until it's snipeNgumber+1 long
-  var undoneSnipes = []
-  while (game.targets[sniperId].length < snipeNumber) {
-    game.badSnipeVotes.get(sniperId).delete(game.targets[sniperId].length);
-    game.targets[sniperId].unshift(game.targetsGot[sniperId].pop()!);
-    undoneSnipes.push(game.targets[sniperId].length);
-  }
-  return undoneSnipes;
-}
+function undoSnipe(game: Game, snipeInfo: SocketEvents.SnipeInfo): number[] {
+  
+  let undoneSnipeIndexes: number[] = [snipeInfo.index]
+  snipeInfo.undone = true
+  game.targets[snipeInfo.snipePlayer].unshift(game.targetsGot[snipeInfo.snipePlayer].pop()!);
 
-function undoneSnipesForClient(undoneSnipes: Map<number, any>) {
-  var list = [];
-  for (var [player, value] of undoneSnipes.entries()) {
-    for (var [snipeNumber, count] of value.entries()) {
-      list.push(`${player}-${snipeNumber}-${count}`);
-    }
+  let previousSnipeIndex = snipeInfo.previousSnipe
+  if(previousSnipeIndex == undefined){
+    game.latestSnipeIndexes[snipeInfo.snipePlayer] = undefined
+  }else{
+    game.latestSnipeIndexes[snipeInfo.snipePlayer] = previousSnipeIndex
+    let previousSnipe = game.snipeInfos[previousSnipeIndex]
+    previousSnipe.undoneNextSnipes.push(snipeInfo.index)
+    previousSnipe.nextSnipe = undefined
   }
-  return list;
-}
 
-function imageMetadata(game: Game): SharedGame.ImageMetadata {
-  let result: SharedGame.ImageMetadata = {};
-  for (let [publicId, images] of game.images.entries()) {
-    result[publicId] = []
-    for (let image of images) {
-      result[publicId].push({
-        snipeNumber: image.snipeNumber,
-        position: image.position,
-        targetPosition: image.targetPosition
-      })
-    }
+  while(snipeInfo.nextSnipe != undefined){
+    undoneSnipeIndexes.push(snipeInfo.nextSnipe)
+    snipeInfo = game.snipeInfos[snipeInfo.nextSnipe]
+    snipeInfo.undone = true
+    // note that the target being shifted here
+    // is NOT the target of the current snipeInfo
+    // we just know that the number of times we shift
+    // matches the total number of links we're going to
+    // travel forward
+    game.targets[snipeInfo.snipePlayer].unshift(game.targetsGot[snipeInfo.snipePlayer].pop()!);
   }
-  return result;
+
+  return undoneSnipeIndexes;
 }
 
 function gameStateForClient(game: Game) {
@@ -227,14 +210,8 @@ function gameStateForClient(game: Game) {
     subState: game.subState,
     winner: game.winner,
     nextCode: game.nextCode,
-    badSnipeVotes: Object.fromEntries(game.badSnipeVotes),
-    undoneSnipes: undoneSnipesForClient(game.undoneSnipes),//todo: store this in chat history alongside the message
-    //we don't include chathistory here
-    // because it could be large and is wasteful to
-    // send often
-    // we don't include raw images for same reason
-    // but metadata about them, so client can decide to reques the raw later
-    imageMetadata: imageMetadata(game)
+    snipeInfos: game.snipeInfos,
+    latestSnipeIndexes: game.latestSnipeIndexes
   }
 
   if (game.state == states.FINISHED) {
@@ -256,7 +233,6 @@ function addPlayer(game: Game, username: string): { privateId: string, publicId:
   game.idMapping.set(privateId, publicId);
   game.userList.set(publicId, { username: username });
   game.positions.set(publicId, []);
-  game.badSnipeVotes.set(publicId, new Map());
   let proposedTargetList = shuffle(Array.from(game.userList.keys()));
   game.chosenSettings.proposedTargetList = proposedTargetList;
   return { privateId: privateId, publicId: publicId };
@@ -297,33 +273,30 @@ function updatePosition(game: Game, publicId: number, position: SharedGame.Posit
   }
 }
 
-function badSnipe(game: Game, snipePlayer: number, snipeNumber: number, publicId: number) {
-  var playerSnipeVotes = game.badSnipeVotes.get(snipePlayer);
-  if (!playerSnipeVotes.has(snipeNumber)) {
-    return;
+function badSnipe(game: Game, snipeInfosIndex: number, publicId: number) {
+
+  let snipeInfo = game.snipeInfos[snipeInfosIndex]
+
+  if(snipeInfo.undone){
+    return
   }
-  var voteCount = game.badSnipeVotes.get(snipePlayer).get(snipeNumber);
-  if (publicId != snipePlayer) {
-    voteCount += 1;
-    playerSnipeVotes.set(snipeNumber, voteCount);
+
+  // check they haven't already voted
+  if(snipeInfo.votes.indexOf(publicId) == -1){
+    snipeInfo.votes.push(publicId)
+  }else{
+    return
   }
-  if (publicId == snipePlayer || voteCount >= 2) {
-    var undoneSnipes = undoSnipe(game, snipePlayer, snipeNumber);
-    //below helps track how many times a single [player, snipenumber] has been undone
-    // so client side can work out all the images to mark as undone
-    // it's a hack to get around chat history not storing this info
-    if (!game.undoneSnipes.has(snipePlayer)) {
-      game.undoneSnipes.set(snipePlayer, new Map());
-    }
-    if (!game.undoneSnipes.get(snipePlayer).has(snipeNumber)) {
-      game.undoneSnipes.get(snipePlayer).set(snipeNumber, 1);
-    } else {
-      game.undoneSnipes.get(snipePlayer).set(snipeNumber, game.undoneSnipes.get(snipePlayer).get(snipeNumber) + 1);
-    }
+
+  let voteCount = snipeInfo.votes.length
+
+  if(publicId == snipeInfo.snipePlayer || voteCount > 2){
+    let undoneSnipes = undoSnipe(game, snipeInfo);
 
     return undoneSnipes;
+
   }
-  return;
+
 }
 
 function generateGame(numberOfGames: number) {

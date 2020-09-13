@@ -10,7 +10,7 @@ Sentry.init({ dsn: process.env.BROWSER_SENTRY });
 if (process.env.SENTRY_TESTS == "true") {
     Sentry.captureException(new Error("sentry test in index.js"));
 }
-function createChatElement(sender: string, message: string, imageId?: number, snipeInfo?: { snipeNumber: number, snipePlayer: number, snipeCount: number }) {
+function createChatElement(sender: string, message: string, imageId?: number, snipeInfo?: SharedGame.SnipeInfo) {
     var li = document.createElement('li');
     let messages = document.getElementById('messages')!
     messages.appendChild(li);
@@ -40,16 +40,16 @@ function createChatElement(sender: string, message: string, imageId?: number, sn
         img.classList.add('message-image');
         img.src = window.location.href + `/images/${imageId}`;
         li.appendChild(img);
-        if (snipeInfo) {
-            img.setAttribute('id', `snipe-${snipeInfo.snipePlayer}-${snipeInfo.snipeNumber}-${snipeInfo.snipeCount}`)
+        if (snipeInfo != undefined) {
+            img.setAttribute('id', `snipe-${snipeInfo.index}`)
             var voteButton = document.createElement('button');
-            let targetUser = game.getTarget(snipeInfo.snipePlayer, snipeInfo.snipeNumber);
+            voteButton.setAttribute('class', 'vote-button')
+            let targetUser = game.getUsername(snipeInfo.target);
             voteButton.innerText = `Was ${targetUser} not in the picture?`;
             voteButton.onclick = function () {
                 if (confirm(`Was ${targetUser} not in the picture?`)) {
                     let msg: socketClient.ClientBadSnipe = {
-                        snipeNumber: snipeInfo.snipeNumber,
-                        sniperPlayer: snipeInfo.snipePlayer
+                        snipeInfosIndex: snipeInfo.index
                     }
                     socketClient.badSnipe(socket, msg);
                     voteButton.onclick = null;
@@ -57,6 +57,9 @@ function createChatElement(sender: string, message: string, imageId?: number, sn
                 }
             };
             li.appendChild(voteButton);
+            if(snipeInfo.undone){
+                markSnipeAsBad(snipeInfo.index);
+            }
         }
     }
 }
@@ -65,8 +68,6 @@ function processMsg(msg: socketClient.ServerChatMessage, isReplay: boolean) {
     if (msg.botMessage) {
         createChatElement('Gamebot3000', msg.botMessage);
     }
-    //todo: you can actual work out snipe number ,player, snipecount from game state
-    // if game state is upto date
     createChatElement(game.getUsername(msg.publicId), msg.text, msg.imageId, msg.snipeInfo);
     if (isReplay) {
         return;
@@ -220,19 +221,15 @@ function targetsMadeView() {
     }
 }
 
-function markSnipesAsBad(undoneSnipes: SharedGame.UndoneSnipes) {
-    for (var snipeId of undoneSnipes) {
-        //bug:snipe, undo, snipe, undo, reload page
-        // only 2nd snipe marked as undone
-        let snipeImage = document.getElementById(`snipe-${snipeId}`)!;
-        if (!document.getElementById(`snipe-text-${snipeId}`)) {
-            var undotext = document.createElement('p');
-            undotext.innerText = "BAD SNIPE";
-            undotext.setAttribute('class', 'undotext');
-            undotext.setAttribute('id', `snipe-text-${snipeId}`);
-            snipeImage.parentNode!.appendChild(undotext);
-            (<HTMLButtonElement>(<Element>snipeImage.parentNode).getElementsByTagName('button')[0]).hidden = true;
-        }
+function markSnipeAsBad(snipeInfosIndex: number) {
+    let snipeImage = document.getElementById(`snipe-${snipeInfosIndex}`)!;
+    if (!document.getElementById(`snipe-text-${snipeInfosIndex}`)) {
+        var undotext = document.createElement('p');
+        undotext.innerText = "BAD SNIPE";
+        undotext.setAttribute('class', 'undotext');
+        undotext.setAttribute('id', `snipe-text-${snipeInfosIndex}`);
+        snipeImage.parentNode!.appendChild(undotext);
+        (<HTMLButtonElement>(<Element>snipeImage.parentNode).getElementsByTagName('button')[0]).hidden = true;
     }
 }
 
@@ -253,7 +250,6 @@ function initialization(msg: socketClient.ServerInitializationMsg) {
     for (let message of msg.chatHistory) {
         processMsg(message, true);
     }
-    markSnipesAsBad(game.game.undoneSnipes);
     let userNameElements = document.getElementsByClassName('current-username');
     for (let index = 0; index < userNameElements.length; index++) {
         (<HTMLElement>userNameElements[index]).innerText = game.getUsername(publicId);
@@ -283,10 +279,9 @@ function initialization(msg: socketClient.ServerInitializationMsg) {
 function badSnipe(msg: socketClient.ServerBadSnipeMsg) {
     game.update(msg.gameState);
     setCurrentTarget();
-    //go through msg history and mark delete snipes as gone
-    markSnipesAsBad(game.game.undoneSnipes);
-    //good to know what snipes go undone in this event so we can show user
-    console.log(msg.snipePlayer + "had to undo " + msg.undoneSnipes);
+    for(let snipeInfoIndex of msg.undoneSnipeIndexes){
+        markSnipeAsBad(snipeInfoIndex);
+    }
 }
 
 function resetUserList(userList: SharedGame.UserList) {

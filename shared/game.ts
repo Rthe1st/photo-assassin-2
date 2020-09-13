@@ -13,10 +13,9 @@ export interface ClientGame {
   countDown: number | undefined,
   timeLeft: number | undefined,
   nextCode: string | undefined,
-  badSnipeVotes: { [key: number]: any },
-  undoneSnipes: UndoneSnipes,
   winner: string | undefined,
-  imageMetadata: ImageMetadata
+  snipeInfos: SnipeInfo[],
+  latestSnipeIndexes: {[key: number]: number | undefined}
 }
 
 export interface UserList {
@@ -28,8 +27,6 @@ export interface UndoneSnipes {
   [Symbol.iterator]: any
 }
 
-export interface ImageMetadata { [key: number]: { snipeNumber: number, position: Position, targetPosition: Position }[] }
-
 export interface Position {
   longitude: number | null,
   latitude: number | null,
@@ -39,4 +36,20 @@ export interface Position {
     target: number,
     targetPosition: any
   }
+}
+
+export interface SnipeInfo {
+  // index of this snipe info in game.snipeInfos
+  index: number,
+  snipePlayer: number,
+  imageId: number,
+  // todo: can we use a set?
+  votes: number[],
+  position?: Position,
+  targetPosition?: Position,
+  target: number,
+  previousSnipe: number | undefined,
+  nextSnipe: number | undefined,
+  undoneNextSnipes: number[],
+  undone: boolean
 }

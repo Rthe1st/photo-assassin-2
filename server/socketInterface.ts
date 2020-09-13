@@ -66,7 +66,7 @@ function socketConnect(
     socket.on('positionUpdate', (msg) => socketHandler.positionUpdate(msg, game, publicId));
   
     socket.on('chat message', (msg) => socketHandler.chatMsg(msg, game, socket, publicId, games, io));
-  
+    
     socket.on('bad snipe', (msg) => socketHandler.badSnipe(msg, game, socket, publicId));
   
     socket.on('disconnect', function () {

@@ -62,9 +62,6 @@ export function chatMsg(msg: socketEvents.ClientChatMessage, game: Game.Game, so
   // we know socket IO turns the File type (clientside) into a buffer
   let image = msg.image as Buffer;
 
-  console.log('ingame chat msg');
-  console.log(msg);
-
   logger.log("verbose", "Chat message", { gameCode: game.code, publicId: publicId, chatMessage: msg.text });
 
   // snipes must contain an image
@@ -72,57 +69,38 @@ export function chatMsg(msg: socketEvents.ClientChatMessage, game: Game.Game, so
   // for example, to send a selfie
   var wasSnipe = msg.isSnipe && msg.image && game.subState == Game.inPlaySubStates.PLAYING;
 
-  //todo: move snipe info off of position
-  if (msg.position == undefined) {
-    logger.log("debug", "chat message without position", { gameCode: game.code, position: msg.position });
-    return
-  }
-
   logger.log("debug", "positionUpdate", { 'positionHistory': game.positions.get(publicId), 'position': msg.position });
-  Game.updatePosition(game, publicId, msg.position);
-
-  let snipeRes;
-  let snipeInfo: socketEvents.SnipeInfo|undefined = undefined;
-  let targetPosition;
-  let botMessage;
-  if (wasSnipe) {
-    snipeRes = Game.snipe(game, publicId);
-    msg.position.snipeInfo = snipeRes.snipeInfo;
-
-    logger.log("verbose", "Snipe", { gameCode: game.code, gameState: game.state });
-    if (snipeRes.gameOver) {
-      Game.updatePosition(game, publicId, msg.position!);
-      finishGame(game, publicId.toString(), games, io);
-      return;
-    }
-
-    snipeInfo = {
-      snipeNumber: snipeRes.snipeNumber,
-      snipePlayer: publicId,
-      snipeCount: snipeRes.snipeCount
-    }
-    botMessage = snipeRes.botMessage;
-
-    targetPosition = snipeRes.snipeInfo.targetPosition;
+  if(msg.position != undefined){
+    Game.updatePosition(game, publicId, msg.position);
   }
+  let imageId: number | undefined
+  if (image) {
+    imageId = Game.saveImage(game, image);
 
-  let imageId
-  if (msg.image) {
-    let snipeNumber;
-    if(wasSnipe){
-      snipeNumber = snipeInfo!.snipeNumber;
+    if (wasSnipe) {
+      var {botMessage: botMessage, snipeInfo: snipeInfo, gameOver: gameOver} = Game.snipe(game, publicId, imageId, msg.position);
+
+      logger.log("verbose", "Snipe", { gameCode: game.code, gameState: game.state });
+      if (gameOver) {
+        Game.updatePosition(game, publicId, msg.position!);
+        finishGame(game, publicId.toString(), games, io);
+        return;
+      }
     }
-    imageId = Game.saveImage(game, image, publicId, snipeNumber, msg.position, targetPosition);
   }
 
   let clientState = Game.gameStateForClient(game)
 
-  var outgoingMsg = {
+  // snipeInfo already contains imageID
+  // maybe we should make this:
+  // socketEvents.ServerChatMessageImage | socketEvents.ServerChatMessageSnipe
+  // instead (and store the text in those types as well)
+  // this will also help with stoing non-snipe images on the game obvject
+  // for lookup in the archieve page
+  var outgoingMsg: socketEvents.ServerChatMessage = {
     publicId: publicId,
     text: msg.text,
     imageId: imageId,
-    image: image,
-    //replace with link
     gameState: clientState,
     snipeInfo: snipeInfo,
     botMessage: botMessage
@@ -134,11 +112,11 @@ export function chatMsg(msg: socketEvents.ClientChatMessage, game: Game.Game, so
 };
 
 export function badSnipe(msg: socketEvents.ClientBadSnipe, game: Game.Game, socket: SocketIO.Socket, publicId: number) {
-    var undoneSnipes = Game.badSnipe(game, msg.sniperPlayer, msg.snipeNumber, publicId)
-    if (undoneSnipes) {
+    var undoneSnipeIndexes = Game.badSnipe(game, msg.snipeInfosIndex, publicId)
+    if (undoneSnipeIndexes) {
       //we need to tell the client which snipes need ot be marked as canceled in the gui
       //undosnipe should probs return that
-      socketInterface.badSnipe(socket, { gameState: Game.gameStateForClient(game), snipePlayer: msg.sniperPlayer, undoneSnipes: undoneSnipes })
+      socketInterface.badSnipe(socket, { gameState: Game.gameStateForClient(game), undoneSnipeIndexes: undoneSnipeIndexes })
     }
 };
 

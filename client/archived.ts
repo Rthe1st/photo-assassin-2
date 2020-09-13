@@ -24,12 +24,6 @@ function getPlayerColor(playerPublicId: number) {
     return playerColours[playerPublicId % playerColours.length];
 }
 
-function getIndexForTarget(_playerPublicId: number, _targetGotIndex: number) {
-    // todo: store the mapping on the gmestate so we don't have to do this crap
-    // todo: handle undos
-    return 0;
-}
-
 var gameState: SharedGame.ClientGame;
 const getData = async () => {
     const response = await fetch(window.location.href + "?format=json");
@@ -75,15 +69,21 @@ function setUpPage(gameState: SharedGame.ClientGame) {
         var ul = document.createElement('ul');
         ul.setAttribute('class', 'target-list')
         outerLi.appendChild(ul);
-        for (let [index, got] of gameState.targetsGot![playerPublicId].entries()) {
+        let snipeInfoIndex = gameState.latestSnipeIndexes[playerPublicId]
+        while(snipeInfoIndex != undefined){
+            let snipeInfo = gameState.snipeInfos[snipeInfoIndex]
             var innerLi = document.createElement('li');
             var targetButton = document.createElement('button');
+            let targetUsername = gameState.userList[snipeInfo.target].username
+            let sniperUsername = gameState.userList[snipeInfo.snipePlayer].username
             targetButton.onclick = function () {
-                showPhoto("wip", playerPublicId, getIndexForTarget(parseInt(key), index));
+                // todo: show usernames instead
+                showPhoto(`${sniperUsername} got ${targetUsername}`, snipeInfo.imageId);
             }
-            targetButton.innerText = gameState.userList[got].username;
+            targetButton.innerText = targetUsername;
             innerLi.appendChild(targetButton);
-            ul.appendChild(innerLi);
+            ul.prepend(innerLi);
+            snipeInfoIndex = snipeInfo.previousSnipe
         }
         targetsState.appendChild(outerLi);
     }
@@ -200,59 +200,64 @@ function prepareMapData(gameState: SharedGame.ClientGame) {
             strokeOpacity: 1.0,
             strokeWeight: 2
         });
-        if (gameState.imageMetadata[playerPublicId]) {
-            for (const [index, metadata] of gameState.imageMetadata[playerPublicId].entries()) {
-                let title = `Picture by ${sniper}`
-                if (metadata["snipeNumber"] != undefined) {
-                    var sniper = gameState.userList[playerPublicId].username;
-                    //todo: simplify snipe number - its complex and stupid
-                    let totalTargets = gameState.targetsGot![playerPublicId].length + gameState.targets![playerPublicId].length
-                    let targetIndex = totalTargets - metadata["snipeNumber"]
-                    var target = gameState.userList[gameState.targetsGot![playerPublicId][targetIndex]].username;
-                    title = `${sniper} got ${target}`
-                }
-                var latlng: google.maps.ReadonlyLatLngLiteral = { lat: metadata.position.latitude!, lng: metadata.position.longitude! };
-                var marker = new google.maps.Marker({
-                    position: latlng,
-                    title: title
-                });
-                marker.addListener('click', function () {
-                    showPhoto(title, playerPublicId, index);
-                });
 
-                var obj: PlayerSnipe = { marker: marker, arrow: undefined };
-
-                if (metadata["targetPosition"]) {
-                    var lineSymbol = {
-                        path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW
-                    };
-                    var targetLatLng = {
-                        lat: metadata["targetPosition"].latitude!,
-                        lng: metadata["targetPosition"].longitude!,
-                    };
-                    var arrow = new google.maps.Polyline({
-                        path: [latlng, targetLatLng],
-                        icons: [{
-                            icon: lineSymbol,
-                            offset: '100%'
-                        }],
-                    });
-                    obj.arrow = arrow;
-                }
-                mapData["playerSnipes"][playerPublicId].push(obj);
+        //todo: plot non-snipe images as well
+        for(let snipeInfo of gameState.snipeInfos){
+            if(snipeInfo.undone){
+                continue
             }
+            var sniper = gameState.userList[snipeInfo.snipePlayer].username;
+            var target = gameState.userList[snipeInfo.target].username;
+            let title = `${sniper} got ${target}`
+            let latlng: google.maps.ReadonlyLatLngLiteral
+            if(snipeInfo.position != undefined){
+                latlng = { lat: snipeInfo.position.latitude!, lng: snipeInfo.position.longitude! }; 
+            }else{
+                // todo: choose a default point
+                // middle of the map? interpolation between known positions?
+                latlng = { lat: 0, lng: 0 };
+            }
+            var marker = new google.maps.Marker({
+                position: latlng,
+                title: title
+            });
+            marker.addListener('click', function () {
+                showPhoto(title, snipeInfo.imageId);
+            });
+
+            var obj: PlayerSnipe = { marker: marker, arrow: undefined };
+
+            if (snipeInfo.targetPosition != undefined) {
+                var lineSymbol = {
+                    path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW
+                };
+                var targetLatLng: google.maps.ReadonlyLatLngLiteral = {
+                    lat: snipeInfo.targetPosition.latitude!,
+                    lng: snipeInfo.targetPosition.longitude!,
+                };
+                var arrow = new google.maps.Polyline({
+                    path: [latlng, targetLatLng],
+                    icons: [{
+                        icon: lineSymbol,
+                        offset: '100%'
+                    }],
+                });
+                obj.arrow = arrow;
+            }
+            mapData["playerSnipes"][playerPublicId].push(obj);
         }
+
         //todo: this is undefined if player never sends position and so explodes
         //in annotation
         mapData["playerPaths"][playerPublicId] = polyLine;
     }
 }
 
-function showPhoto(text: string, playerPublicId: number, index: number) {
+function showPhoto(text: string, imageIndex: number) {
     document.getElementById('photo-div')!.hidden = false;
     document.getElementById('main')!.hidden = true;
     document.getElementById('photo-text')!.innerText = text;
-    (<HTMLImageElement>document.getElementById('photo')).src = window.location.href + "?format=json&publicId=" + playerPublicId + "&index=" + index;
+    (<HTMLImageElement>document.getElementById('photo')).src = window.location.href + `/images/${imageIndex}`;
 }
 
 var map: google.maps.Map;

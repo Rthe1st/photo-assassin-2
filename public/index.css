@@ -189,7 +189,7 @@ body{
     max-width: 50%;
 }
 
-.own-message > p {
+.own-message > p, .own-message > button {
     width: max-content;
     float: right;
     clear: right;

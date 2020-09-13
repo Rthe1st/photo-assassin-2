@@ -188,11 +188,10 @@ function listeningPlayer(gameId: string, privateId: string, player: Player, publ
                     isSnipe: undefined,
                 }
                 socketClient.chatMessage(socket, message);
-            } else if (command == "badsnipe" && parts.length == 4) {
+            } else if (command == "badsnipe" && parts.length == 3) {
                 console.log("badsniping");
                 let msg: socketClient.ClientBadSnipe = {
-                    snipeNumber: parseInt(parts[2]),
-                    sniperPlayer: parseInt(parts[3])
+                    snipeInfosIndex: parts[2]
                 }
                 socketClient.badSnipe(socket, msg);
             }
