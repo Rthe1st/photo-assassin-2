@@ -2,7 +2,7 @@ import * as SharedGame from '../shared/game'
 
 export interface ServerInitializationMsg {
     gameState: SharedGame.ClientGame,
-    chatHistory: any[]
+    chatHistory: ServerChatMessage[]
 }
 
 export interface NewUserMsg {
@@ -34,6 +34,7 @@ export interface SnipeInfo {
 export interface ServerChatMessage {
     publicId: number,
     text: string,
+    imageId?: number,
     image?: Buffer,
     snipeInfo?: SnipeInfo,
     botMessage?: string,

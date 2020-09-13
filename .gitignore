@@ -6,3 +6,4 @@ public/*.html
 public/*.js.map
 .env
 server/**/*.js
+client/**/*.js

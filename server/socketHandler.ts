@@ -106,26 +106,29 @@ export function chatMsg(msg: socketEvents.ClientChatMessage, game: Game.Game, so
     targetPosition = snipeRes.snipeInfo.targetPosition;
   }
 
+  let imageId
   if (msg.image) {
     let snipeNumber;
     if(wasSnipe){
       snipeNumber = snipeInfo!.snipeNumber;
     }
-    Game.saveImage(game, image, publicId, snipeNumber, msg.position, targetPosition);
+    imageId = Game.saveImage(game, image, publicId, snipeNumber, msg.position, targetPosition);
   }
 
   let clientState = Game.gameStateForClient(game)
 
-  game.chatHistory.push(clientState);
-
   var outgoingMsg = {
     publicId: publicId,
     text: msg.text,
+    imageId: imageId,
     image: image,
+    //replace with link
     gameState: clientState,
     snipeInfo: snipeInfo,
     botMessage: botMessage
   }
+
+  game.chatHistory.push(outgoingMsg);
 
   socketInterface.chatMessage(socket, outgoingMsg)
 };

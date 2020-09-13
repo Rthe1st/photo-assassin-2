@@ -30,6 +30,7 @@ export function createServer(useSentry = true, port = process.env.PORT || 3000) 
   // have the middlewares fetch games from db or w/e
   app.get('/', (req, res) => root(req, res, games));
   app.get('/game/:code', (req, res) => gamePage(req, res, games));
+  app.get('/game/:code/images/:id', (req, res) => getImage(req, res, games));
 
   var http = new httpServer.Server(app);
 
@@ -159,6 +160,24 @@ function join(req: express.Request, res: express.Response, games: Map<string, Ga
     res.redirect(`/game/${code}`);
   }
 };
+
+function getImage(req: express.Request, res: express.Response, games: Map<string, Game.Game>){
+  var game = games.get(req.params.code);
+  if (game == undefined) {
+    logger.log("verbose", `Accessing invalid game: ${req.params.code}`);
+    res.redirect(`/static/game_doesnt_exist.html`);
+    return;
+  }
+
+  if(req.params.id == undefined || game.actualImages.length <= parseInt(req.params.id)){
+    logger.log("verbose", `Accessing invalid image: ${req.params.code}, ${req.params.id}`);
+    res.sendStatus(404)
+    return;
+  }
+
+  let image = Game.getActualImage(game, parseInt(req.params.id))
+  res.write(image);
+}
 
 function gamePage(req: express.Request, res: express.Response, games: Map<string, Game.Game>) {
   //todo: convey errors to user (template error page?)

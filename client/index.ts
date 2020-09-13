@@ -10,7 +10,7 @@ Sentry.init({ dsn: process.env.BROWSER_SENTRY });
 if (process.env.SENTRY_TESTS == "true") {
     Sentry.captureException(new Error("sentry test in index.js"));
 }
-function createChatElement(sender: string, message: string, image?: ArrayBuffer, snipeInfo?: { snipeNumber: number, snipePlayer: number, snipeCount: number }) {
+function createChatElement(sender: string, message: string, imageId?: number, snipeInfo?: { snipeNumber: number, snipePlayer: number, snipeCount: number }) {
     var li = document.createElement('li');
     let messages = document.getElementById('messages')!
     messages.appendChild(li);
@@ -35,12 +35,10 @@ function createChatElement(sender: string, message: string, image?: ArrayBuffer,
         paragraph.innerText = message;
         li.appendChild(paragraph);
     }
-    if (image) {
-        var blob = new Blob([image], { type: 'image/png' });
-        var url = URL.createObjectURL(blob);
+    if (imageId != undefined) {
         var img = new Image;
         img.classList.add('message-image');
-        img.src = url;
+        img.src = window.location.href + `/images/${imageId}`;
         li.appendChild(img);
         if (snipeInfo) {
             img.setAttribute('id', `snipe-${snipeInfo.snipePlayer}-${snipeInfo.snipeNumber}-${snipeInfo.snipeCount}`)
@@ -69,7 +67,7 @@ function processMsg(msg: socketClient.ServerChatMessage, isReplay: boolean) {
     }
     //todo: you can actual work out snipe number ,player, snipecount from game state
     // if game state is upto date
-    createChatElement(game.getUsername(msg.publicId), msg.text, msg.image, msg.snipeInfo);
+    createChatElement(game.getUsername(msg.publicId), msg.text, msg.imageId, msg.snipeInfo);
     if (isReplay) {
         return;
     }

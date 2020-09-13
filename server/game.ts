@@ -1,6 +1,7 @@
 import * as crypto from 'crypto';
 import { shuffle } from '../shared/shuffle.js'
 import * as SharedGame from '../shared/game.js'
+import * as SocketEvents from '../shared/socketEvents'
 
 import socketIo from 'socket.io'
 
@@ -44,12 +45,13 @@ export interface Game {
   // todo: instead of saving images directly in here, we should point
   // to those in the images key
   // (and even that should just be a ref to images stored not in memory)
-  chatHistory: any[],
+  chatHistory: SocketEvents.ServerChatMessage[],
   // we need to track images so we can reference them later
   // say, when user clicks marker in map after game is over
   //todo: store references to the snipes separately
   // so we can look up snipe N efficiently
   images: Map<number, any>,
+  actualImages: Buffer[],
   // this is set after the game is created, because we need to know the
   // game code in order to define the namespace
   // used to communicate with the sockets where we don't have easy access to the namespace
@@ -78,22 +80,35 @@ function newGame(code: string): Game {
     undoneSnipes: new Map(),
     chatHistory: [],
     images: new Map(),
+    actualImages: [],
     winner: undefined,
     namespace: undefined
   };
 
 }
 
+export function getActualImage(game: Game, id: number){
+  return game.actualImages[id]
+}
+
 export function saveImage(game: Game, image: Buffer, publicId: number, snipeNumber?: number, position?: SharedGame.Position, targetPosition?: SharedGame.Position) {
+
+  let imageId = game.actualImages.length
+
+  game.actualImages.push(image);
+
   if (!game.images.has(publicId)) {
     game.images.set(publicId, []);
   }
   game.images.get(publicId).push({
+    imageId: imageId,
     image: image,
     snipeNumber: snipeNumber,
     position: position,
     targetPosition: targetPosition
   })
+
+  return imageId;
 
 }
 

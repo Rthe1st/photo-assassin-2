@@ -173,7 +173,7 @@ function listeningPlayer(gameId: string, privateId: string, player: Player, publ
                 console.log("pictureing");
                 let file = fs.readFileSync('./server/sample_snipe_image.jpeg');
                 let message = {
-                    "text": "gotya",
+                    "text": "picture",
                     "image": file,
                     "position": { "latitude": player.position.latitude, "longitude": player.position.longitude },
                     "isSnipe": false,
