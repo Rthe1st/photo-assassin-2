@@ -1,322 +1,88 @@
-// purpose of this is for testing the server
-// and allowing AI opponents
-// without the need for a browser
+import io from 'socket.io-client';
 
-import * as socketEvents from '../shared/socketEvents.js';
-import fetch from 'node-fetch';
-import fs from 'fs';
-import randomSeed from 'random-seed';
-import * as SharedGame from '../shared/game.js';
+import * as SocketEvents from '../shared/socketEvents.js'
+export * from '../shared/socketEvents.js'
 
-let domain = "http://localhost:3000";
-
-export function useProd() {
-    domain = "https://photo-assassin.prangten.com";
-}
-
-function makeGame(username: string) {
-    const url = `${domain}/make?username=${username}&format=json`;
-
-    const getData = async (url: string) => {
-        const response = await fetch(url);
-        const json = await response.json();
-        return json;
-    };
-
-    return getData(url);
-
-}
-
-function joinGame(username: string, gameId: string) {
-    const url = `${domain}/join?code=${gameId}&username=${username}&format=json`;
-
-    const getData = async (url: string) => {
-        const response = await fetch(url);
-        const json = await response.json();
-        return json;
-    };
-
-    return getData(url);
-}
-
-interface Player {
-    name: string;
-    algo: (gameId: string, privateId: string, player: Player, publicId: number) => SocketIOClient.Socket;
-    position: SharedGame.Position;
-}
-
-async function gameSetup(players: Player[]) {
-    if (players.length == 0) {
-        console.log("no player supplied")
-        return;
-    }
-    let hostPlayer = players.shift()!;
-    let details = await makeGame(hostPlayer.name);
-    console.log(details);
-    console.log(`${domain}/game/${details["gameId"]}`);
-    let gameId = details.gameId;
-    let sockets = new Map();
-    let socket = hostPlayer.algo(details.gameId, details.privateId, hostPlayer, details.publicId);
-    sockets.set(details.publicId, socket);
-    for (let player of players) {
-        let details = await joinGame(player.name, gameId);
-        let socket = player.algo(details.gameId, details.privateId, player, details.publicId);
-        sockets.set(details.publicId, socket);
-    }
-}
-
-function activePlayer(gameId: string, privateId: string, player: Player) {
-    var randomGenerator = randomSeed.create("seedvalue");
-
-    let socket = socketEvents.setup(
-        gameId,
-        privateId,
-        (msg) => {
-            console.log('init');
-            if (Object.entries(msg.gameState.userList).length > 1) {
-                socketEvents.makeTargets(socket, { gameLength: 60000, countDown: 0, proposedTargetList: msg.gameState.chosenSettings.proposedTargetList });
-            }
-        },
-        () => { },
-        () => { },
-        () => { },
-        (_) => {
-            console.log('make targets')
-            socketEvents.startGame(socket);
-        },
-        () => { },
-        (_) => {
-            console.log('start')
-            let file = fs.readFileSync('./server/sample_snipe_image.jpeg');
-            let message = {
-                "text": "gotya",
-                "image": file,
-                "position": { "latitude": player.position.latitude, "longitude": player.position.longitude },
-                "isSnipe": true,
-            }
-            socketEvents.chatMessage(socket, message);
-        },
-        () => {
-            console.log("game over");
-        },
-        () => { },
-        (_) => {
-            player.position.latitude! += (Math.random() - 0.5) * 0.001;
-            player.position.longitude! += (Math.random() - 0.5) * 0.001;
-            let file = fs.readFileSync('./server/sample_snipe_image.jpeg');
-            let message = {
-                "text": "gotya",
-                "image": file,
-                "position": { "latitude": player.position.latitude, "longitude": player.position.longitude },
-                "isSnipe": randomGenerator(100) > 50,
-            }
-            socketEvents.chatMessage(socket, message);
-        },
-        domain
-    );
-    return socket;
-}
-
-function passivePlayer(gameId: string, privateId: string, player: Player) {
-    let socket = socketEvents.setup(
-        gameId,
-        privateId,
-        () => { },
-        () => { },
-        () => { },
-        () => { },
-        () => { },
-        () => { },
-        () => { },
-        () => { },
-        () => { },
-        (_) => {
-            player.position.latitude! += (Math.random() - 0.5) * 0.001;
-            player.position.longitude! += (Math.random() - 0.5) * 0.001;
-            socketEvents.positionUpdate(socket, { "latitude": player.position.latitude, "longitude": player.position.longitude });
-        },
-        domain
-    );
-    return socket;
-}
-
-function listeningPlayer(gameId: string, privateId: string, player: Player, publicId: number) {
-
-    //this is incase we re-connect and miss messagesfile
-    let commandsSeen = 0;
-
-    function processCommand(msg: any) {
-        player.position.latitude! += (Math.random() - 0.5) * 0.001;
-        player.position.longitude! += (Math.random() - 0.5) * 0.001;
-        let parts = msg.text.split(" ");
-        let command = parts[0];
-        let name = parts[1];
-        if (name == player.name || name == "all") {
-            console.log(command);
-            console.log(name);
-            if (command == "snipe") {
-                console.log("sniping");
-                let file = fs.readFileSync('./server/sample_snipe_image.jpeg');
-                let message = {
-                    "text": "gotya",
-                    "image": file,
-                    "position": { "latitude": player.position.latitude, "longitude": player.position.longitude },
-                    "isSnipe": true,
-                }
-                socketEvents.chatMessage(socket, message);
-            } else if (command == "move") {
-                console.log("moving");
-                player.position.latitude! += (Math.random() - 0.5) * 0.001;
-                player.position.longitude! += (Math.random() - 0.5) * 0.001;
-                socketEvents.positionUpdate(socket, { "latitude": player.position.latitude, "longitude": player.position.longitude });
-            } else if (command == "picture") {
-                console.log("pictureing");
-                let file = fs.readFileSync('./server/sample_snipe_image.jpeg');
-                let message = {
-                    "text": "gotya",
-                    "image": file,
-                    "position": { "latitude": player.position.latitude, "longitude": player.position.longitude },
-                    "isSnipe": false,
-                }
-                socketEvents.chatMessage(socket, message);
-            } else if (command == "message") {
-                console.log("messging");
-                let message: socketEvents.ClientChatMessage = {
-                    text: "blahblah",
-                    position: { "latitude": player.position.latitude, "longitude": player.position.longitude },
-                    image: undefined,
-                    isSnipe: undefined,
-                }
-                socketEvents.chatMessage(socket, message);
-            } else if (command == "badsnipe" && parts.length == 4) {
-                console.log("badsniping");
-                let msg: socketEvents.ClientBadSnipe = {
-                    snipeNumber: parseInt(parts[2]),
-                    sniperPlayer: parseInt(parts[3])
-                }
-                socketEvents.badSnipe(socket, msg);
-            }
-            // it's important this is only logged after we know the action was sent
-            commandsSeen += 1;
+export function setup(
+    gameId: string,
+    privateId: string,
+    initialization: (msg: SocketEvents.ServerInitializationMsg) => void,
+    badSnipe: (msg: SocketEvents.ServerBadSnipeMsg) => void,
+    newUser: (msg: SocketEvents.NewUserMsg) => void,
+    removeUser: (msg: SocketEvents.RemoveUserMsg) => void,
+    makeTargets: (msg: SocketEvents.ServerMakeTargetsMsg) => void,
+    undoMakeTargets: (msg: SocketEvents.ServerUndoMakeTargetsMsg) => void,
+    start: (msg: SocketEvents.ServerStartMsg) => void,
+    finished: (msg: SocketEvents.ServerFinishedMsg) => void,
+    timeLeft: (msg: SocketEvents.ServerTimeLeftMsg) => void,
+    chatMessage: (msg: SocketEvents.ServerChatMessage) => void,
+    // this only needs to be supplied when not in a browser
+    // otherwise window.location is used
+    hostname = ''
+): SocketIOClient.Socket {
+    let socket = io(
+        // leading slash is needed so IO nows we're giving it a path
+        // otherwise it uses it as a domain
+        `${hostname}/game/${gameId}`,
+        {
+            query: {
+                "privateId": privateId,
+            },
+            // todo: review - done to avoid the default size limit
+            // of payloads when polling because large files will exceed this
+            // see maxHttpBufferSize at https://socket.io/docs/server-api/#new-Server-httpServer-options
+            transports: ['websocket']
         }
-    }
-
-    let socket = socketEvents.setup(
-        gameId,
-        privateId,
-        (msg) => {
-            console.log('init:');
-            console.log(player);
-            let commandsInHistory = 0;
-            for (let message of msg.chatHistory) {
-                let parts = message.text.split(" ");
-                if (parts.length < 2) {
-                    continue;
-                }
-                let name = parts[1];
-                if (name == player.name || name == "all") {
-                    commandsInHistory += 1;
-                    if (commandsInHistory > commandsSeen) {
-                        console.log("replaying");
-                        console.log(message.text)
-                        commandsSeen += 1;
-                        processCommand(message);
-                    }
-                }
-            }
-        },
-        () => { },
-        () => { },
-        (msg) => {
-            //remove user
-            if (msg.publicId == publicId) {
-                socket.close();
-            }
-        },
-        (_) => { },
-        () => { },
-        (_) => {
-            console.log('start')
-            console.log("start move");
-            player.position.latitude! += (Math.random() - 0.5) * 0.001;
-            player.position.longitude! += (Math.random() - 0.5) * 0.001;
-            socketEvents.positionUpdate(socket, { "latitude": player.position.latitude, "longitude": player.position.longitude });
-        },
-        () => {
-            console.log("game over");
-        },
-        () => { },
-        processCommand,
-        domain
     );
+
+    socket.on('initialization', initialization);
+    socket.on('New user', newUser);
+    socket.on('Remove user', removeUser);
+    socket.on('make targets', makeTargets);
+    // targets made
+    socket.on('undo make targets', undoMakeTargets);
+    socket.on('start', start);
+    // in game events
+    socket.on('chat message', chatMessage);
+    socket.on('bad snipe', badSnipe);
+    socket.on('timeLeft', timeLeft);
+    socket.on('game finished', finished);
+    socket.on('error', (err: any) => console.log(err));
+    socket.on('disconnect', (reason: any) => console.log(reason));
+    socket.on('disconnecting', (reason: any) => console.log(reason));
+
     return socket;
 }
 
-export function activeGame() {
-    gameSetup([
-        {
-            name: 'p1',
-            algo: passivePlayer,
-            position: { latitude: 51.389, longitude: 0.012 }
-        },
-        {
-            name: 'p2',
-            algo: passivePlayer,
-            position: { latitude: 51.389, longitude: 0.012 }
-        },
-        {
-            name: 'p3',
-            algo: passivePlayer,
-            position: { latitude: 51.389, longitude: 0.012 }
-        }, {
-            name: 'simpleSloth',
-            algo: activePlayer,
-            position: { latitude: 51.389, longitude: 0.012 }
-        }]);
+export function chatMessage(socket: SocketIOClient.Socket, message: SocketEvents.ClientChatMessage) {
+    socket.emit('chat message', message);
 }
 
-export function passiveGame() {
-    gameSetup([
-        {
-            name: 'p1',
-            algo: passivePlayer,
-            position: { latitude: 51.389, longitude: 0.012 }
-        },
-        {
-            name: 'p2',
-            algo: passivePlayer,
-            position: { latitude: 51.389, longitude: 0.012 }
-        },
-        {
-            name: 'p3',
-            algo: passivePlayer,
-            position: { latitude: 51.389, longitude: 0.012 }
-        }, {
-            name: 'simpleSloth',
-            algo: passivePlayer,
-            position: { latitude: 51.389, longitude: 0.012 }
-        }]);
+export function badSnipe(socket: SocketIOClient.Socket, msg: SocketEvents.ClientBadSnipe) {
+    socket.emit('bad snipe', msg);
 }
 
-export function listenGame() {
-    gameSetup([
-        {
-            name: 'p1',
-            algo: listeningPlayer,
-            position: { latitude: 51.389, longitude: 0.012 }
-        },
-        {
-            name: 'p2',
-            algo: listeningPlayer,
-            position: { latitude: 51.389, longitude: 0.012 }
-        },
-        {
-            name: 'p3',
-            algo: listeningPlayer,
-            position: { latitude: 51.389, longitude: 0.012 }
-        }, {
-            name: 'simpleSloth',
-            algo: listeningPlayer,
-            position: { latitude: 51.389, longitude: 0.012 }
-        }]);
+export function makeTargets(socket: SocketIOClient.Socket, msg: SocketEvents.ClientMakeTargets) {
+    socket.emit('make targets', msg);
+}
+
+export function undoMakeTargets(socket: SocketIOClient.Socket) {
+    socket.emit('undo make targets');
+}
+
+export function startGame(socket: SocketIOClient.Socket) {
+    socket.emit('start game');
+}
+
+export function positionUpdate(socket: SocketIOClient.Socket, position: SocketEvents.ClientPositionUpdate) {
+    socket.emit('positionUpdate', position);
+}
+
+export function stopGame(socket: SocketIOClient.Socket) {
+    socket.emit('stop game');
+}
+
+export function removeUser(socket: SocketIOClient.Socket, publicId: number) {
+    let msg: SocketEvents.ClientRemoveUser = { publicId: publicId }
+    socket.emit('remove user', msg);
 }

@@ -15,6 +15,7 @@ import * as httpServer from 'http'
 
 import * as Game from './game.js';
 import * as socketHandler from './socketHandler.js';
+import * as socketInterface from './socketInterface.js';
 import { logger } from './logging.js';
 
 export function createServer(useSentry = true, port = process.env.PORT || 3000) {
@@ -51,7 +52,7 @@ export function createServer(useSentry = true, port = process.env.PORT || 3000) 
 
   http.listen(port);
 
-  setInterval(() => { socketHandler.checkGameTiming(games) }, 1000);
+  setInterval(() => { socketHandler.checkGameTiming(games , io) }, 1000);
 }
 
 function addSentry(app: express.Application) {
@@ -112,14 +113,10 @@ function make(req: express.Request, res: express.Response, games: Map<string, Ga
     res.redirect('/');
     return;
   }
-  var game = Game.generateGame(games.size);
-  games.set(game.code, game);
-  var namespace = io.of(`/game/${game.code}`);
-  // I don't like namespace getting registered on game after game is already made
-  game.namespace = namespace;
-  // register connection after setting game space to prevent race condition
-  // where ioConnect relies on game.namespace
-  namespace.on('connection', (socket) => socketHandler.ioConnect(socket, games));
+  let game = socketInterface.setup(
+    games,
+    io
+  )
   var [privateId, publicId] = addUserToGame(game, res, req.query.username.toString());
   if (req.query.format == 'json') {
     res.json({ publicId: publicId, privateId: privateId, gameId: game.code });

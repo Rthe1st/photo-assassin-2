@@ -1,7 +1,7 @@
 import * as gps from './gps'
 import * as game from './game'
 import * as SharedGame from '../shared/game'
-import * as socketEvents from '../shared/socketEvents'
+import * as socketClient from './socketClient'
 
 import * as Sentry from '@sentry/browser';
 import { shuffle } from '../shared/shuffle';
@@ -49,11 +49,11 @@ function createChatElement(sender: string, message: string, image?: ArrayBuffer,
             voteButton.innerText = `Was ${targetUser} not in the picture?`;
             voteButton.onclick = function () {
                 if (confirm(`Was ${targetUser} not in the picture?`)) {
-                    let msg: socketEvents.ClientBadSnipe = {
+                    let msg: socketClient.ClientBadSnipe = {
                         snipeNumber: snipeInfo.snipeNumber,
                         sniperPlayer: snipeInfo.snipePlayer
                     }
-                    socketEvents.badSnipe(socket, msg);
+                    socketClient.badSnipe(socket, msg);
                     voteButton.onclick = null;
                     voteButton.disabled = true;
                 }
@@ -63,13 +63,13 @@ function createChatElement(sender: string, message: string, image?: ArrayBuffer,
     }
 }
 
-function processMsg(msg: socketEvents.ServerChatMessage, isReplay: boolean) {
+function processMsg(msg: socketClient.ServerChatMessage, isReplay: boolean) {
     if (msg.botMessage) {
         createChatElement('Gamebot3000', msg.botMessage);
     }
     //todo: you can actual work out snipe number ,player, snipecount from game state
     // if game state is upto date
-    createChatElement(game.getUsername(msg.publicId), msg.text, msg.image, { snipeNumber: msg.snipeNumber, snipePlayer: msg.snipePlayer, snipeCount: msg.snipeCount });
+    createChatElement(game.getUsername(msg.publicId), msg.text, msg.image, msg.snipeInfo);
     if (isReplay) {
         return;
     }
@@ -111,13 +111,13 @@ function sendTextMessage(ev: MouseEvent) {
     if (messageElement.value == '') {
         return;
     }
-    let message: socketEvents.ClientChatMessage = {
+    let message: socketClient.ClientChatMessage = {
         text: messageElement.value,
         position: gps.position,
         image: undefined,
         isSnipe: undefined
     }
-    socketEvents.chatMessage(socket, message);
+    socketClient.chatMessage(socket, message);
     messageElement.value = '';
     ev.preventDefault();
     // keep the keyboard open, incase user wants to send another message
@@ -134,7 +134,7 @@ function sendPhotoMessage(ev: MouseEvent) {
         "position": gps.position,
         "isSnipe": (<HTMLInputElement>document.getElementById('is-snipe')).checked,
     }
-    socketEvents.chatMessage(socket, message);
+    socketClient.chatMessage(socket, message);
     (<HTMLInputElement>document.getElementById('message')).value = '';
     (<HTMLInputElement>document.getElementById('photo-message')).value = '';
     (<HTMLInputElement>document.getElementById('photo-input')).value = '';
@@ -200,7 +200,7 @@ function inPlayView() {
     (<HTMLParagraphElement>document.getElementById('time-left')).innerText = String(game.game.timeLeft! / 1000);
 
     //the first time, before they move
-    gps.setup((position) => socketEvents.positionUpdate(socket, position));
+    gps.setup((position) => socketClient.positionUpdate(socket, position));
 }
 
 function targetsMadeView() {
@@ -249,7 +249,7 @@ function refreshProposedTargets(proposedTargetList: number[]) {
     }
 }
 
-function initialization(msg: socketEvents.InitializationMsg) {
+function initialization(msg: socketClient.ServerInitializationMsg) {
     console.log('initialized');
     game.update(msg.gameState);
     for (let message of msg.chatHistory) {
@@ -282,7 +282,7 @@ function initialization(msg: socketEvents.InitializationMsg) {
     }
 };
 
-function badSnipe(msg: socketEvents.ServerBadSnipeMsg) {
+function badSnipe(msg: socketClient.ServerBadSnipeMsg) {
     game.update(msg.gameState);
     setCurrentTarget();
     //go through msg history and mark delete snipes as gone
@@ -312,14 +312,14 @@ function createUserElement(username: string, publicId: number) {
     remove.innerText = 'Remove';
     remove.onclick = function () {
         if (confirm(`Remove ${username} from the game?`)) {
-            socketEvents.removeUser(socket, publicId);
+            socketClient.removeUser(socket, publicId);
         }
     }
     li.appendChild(remove);
     return li;
 }
 
-function newUser(msg: socketEvents.NewUserMsg) {
+function newUser(msg: socketClient.NewUserMsg) {
     game.update(msg.gameState);
     proposedTargetList = game.getSettings().proposedTargetList;
     refreshProposedTargets(proposedTargetList);
@@ -331,7 +331,7 @@ function newUser(msg: socketEvents.NewUserMsg) {
     userList.append(createUserElement(newUser, msg.publicId));
 };
 
-function removeUser(msg: socketEvents.RemoveUserMsg) {
+function removeUser(msg: socketClient.RemoveUserMsg) {
     game.update(msg.gameState);
     proposedTargetList = game.getSettings().proposedTargetList;
     refreshProposedTargets(proposedTargetList);
@@ -344,12 +344,12 @@ function removeUser(msg: socketEvents.RemoveUserMsg) {
     }
 };
 
-function makeTargets(msg: socketEvents.ServerMakeTargetsMsg) {
+function makeTargets(msg: socketClient.ServerMakeTargetsMsg) {
     game.update(msg.gameState);
     targetsMadeView();
 };
 
-function undoMakeTargets(msg: socketEvents.ServerUndoMakeTargetsMsg) {
+function undoMakeTargets(msg: socketClient.ServerUndoMakeTargetsMsg) {
     game.update(msg.gameState);
     //resetting values isn't needed
     // because they should already be in their from the make-targets message
@@ -371,7 +371,7 @@ function undoMakeTargets(msg: socketEvents.ServerUndoMakeTargetsMsg) {
     refreshProposedTargets(proposedTargetList);
 };
 
-function start(msg: socketEvents.ServerStartMsg) {
+function start(msg: socketClient.ServerStartMsg) {
     game.update(msg.gameState);
     inPlayView();
 };
@@ -380,12 +380,12 @@ function finished() {
     location.reload(true);
 };
 
-function timeLeft(msg: socketEvents.ServerTimeLeftMsg) {
+function timeLeft(msg: socketClient.ServerTimeLeftMsg) {
     game.update(msg.gameState);
     updateTimeLeft();
 };
 
-function chatMessage(msg: socketEvents.ServerChatMessage) {
+function chatMessage(msg: socketClient.ServerChatMessage) {
     game.update(msg.gameState);
     processMsg(msg, false);
 
@@ -454,7 +454,7 @@ window.onload = function () {
 
     // do in onload, so that we can't accidentally receive a socket event
     // before dom loaded
-    socket = socketEvents.setup(
+    socket = socketClient.setup(
         gameId,
         privateId,
         initialization,
@@ -496,22 +496,22 @@ window.onload = function () {
         console.log(game.game.state)
         if (game.game.state == game.states.TARGETS_MADE) {
             if (confirm('Start the game?')) {
-                socketEvents.startGame(socket);
+                socketClient.startGame(socket);
             }
         } else {
             var gameLength = Number((<HTMLInputElement>document.getElementById('game-length')).value) * 1000 * 60;
             var countDown = Number((<HTMLInputElement>document.getElementById('count-down')).value) * 1000 * 60;
-            socketEvents.makeTargets(socket, { gameLength: gameLength, countDown: countDown, proposedTargetList: proposedTargetList });
+            socketClient.makeTargets(socket, { gameLength: gameLength, countDown: countDown, proposedTargetList: proposedTargetList });
         }
     }
 
     document.getElementById('undo-make-targets')!.onclick = function (_) {
-        socketEvents.undoMakeTargets(socket);
+        socketClient.undoMakeTargets(socket);
     }
 
     document.getElementById('stop-game')!.onclick = function (_) {
         if (confirm('Finish the game?')) {
-            socketEvents.stopGame(socket);
+            socketClient.stopGame(socket);
         }
     }
 };
