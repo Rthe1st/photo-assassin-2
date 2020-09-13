@@ -36,7 +36,7 @@ const getData = async () => {
         zoom: 17,
         mapTypeId: 'satellite',
     });
-    annotateMap();
+    annotateMap(true);
 }
 
 function setUpPage(gameState: SharedGame.ClientGame) {
@@ -109,7 +109,7 @@ function setUpPage(gameState: SharedGame.ClientGame) {
         input.setAttribute("type", "checkbox");
         input.setAttribute("checked", "true");
         input.addEventListener('change', () => {
-            annotateMap();
+            annotateMap(false);
         });
         input.setAttribute("id", inputId);
         labelItem.appendChild(label);
@@ -262,7 +262,7 @@ function showPhoto(text: string, imageIndex: number) {
 
 var map: google.maps.Map;
 
-function annotateMap() {
+function annotateMap(centerMap: boolean) {
     // it's more efficient if we just add/remove the relevant bits when
     // for a specific option that's been changed
     // but this is more flexible for now
@@ -292,9 +292,11 @@ function annotateMap() {
     //center on when they started
     //instead we should capture the agreed starting point of the game and use that
     //current approach also breaks for observers without a publicId
-    if (publicId) {
-        map.setCenter(mapData["playerPaths"][publicId].getPath().getAt(0));
-    } else {
-        map.setCenter(mapData["playerPaths"][0].getPath().getAt(0));
+    if(centerMap){
+        if (publicId) {
+            map.setCenter(mapData["playerPaths"][publicId].getPath().getAt(0));
+        } else {
+            map.setCenter(mapData["playerPaths"][0].getPath().getAt(0));
+        }
     }
 }
