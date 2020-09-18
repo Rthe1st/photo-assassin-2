@@ -9,7 +9,6 @@ export function makeTargets(msg: socketEvents.ClientMakeTargets, game: Game.Game
   }
   Game.makeTargets(game, msg.gameLength, msg.countDown, msg.proposedTargetList);
   logger.log("verbose", "Making targets", { gameCode: game.code, gameState: game.state });
-  // todo: say who made the targets
   socketInterface.makeTargets(socket, { gameState: Game.gameStateForClient(game) });
 };
 
@@ -30,10 +29,15 @@ export function removeUser(msg: socketEvents.ClientRemoveUser, game: Game.Game, 
   socketInterface.removeUser(socket, { publicId: msg.publicId, gameState: Game.gameStateForClient(game) });
 };
 
-export function start(game: Game.Game, socket: SocketIO.Socket) {
-  if (game.state != Game.states.TARGETS_MADE) {
+export function start(publicId: number, msg: socketEvents.ClientMakeTargets,game: Game.Game, socket: SocketIO.Socket) {
+  if(publicId != 0){
     return;
   }
+  Game.makeTargets(game, msg.gameLength, msg.countDown, msg.proposedTargetList);
+  logger.log("verbose", "Making targets", { gameCode: game.code, gameState: game.state });
+  // if (game.state != Game.states.TARGETS_MADE) {
+  //   return;
+  // }
   Game.start(game);
   logger.log("verbose", "Starting", { gameCode: game.code, gameState: game.state });
   // todo: say who started it

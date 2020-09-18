@@ -46,8 +46,8 @@ export function makeTargets(socket, msg) {
 export function undoMakeTargets(socket) {
     socket.emit('undo make targets');
 }
-export function startGame(socket) {
-    socket.emit('start game');
+export function startGame(socket, msg) {
+    socket.emit('start game', msg);
 }
 export function positionUpdate(socket, position) {
     socket.emit('positionUpdate', position);

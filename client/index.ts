@@ -234,7 +234,7 @@ function targetsMadeView() {
     resetUserList(game.game.userList);
     let deleteButtons = document.getElementsByClassName('delete-user-button');
     for (let i = 0; i < deleteButtons.length; i++) {
-        (<HTMLButtonElement>deleteButtons[i]).disabled = true;
+        (<HTMLButtonElement>deleteButtons[i]).hidden = true;
     }
 }
 
@@ -275,23 +275,29 @@ function initialization(msg: socketClient.ServerInitializationMsg) {
     if (game.game.state == game.states.IN_PLAY) {
         inPlayView();
     } else if (game.game.state == game.states.NOT_STARTED) {
-        proposedTargetList = game.getSettings().proposedTargetList;
         document.getElementById('not-started')!.hidden = false;
-        document.getElementById('undo-make-targets')!.hidden = true;
-        refreshProposedTargets(proposedTargetList);
-        // todo: move into game as isGameReady()
-        if (Object.entries(game.game.userList).length > 1) {
-            document.getElementById('make-targets')!.removeAttribute('disabled');
+        if(publicId != 0){
+            targetsMadeView();
+        }else{
+            proposedTargetList = game.getSettings().proposedTargetList;
+            document.getElementById('not-started')!.hidden = false;
+            document.getElementById('undo-make-targets')!.hidden = true;
+            refreshProposedTargets(proposedTargetList);
+            // todo: move into game as isGameReady()
+            if (Object.entries(game.game.userList).length > 1) {
+                document.getElementById('make-targets')!.removeAttribute('disabled');
+            }
+            resetUserList(game.game.userList);
+            let deleteButtons = document.getElementsByClassName('delete-user-button');
+            for (let i = 0; i < deleteButtons.length; i++) {
+                (<HTMLButtonElement>deleteButtons[i]).hidden = false;
+            }
         }
-        resetUserList(game.game.userList);
-        let deleteButtons = document.getElementsByClassName('delete-user-button');
-        for (let i = 0; i < deleteButtons.length; i++) {
-            (<HTMLButtonElement>deleteButtons[i]).hidden = false;
-        }
-    } else if (game.game.state == game.states.TARGETS_MADE) {
-        document.getElementById('not-started')!.hidden = false;
-        targetsMadeView();
     }
+    //  else if (game.game.state == game.states.TARGETS_MADE) {
+    //     document.getElementById('not-started')!.hidden = false;
+    //     targetsMadeView();
+    // }
 };
 
 function badSnipe(msg: socketClient.ServerBadSnipeMsg) {
@@ -317,16 +323,18 @@ function createUserElement(username: string, publicId: number) {
     text.setAttribute('class', 'user-joined-text')
     text.innerText = username;
     li.appendChild(text);
-    var remove = document.createElement('button');
-    remove.setAttribute('id', `delete-user-${publicId}`);
-    remove.setAttribute('class', 'delete-user-button')
-    remove.innerText = 'Remove';
-    remove.onclick = function () {
-        if (confirm(`Remove ${username} from the game?`)) {
-            socketClient.removeUser(socket, publicId);
+    if(publicId != 0){
+        var remove = document.createElement('button');
+        remove.setAttribute('id', `delete-user-${publicId}`);
+        remove.setAttribute('class', 'delete-user-button')
+        remove.innerText = 'Remove';
+        remove.onclick = function () {
+            if (confirm(`Remove ${username} from the game?`)) {
+                socketClient.removeUser(socket, publicId);
+            }
         }
+        li.appendChild(remove);
     }
-    li.appendChild(remove);
     return li;
 }
 
@@ -342,6 +350,7 @@ function newUser(msg: socketClient.NewUserMsg) {
     userList.append(createUserElement(newUser, msg.publicId));
 };
 
+//todo: merge this into maketargets as just another settings change
 function removeUser(msg: socketClient.RemoveUserMsg) {
     game.update(msg.gameState);
     proposedTargetList = game.getSettings().proposedTargetList;
@@ -357,7 +366,9 @@ function removeUser(msg: socketClient.RemoveUserMsg) {
 
 function makeTargets(msg: socketClient.ServerMakeTargetsMsg) {
     game.update(msg.gameState);
-    targetsMadeView();
+    if(publicId != 0){
+        targetsMadeView();
+    }
 };
 
 function undoMakeTargets(msg: socketClient.ServerUndoMakeTargetsMsg) {
@@ -427,6 +438,7 @@ function chatMessage(msg: socketClient.ServerChatMessage) {
 function shuffleTargets() {
     proposedTargetList = shuffle(proposedTargetList);
     refreshProposedTargets(proposedTargetList);
+    sendMakeTargets();
 }
 
 function hideSnipedScreen() {
@@ -471,6 +483,12 @@ function showGameInfo() {
         sendMessageForm.hidden = false;
         middle.hidden = false;
     }
+}
+
+function sendMakeTargets(){
+    var gameLength = Number((<HTMLInputElement>document.getElementById('game-length')).value) * 1000 * 60;
+    var countDown = Number((<HTMLInputElement>document.getElementById('count-down')).value) * 1000 * 60;
+    socketClient.makeTargets(socket, { gameLength: gameLength, countDown: countDown, proposedTargetList: proposedTargetList });
 }
 
 // gameId needs to be decoded because it contains a '/'
@@ -526,22 +544,21 @@ window.onload = function () {
     document.getElementById('send-message')!.addEventListener('click', sendTextMessage);
     document.getElementById('send-photo-message')!.addEventListener('click', sendPhotoMessage);
 
+    (<HTMLInputElement>document.getElementById('count-down')).onchange = sendMakeTargets;
+
+    (<HTMLInputElement>document.getElementById('game-length')).onchange = sendMakeTargets;
+
     document.getElementById('make-targets')!.onclick = function (_) {
-        console.log(game.game.state)
-        if (game.game.state == game.states.TARGETS_MADE) {
-            if (confirm('Start the game?')) {
-                socketClient.startGame(socket);
-            }
-        } else {
+        if (confirm('Start the game?')) {
             var gameLength = Number((<HTMLInputElement>document.getElementById('game-length')).value) * 1000 * 60;
             var countDown = Number((<HTMLInputElement>document.getElementById('count-down')).value) * 1000 * 60;
-            socketClient.makeTargets(socket, { gameLength: gameLength, countDown: countDown, proposedTargetList: proposedTargetList });
+            socketClient.startGame(socket, { gameLength: gameLength, countDown: countDown, proposedTargetList: proposedTargetList });
         }
     }
 
-    document.getElementById('undo-make-targets')!.onclick = function (_) {
-        socketClient.undoMakeTargets(socket);
-    }
+    // document.getElementById('undo-make-targets')!.onclick = function (_) {
+    //     socketClient.undoMakeTargets(socket);
+    // }
 
     document.getElementById('stop-game')!.onclick = function (_) {
         if (confirm('Finish the game?')) {

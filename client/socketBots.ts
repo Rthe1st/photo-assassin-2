@@ -56,13 +56,13 @@ async function gameSetup(players: Player[]) {
     console.log(`${domain}/game/${details["gameId"]}`);
     let gameId = details.gameId;
     let sockets = new Map();
-    let socket = hostPlayer.algo(details.gameId, details.privateId, hostPlayer, details.publicId);
-    sockets.set(details.publicId, socket);
     for (let player of players) {
         let details = await joinGame(player.name, gameId);
         let socket = player.algo(details.gameId, details.privateId, player, details.publicId);
         sockets.set(details.publicId, socket);
     }
+    let socket = hostPlayer.algo(details.gameId, details.privateId, hostPlayer, details.publicId);
+    sockets.set(details.publicId, socket);
 }
 
 function activePlayer(gameId: string, privateId: string, player: Player) {
@@ -74,16 +74,13 @@ function activePlayer(gameId: string, privateId: string, player: Player) {
         (msg) => {
             console.log('init');
             if (Object.entries(msg.gameState.userList).length > 1) {
-                socketClient.makeTargets(socket, { gameLength: 60000, countDown: 0, proposedTargetList: msg.gameState.chosenSettings.proposedTargetList });
+                socketClient.startGame(socket, { gameLength: 60000, countDown: 0, proposedTargetList: msg.gameState.chosenSettings.proposedTargetList });
             }
         },
         () => { },
         () => { },
         () => { },
-        (_) => {
-            console.log('make targets')
-            socketClient.startGame(socket);
-        },
+        (_) => { },
         () => { },
         (_) => {
             console.log('start')
@@ -257,6 +254,11 @@ function listeningPlayer(gameId: string, privateId: string, player: Player, publ
 export function activeGame() {
     gameSetup([
         {
+            name: 'simpleSloth',
+            algo: activePlayer,
+            position: { latitude: 51.389, longitude: 0.012 }
+        },
+        {
             name: 'p1',
             algo: passivePlayer,
             position: { latitude: 51.389, longitude: 0.012 }
@@ -269,10 +271,6 @@ export function activeGame() {
         {
             name: 'p3',
             algo: passivePlayer,
-            position: { latitude: 51.389, longitude: 0.012 }
-        }, {
-            name: 'simpleSloth',
-            algo: activePlayer,
             position: { latitude: 51.389, longitude: 0.012 }
         }]);
 }

@@ -66,7 +66,7 @@ function socketConnect(
   
     socket.on('remove user', (msg) => socketHandler.removeUser(msg, game, socket));
   
-    socket.on('start game', (_) => socketHandler.start(game, socket));
+    socket.on('start game', (msg) => socketHandler.start(publicId, msg, game, socket));
   
     socket.on('stop game', (_) => socketHandler.stop(game, games, io));
   

@@ -123,7 +123,7 @@ function makeTargets(game: Game, gameLength: number, countDown: number, proposed
     game.targets[player] = targetsBeforePlayer.concat(targetsAfterPlayer);
     game.targetsGot[player] = [];
   }
-  game.state = states.TARGETS_MADE;
+  // game.state = states.TARGETS_MADE;
 }
 
 function undoMakeTargets(game: Game) {

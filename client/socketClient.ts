@@ -71,8 +71,8 @@ export function undoMakeTargets(socket: SocketIOClient.Socket) {
     socket.emit('undo make targets');
 }
 
-export function startGame(socket: SocketIOClient.Socket) {
-    socket.emit('start game');
+export function startGame(socket: SocketIOClient.Socket, msg: SocketEvents.ClientMakeTargets) {
+    socket.emit('start game', msg);
 }
 
 export function positionUpdate(socket: SocketIOClient.Socket, position: SocketEvents.ClientPositionUpdate) {
