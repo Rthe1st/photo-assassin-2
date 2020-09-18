@@ -41,10 +41,16 @@ function updatePosition(geolocationPosition: Position, callback: (position: Shar
     }
     callback(position);
 }
+
+let userNotified = false;
+
 function dontUpdatePosition(err: PositionError): void {
-    alert("geo faild");
-    console.log("geo loc failed");
-    console.log(err);
+    if(!userNotified){
+        userNotified = true;
+        alert("geo faild");
+        console.log("geo loc failed");
+        console.log(err);
+    }
 }
 
 export { setup, position }

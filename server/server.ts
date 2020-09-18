@@ -31,6 +31,7 @@ export function createServer(useSentry = true, port = process.env.PORT || 3000) 
   app.get('/', (req, res) => root(req, res, games));
   app.get('/game/:code', (req, res) => gamePage(req, res, games));
   app.get('/game/:code/images/:id', (req, res) => getImage(req, res, games));
+  app.get('/game/:code/low-res-images/:id', (req, res) => getImage(req, res, games));
 
   var http = new httpServer.Server(app);
 
@@ -175,7 +176,18 @@ function getImage(req: express.Request, res: express.Response, games: Map<string
     return;
   }
 
-  let image = Game.getActualImage(game, parseInt(req.params.id))
+  let image;
+  if(req.path.indexOf('low-res-images') != -1){
+  // if(req.query.lowRes != undefined){
+    image = Game.getActualImage(game, parseInt(req.params.id), true)
+    if(image == undefined){
+      // this happens when sharp hasn't finished resizing the image
+      res.sendStatus(404)
+    }
+  }else{
+    image = Game.getActualImage(game, parseInt(req.params.id), false)
+  }
+
   res.write(image);
 }
 

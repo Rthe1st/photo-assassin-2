@@ -75,7 +75,19 @@ export function chatMsg(msg: socketEvents.ClientChatMessage, game: Game.Game, so
   }
   let imageId: number | undefined
   if (image) {
-    imageId = Game.saveImage(game, image);
+    let res = Game.saveImage(game, image);
+    imageId = res.imageId
+    res.resizePromise
+      .then(lowRes => {
+        game.lowResImages[imageId!] = lowRes
+        socketInterface.resizeDone(socket, {imageId: imageId!});
+      })
+      .catch(err => {
+        console.log(err);
+        // this happens if file is bad type, etc
+        // todo: handle better
+        // for now, just leave it undefined so client sees loader image
+      });
 
     if (wasSnipe) {
       var {botMessage: botMessage, snipeInfo: snipeInfo, gameOver: gameOver} = Game.snipe(game, publicId, imageId, msg.position);
@@ -103,7 +115,8 @@ export function chatMsg(msg: socketEvents.ClientChatMessage, game: Game.Game, so
     imageId: imageId,
     gameState: clientState,
     snipeInfo: snipeInfo,
-    botMessage: botMessage
+    botMessage: botMessage,
+    resizeIsAvailable: game.lowResImages[imageId!] != undefined
   }
 
   game.chatHistory.push(outgoingMsg);

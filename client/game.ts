@@ -1,20 +1,20 @@
 import * as SharedGame from '../shared/game'
 
-const states = Object.freeze({ "NOT_STARTED": "NOT STARTED", "IN_PLAY": "IN PLAY", "TARGETS_MADE": "TARGETS MADE" })
+export const states = Object.freeze({ "NOT_STARTED": "NOT STARTED", "IN_PLAY": "IN PLAY", "TARGETS_MADE": "TARGETS MADE" })
 
-const inPlaySubStates = Object.freeze({ COUNTDOWN: "COUNTDOWN", PLAYING: "PLAYING" })
+export const inPlaySubStates = Object.freeze({ COUNTDOWN: "COUNTDOWN", PLAYING: "PLAYING" })
 
-let game: SharedGame.ClientGame;
+export let game: SharedGame.ClientGame;
 
-function update(updatedGame: SharedGame.ClientGame){
+export function update(updatedGame: SharedGame.ClientGame){
     game = updatedGame;
 }
 
-function getSettings(){
+export function getSettings(){
     return game.chosenSettings;
 }
 
-function getUsername(publicId: number){
+export function getUsername(publicId: number){
     return game.userList[publicId].username;
 }
 
@@ -23,13 +23,13 @@ export function getLastSnipedPlayerId(publicId: number){
     return targetsGot[targetsGot.length - 1];
 }
 
-function getPlayerProgress(publicId: number){
+export function getPlayerProgress(publicId: number){
     let got = game.targetsGot![publicId].length;
     let remaining = got + game.targets![publicId].length;
     return [got, remaining];
 }
 
-function getTarget(publicId: number, snipeNumber?: number){
+export function getTarget(publicId: number, snipeNumber?: number){
     if(snipeNumber == undefined){
         snipeNumber = game.targets![publicId].length;
     }
@@ -54,7 +54,7 @@ export function getProposedTargetPairs(proposedTargetList: number[]){
     return pairs;
 }
 
-function timeLeft(){
+export function timeLeft(){
     //returns in seconds
     if(game.subState == inPlaySubStates.COUNTDOWN){
         return (game.timeLeft! - game.gameLength!) / 1000;
@@ -65,4 +65,6 @@ function timeLeft(){
     }
 }
 
-export { getUsername, getSettings, update, getTarget, states, timeLeft, inPlaySubStates, game, getPlayerProgress}
+export function getSnipeImageId(snipeInfoIndex: number ){
+    return game.snipeInfos[snipeInfoIndex].imageId
+}

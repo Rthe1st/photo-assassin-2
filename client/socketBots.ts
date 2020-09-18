@@ -112,6 +112,7 @@ function activePlayer(gameId: string, privateId: string, player: Player) {
             }
             socketClient.chatMessage(socket, message);
         },
+        () => {},
         domain
     );
     return socket;
@@ -135,6 +136,7 @@ function passivePlayer(gameId: string, privateId: string, player: Player) {
             player.position.longitude! += (Math.random() - 0.5) * 0.001;
             socketClient.positionUpdate(socket, { "latitude": player.position.latitude, "longitude": player.position.longitude });
         },
+        () => {},
         domain
     );
     return socket;
@@ -246,6 +248,7 @@ function listeningPlayer(gameId: string, privateId: string, player: Player, publ
         },
         () => { },
         processCommand,
+        () => {},
         domain
     );
     return socket;

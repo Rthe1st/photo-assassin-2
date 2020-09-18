@@ -2,6 +2,7 @@ import * as crypto from 'crypto';
 import { shuffle } from '../shared/shuffle.js'
 import * as SharedGame from '../shared/game.js'
 import * as SocketEvents from '../shared/socketEvents'
+import sharp from 'sharp'
 
 import socketIo from 'socket.io'
 
@@ -47,11 +48,15 @@ export interface Game {
   // to those in the images key
   // (and even that should just be a ref to images stored not in memory)
   chatHistory: SocketEvents.ServerChatMessage[],
+  //todo: store these in a database
   actualImages: Buffer[],
+  // used to give thumbnail to user
+  // (we only expand to full image when they click)
+  lowResImages: (Buffer|undefined)[],
   // this is set after the game is created, because we need to know the
   // game code in order to define the namespace
   // used to communicate with the sockets where we don't have easy access to the namespace
-  namespace: socketIo.Namespace | undefined
+  namespace: socketIo.Namespace | undefined,
 }
 
 function newGame(code: string): Game {
@@ -76,23 +81,33 @@ function newGame(code: string): Game {
     snipeInfos: [],
     chatHistory: [],
     actualImages: [],
+    lowResImages: [],
     winner: undefined,
     namespace: undefined
   };
 
 }
 
-export function getActualImage(game: Game, id: number){
+export function getActualImage(game: Game, id: number, lowRes = false){
+  if(lowRes){
+    return game.lowResImages[id]    
+  }
   return game.actualImages[id]
 }
 
-export function saveImage(game: Game, image: Buffer): number {
+export function saveImage(game: Game, image: Buffer): {imageId: number, resizePromise: Promise<Buffer>} {
 
   let imageId = game.actualImages.length
 
   game.actualImages.push(image);
 
-  return imageId;
+  // because the resizing is async, reserve our place in the lowRes array
+  game.lowResImages.push(undefined)
+  let resizePromise = sharp(image)
+    .resize(100,100) //todo: choose a better size
+    .toBuffer()
+
+  return {imageId: imageId, resizePromise: resizePromise};
 
 }
 

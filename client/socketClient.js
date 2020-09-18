@@ -1,6 +1,6 @@
 import io from 'socket.io-client';
 export * from '../shared/socketEvents.js';
-export function setup(gameId, privateId, initialization, badSnipe, newUser, removeUser, makeTargets, undoMakeTargets, start, finished, timeLeft, chatMessage, 
+export function setup(gameId, privateId, initialization, badSnipe, newUser, removeUser, makeTargets, undoMakeTargets, start, finished, timeLeft, chatMessage, resizeDone, 
 // this only needs to be supplied when not in a browser
 // otherwise window.location is used
 hostname = '') {
@@ -31,6 +31,7 @@ hostname = '') {
     socket.on('error', (err) => console.log(err));
     socket.on('disconnect', (reason) => console.log(reason));
     socket.on('disconnecting', (reason) => console.log(reason));
+    socket.on('resize done', resizeDone);
     return socket;
 }
 export function chatMessage(socket, message) {

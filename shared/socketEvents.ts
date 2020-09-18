@@ -25,6 +25,8 @@ export interface ServerTimeLeftMsg { gameState: SharedGame.ClientGame }
 
 export interface ServerStartMsg { gameState: SharedGame.ClientGame }
 
+export interface ServerResizeDone {imageId: number}
+
 export type SnipeInfo = SharedGame.SnipeInfo
 
 export interface ServerChatMessage {
@@ -33,7 +35,9 @@ export interface ServerChatMessage {
     imageId?: number,
     snipeInfo?: SnipeInfo,
     botMessage?: string,
-    gameState: SharedGame.ClientGame
+    //todo: remove this - it massivly explodes size of chathistory
+    gameState: SharedGame.ClientGame,
+    resizeIsAvailable: boolean
   }
 
 export type ClientPositionUpdate = SharedGame.Position

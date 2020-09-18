@@ -10,7 +10,8 @@ Sentry.init({ dsn: process.env.BROWSER_SENTRY });
 if (process.env.SENTRY_TESTS == "true") {
     Sentry.captureException(new Error("sentry test in index.js"));
 }
-function createChatElement(sender: string, message: string, imageId?: number, snipeInfo?: SharedGame.SnipeInfo) {
+
+function createChatElement(sender: string, message: string, imageId?: number, snipeInfo?: SharedGame.SnipeInfo, resizeIsAvailable?: boolean) {
     var li = document.createElement('li');
     let messages = document.getElementById('messages')!
     messages.appendChild(li);
@@ -36,9 +37,16 @@ function createChatElement(sender: string, message: string, imageId?: number, sn
         li.appendChild(paragraph);
     }
     if (imageId != undefined) {
+        console.log('chat message, image id ' + imageId)
         var img = new Image;
         img.classList.add('message-image');
-        img.src = window.location.href + `/images/${imageId}`;
+        img.setAttribute('id', `image-${imageId}`)
+        console.log(resizeIsAvailable)
+        if(resizeIsAvailable){
+            img.src = window.location.href + `/low-res-images/${imageId}`;
+        }else{
+            img.src = '/static/shitty_loader.jpg';
+        }
         let snipeScreenText = `From: ${sender}`
         if(snipeInfo != undefined){
             snipeScreenText += `target: ${game.getUsername(snipeInfo.target)}`
@@ -49,7 +57,7 @@ function createChatElement(sender: string, message: string, imageId?: number, sn
         img.onclick = () => showSnipedScreen(snipeScreenText, imageId);
         li.appendChild(img);
         if (snipeInfo != undefined) {
-            img.setAttribute('id', `snipe-${snipeInfo.index}`)
+            // img.setAttribute('id', `snipe-${snipeInfo.index}`)
             var voteButton = document.createElement('button');
             voteButton.setAttribute('class', 'vote-button')
             let targetUser = game.getUsername(snipeInfo.target);
@@ -76,7 +84,8 @@ function processMsg(msg: socketClient.ServerChatMessage, isReplay: boolean) {
     if (msg.botMessage) {
         createChatElement('Gamebot3000', msg.botMessage);
     }
-    createChatElement(game.getUsername(msg.publicId), msg.text, msg.imageId, msg.snipeInfo);
+
+    createChatElement(game.getUsername(msg.publicId), msg.text, msg.imageId, msg.snipeInfo, msg.resizeIsAvailable);
     if (isReplay) {
         return;
     }
@@ -230,7 +239,8 @@ function targetsMadeView() {
 }
 
 function markSnipeAsBad(snipeInfosIndex: number) {
-    let snipeImage = document.getElementById(`snipe-${snipeInfosIndex}`)!;
+    let imageId = game.getSnipeImageId(snipeInfosIndex)
+    let snipeImage = document.getElementById(`image-${imageId}`)!;
     if (!document.getElementById(`snipe-text-${snipeInfosIndex}`)) {
         var undotext = document.createElement('p');
         undotext.innerText = "BAD SNIPE";
@@ -386,6 +396,21 @@ function timeLeft(msg: socketClient.ServerTimeLeftMsg) {
     updateTimeLeft();
 };
 
+function resizeDone(msg: socketClient.ServerResizeDone){
+    let a = (<HTMLImageElement>document.getElementById(`image-${msg.imageId}`))
+    // it could be null if the resize was done very fast
+    // and this gets sent before the actual message with the image
+    console.log('resize done')
+    console.log(a.src)
+    console.log(msg)
+    if(a != null){
+        a.src = window.location.href + `/low-res-images/${msg.imageId}`;
+    }
+    a.hidden = true;
+    a.hidden = false;
+    console.log(a.src)
+}
+
 function chatMessage(msg: socketClient.ServerChatMessage) {
     game.update(msg.gameState);
     processMsg(msg, false);
@@ -413,6 +438,10 @@ function showSnipedScreen(msg: string, imageId: number, shouldVibrate = false) {
     document.getElementById('main-in-play')!.hidden = true;
     document.getElementById('sniped-screen')!.hidden = false;
     document.getElementById('sniped-alert-text')!.innerText = msg;
+    // todo: image id seems to get stuck at 0?
+    // also loading gif doesnt seem to be reloading after source change
+    console.log('show sniped screen')
+    console.log(imageId);
     (<HTMLImageElement>document.getElementById('snipe-image')).src = window.location.href + `/images/${imageId}`;
     // todo: this broken on firefox mobile
     if(shouldVibrate){
@@ -470,7 +499,8 @@ window.onload = function () {
         start,
         finished,
         timeLeft,
-        chatMessage
+        chatMessage,
+        resizeDone,
     );
 
     document.getElementById("exit-sniped-screen")!.addEventListener('click', hideSnipedScreen);

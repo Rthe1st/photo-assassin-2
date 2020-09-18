@@ -16,6 +16,7 @@ export function setup(
     finished: (msg: SocketEvents.ServerFinishedMsg) => void,
     timeLeft: (msg: SocketEvents.ServerTimeLeftMsg) => void,
     chatMessage: (msg: SocketEvents.ServerChatMessage) => void,
+    resizeDone: (msg: SocketEvents.ServerResizeDone) => void,
     // this only needs to be supplied when not in a browser
     // otherwise window.location is used
     hostname = ''
@@ -50,7 +51,7 @@ export function setup(
     socket.on('error', (err: any) => console.log(err));
     socket.on('disconnect', (reason: any) => console.log(reason));
     socket.on('disconnecting', (reason: any) => console.log(reason));
-
+    socket.on('resize done', resizeDone);
     return socket;
 }
 

@@ -1,5 +1,6 @@
 import * as Game from './game.js';
 import * as assert from 'assert';
+import * as fs from 'fs'
 
 export function basicGame() {
     var game = Game.newGame("fakegamecode");
@@ -13,16 +14,17 @@ export function basicGame() {
     Game.makeTargets(game, 40, 5, game.chosenSettings!.proposedTargetList);
     Game.start(game);
     Game.updatePosition(game, publicId2, { longitude: 1, latitude: 1 });
-    let imageId = Game.saveImage(game, new Buffer('not a real image'));
-    let {snipeInfo: snipeInfo} = Game.snipe(game, publicId2, imageId);
+    var photo = fs.readFileSync('./server/sample_snipe_image.jpeg');
+    let {imageId: imageId1} = Game.saveImage(game, photo);
+    let {snipeInfo: snipeInfo} = Game.snipe(game, publicId2, imageId1);
     // publicId2 is undoing their own snipe
     let undoneSnipes = Game.badSnipe(game, snipeInfo.index, publicId2);
     assert.notEqual(undoneSnipes, undefined)
     assert.equal(undoneSnipes!.length, 1)
-    imageId = Game.saveImage(game, new Buffer('not a real image'));
-    var snipeRes = Game.snipe(game, publicId2, imageId);
-    imageId = Game.saveImage(game, new Buffer('not a real image'));
-    var snipeRes = Game.snipe(game, publicId2, imageId);
+    let {imageId: imageId2} = Game.saveImage(game, photo);
+    var snipeRes = Game.snipe(game, publicId2, imageId2);
+    let {imageId: imageId3} = Game.saveImage(game, photo);
+    var snipeRes = Game.snipe(game, publicId2, imageId3);
     if (snipeRes.gameOver) {
         Game.finishGame(game, "made-up-code", publicId.toString());
         console.log("game over, success!");
