@@ -373,28 +373,6 @@ function makeTargets(msg: socketClient.ServerMakeTargetsMsg) {
     }
 };
 
-function undoMakeTargets(msg: socketClient.ServerUndoMakeTargetsMsg) {
-    game.update(msg.gameState);
-    //resetting values isn't needed
-    // because they should already be in their from the make-targets message
-    (<HTMLInputElement>document.getElementById('game-length')).value = String(game.getSettings().gameLength! / 1000 / 60);
-    (<HTMLInputElement>document.getElementById('count-down')).value = String(game.getSettings().countDown! / 1000 / 60);
-    document.getElementById('undo-make-targets')!.hidden = true;
-    document.getElementById('game-length')!.removeAttribute('readonly');
-    document.getElementById('game-length')!.removeAttribute('class');
-    document.getElementById('count-down')!.removeAttribute('readonly');
-    document.getElementById('count-down')!.removeAttribute('class');
-    (<HTMLButtonElement>document.getElementById('shuffle-targets')).disabled = false;
-    document.getElementById('make-targets')!.innerText = "Lock settings?";
-    let deleteButtons = document.getElementsByClassName('delete-user-button');
-    for (let i = 0; i < deleteButtons.length; i++) {
-        (<HTMLButtonElement>deleteButtons[i]).disabled = false;
-    }
-
-    proposedTargetList = game.getSettings().proposedTargetList;
-    refreshProposedTargets(proposedTargetList);
-};
-
 function start(msg: socketClient.ServerStartMsg) {
     game.update(msg.gameState);
     inPlayView();
@@ -515,7 +493,6 @@ window.onload = function () {
         newUser,
         removeUser,
         makeTargets,
-        undoMakeTargets,
         start,
         finished,
         timeLeft,
@@ -557,10 +534,6 @@ window.onload = function () {
             socketClient.startGame(socket, { gameLength: gameLength, countDown: countDown, proposedTargetList: proposedTargetList });
         }
     }
-
-    // document.getElementById('undo-make-targets')!.onclick = function (_) {
-    //     socketClient.undoMakeTargets(socket);
-    // }
 
     document.getElementById('stop-game')!.onclick = function (_) {
         if (confirm('Finish the game?')) {

@@ -11,7 +11,6 @@ export function setup(
     newUser: (msg: SocketEvents.NewUserMsg) => void,
     removeUser: (msg: SocketEvents.RemoveUserMsg) => void,
     makeTargets: (msg: SocketEvents.ServerMakeTargetsMsg) => void,
-    undoMakeTargets: (msg: SocketEvents.ServerUndoMakeTargetsMsg) => void,
     start: (msg: SocketEvents.ServerStartMsg) => void,
     finished: (msg: SocketEvents.ServerFinishedMsg) => void,
     timeLeft: (msg: SocketEvents.ServerTimeLeftMsg) => void,
@@ -40,8 +39,6 @@ export function setup(
     socket.on('New user', newUser);
     socket.on('Remove user', removeUser);
     socket.on('make targets', makeTargets);
-    // targets made
-    socket.on('undo make targets', undoMakeTargets);
     socket.on('start', start);
     // in game events
     socket.on('chat message', chatMessage);
@@ -65,10 +62,6 @@ export function badSnipe(socket: SocketIOClient.Socket, msg: SocketEvents.Client
 
 export function makeTargets(socket: SocketIOClient.Socket, msg: SocketEvents.ClientMakeTargets) {
     socket.emit('make targets', msg);
-}
-
-export function undoMakeTargets(socket: SocketIOClient.Socket) {
-    socket.emit('undo make targets');
 }
 
 export function startGame(socket: SocketIOClient.Socket, msg: SocketEvents.ClientMakeTargets) {

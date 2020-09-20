@@ -62,8 +62,6 @@ function socketConnect(
   
     socket.on('make targets', (msg) => socketHandler.makeTargets(msg, game, socket));
   
-    socket.on('undo make targets', (_) => socketHandler.undoMakeTargets(game, socket));
-  
     socket.on('remove user', (msg) => socketHandler.removeUser(msg, game, socket));
   
     socket.on('start game', (msg) => socketHandler.start(publicId, msg, game, socket));
@@ -88,10 +86,6 @@ export function resizeDone(socket: SocketIO.Socket, msg: socketEvents.ServerResi
 
 export function makeTargets(socket: SocketIO.Socket, msg: socketEvents.ServerMakeTargetsMsg){
   socket.nsp.emit('make targets', msg);
-}
-
-export function undoMakeTargets(socket: SocketIO.Socket, msg: socketEvents.ServerUndoMakeTargetsMsg){
-  socket.nsp.emit('undo make targets', msg);
 }
 
 export function removeUser(socket: SocketIO.Socket, msg: socketEvents.RemoveUserMsg){

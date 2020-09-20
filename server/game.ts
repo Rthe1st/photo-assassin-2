@@ -126,14 +126,6 @@ function makeTargets(game: Game, gameLength: number, countDown: number, proposed
   // game.state = states.TARGETS_MADE;
 }
 
-function undoMakeTargets(game: Game) {
-  game.gameLength = undefined;
-  game.countDown = undefined;
-  game.targets = {};
-  game.targetsGot = {};
-  game.state = states.NOT_STARTED;
-}
-
 function start(game: Game) {
   game.startTime = Date.now();
   game.state = states.IN_PLAY;
@@ -326,4 +318,4 @@ function generateGame(numberOfGames: number) {
   return game;
 }
 
-export { newGame, makeTargets, states, undoMakeTargets, start, inPlaySubStates, snipe, gameStateForClient, addPlayer, removePlayer, finishGame, updatePosition, badSnipe, generateGame };
+export { newGame, makeTargets, states, start, inPlaySubStates, snipe, gameStateForClient, addPlayer, removePlayer, finishGame, updatePosition, badSnipe, generateGame };

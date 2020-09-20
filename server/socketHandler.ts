@@ -12,14 +12,6 @@ export function makeTargets(msg: socketEvents.ClientMakeTargets, game: Game.Game
   socketInterface.makeTargets(socket, { gameState: Game.gameStateForClient(game) });
 };
 
-export function undoMakeTargets(game: Game.Game, socket: SocketIO.Socket) {
-  if (game.state != Game.states.TARGETS_MADE) {
-    return;
-  }
-  Game.undoMakeTargets(game);
-  socketInterface.undoMakeTargets(socket, {gameState: Game.gameStateForClient(game)})
-};
-
 export function removeUser(msg: socketEvents.ClientRemoveUser, game: Game.Game, socket: SocketIO.Socket) {
   //todo: kill the socket connection of the removed user
   if (game.state != Game.states.NOT_STARTED) {

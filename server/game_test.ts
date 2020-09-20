@@ -9,8 +9,6 @@ export function basicGame() {
     const { publicId: publicId2 } = Game.addPlayer(game, "player2");
     Game.addPlayer(game, "player3");
     Game.addPlayer(game, "player4");
-    Game.makeTargets(game, 60, 10, game.chosenSettings!.proposedTargetList);
-    Game.undoMakeTargets(game);
     Game.makeTargets(game, 40, 5, game.chosenSettings!.proposedTargetList);
     Game.start(game);
     Game.updatePosition(game, publicId2, { longitude: 1, latitude: 1 });

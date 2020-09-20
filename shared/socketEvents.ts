@@ -13,8 +13,6 @@ export interface RemoveUserMsg {
     publicId: number, gameState: SharedGame.ClientGame
 }
 
-export interface ServerUndoMakeTargetsMsg { gameState: SharedGame.ClientGame }
-
 export interface ServerMakeTargetsMsg { gameState: SharedGame.ClientGame }
 
 export interface ServerBadSnipeMsg { gameState: SharedGame.ClientGame, undoneSnipeIndexes: number[] }

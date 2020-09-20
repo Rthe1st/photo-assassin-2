@@ -87,7 +87,6 @@ function activePlayer(gameId: string, privateId: string, player: Player) {
         },
         () => { },
         () => { },
-        () => { },
         (_) => { },
         () => { },
         (_) => {
@@ -127,7 +126,6 @@ function passivePlayer(gameId: string, privateId: string, player: Player) {
     let socket = socketClient.setup(
         gameId,
         privateId,
-        () => { },
         () => { },
         () => { },
         () => { },
@@ -231,7 +229,6 @@ function listeningPlayer(gameId: string, privateId: string, player: Player, publ
                 }
             }
         },
-        () => { },
         () => { },
         (msg) => {
             //remove user
