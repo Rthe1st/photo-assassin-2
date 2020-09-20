@@ -45,24 +45,32 @@ interface Player {
     position: SharedGame.Position;
 }
 
-async function gameSetup(players: Player[]) {
+async function gameSetup(players: Player[], gameId: string|undefined) {
     if (players.length == 0) {
-        console.log("no player supplied")
+        console.log("no players supplied")
         return;
     }
-    let hostPlayer = players.shift()!;
-    let details = await makeGame(hostPlayer.name);
-    console.log(details);
-    console.log(`${domain}/game/${details["gameId"]}`);
-    let gameId = details.gameId;
+    let hostPlayer: Player | undefined;
+    let details;
+
+    let wasGamePremade = gameId != undefined
+    if(!wasGamePremade){
+        hostPlayer = players.shift()!;
+        details = await makeGame(hostPlayer.name);
+        console.log(details);
+        console.log(`${domain}/game/${details["gameId"]}`);
+        gameId = details.gameId;
+    }
     let sockets = new Map();
     for (let player of players) {
-        let details = await joinGame(player.name, gameId);
+        let details = await joinGame(player.name, gameId!);
         let socket = player.algo(details.gameId, details.privateId, player, details.publicId);
         sockets.set(details.publicId, socket);
     }
-    let socket = hostPlayer.algo(details.gameId, details.privateId, hostPlayer, details.publicId);
-    sockets.set(details.publicId, socket);
+    if(!wasGamePremade){
+        let socket = hostPlayer!.algo(details.gameId, details.privateId, hostPlayer!, details.publicId);
+        sockets.set(details.publicId, socket);
+    }
 }
 
 function activePlayer(gameId: string, privateId: string, player: Player) {
@@ -272,10 +280,11 @@ export function activeGame() {
             name: 'p3',
             algo: passivePlayer,
             position: { latitude: 51.389, longitude: 0.012 }
-        }]);
+        }],
+        undefined);
 }
 
-export function passiveGame() {
+export function passiveGame(gameCode?: string) {
     gameSetup([
         {
             name: 'p1',
@@ -295,10 +304,11 @@ export function passiveGame() {
             name: 'simpleSloth',
             algo: passivePlayer,
             position: { latitude: 51.389, longitude: 0.012 }
-        }]);
+        }],
+        gameCode);
 }
 
-export function listenGame() {
+export function listenGame(gameCode?: string) {
     gameSetup([
         {
             name: 'p1',
@@ -318,5 +328,6 @@ export function listenGame() {
             name: 'simpleSloth',
             algo: listeningPlayer,
             position: { latitude: 51.389, longitude: 0.012 }
-        }]);
+        }],
+        gameCode);
 }

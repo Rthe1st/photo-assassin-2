@@ -14,12 +14,14 @@ if (process.env.NODE_ENV == "production") {
 } else {
     // wrap in an async so we can dynamically import socketClient
     // which means we don't need to install dev dependencies in production
-    // where socketclient is never used
+    // where socketClient is never used
     (async () => {
         let socketClient = await import('../client/socketBots.js');
+        let gameCodeSpecified = process.argv.indexOf("--game-code")
         if (process.argv.includes("--prod")) {
             socketClient.useProd();
-        } else {
+        } else if (gameCodeSpecified == -1){
+            // if game code specified, server must already be running
             Logging.setUpLogging('realGame');
             Server.createServer();
         }
@@ -29,16 +31,21 @@ if (process.env.NODE_ENV == "production") {
             return;
         }
         let clientTypeIndex = clientsSpecified + 1
+
+        let gameCode
+        if (gameCodeSpecified != -1 && gameCodeSpecified < process.argv.length) {
+            gameCode = process.argv[gameCodeSpecified + 1]
+        }
         if (clientTypeIndex < process.argv.length) {
             switch (process.argv[clientTypeIndex]) {
                 case "active":
                     socketClient.activeGame();
                     break;
                 case "passive":
-                    socketClient.passiveGame();
+                    socketClient.passiveGame(gameCode);
                     break;
                 case "listen":
-                    socketClient.listenGame();
+                    socketClient.listenGame(gameCode);
                     break;
                 default:
                     console.log('unrecognized arguments');

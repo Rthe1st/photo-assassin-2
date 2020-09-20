@@ -188,7 +188,7 @@ function setSnipe(unset: boolean) {
 }
 
 function markNotSnipe(_: MouseEvent) {
-    //dont think this needs to check game state
+    // don't think this needs to check game state
     // because if theres not game state the button will be hidden
     if (game.game.subState == game.inPlaySubStates.COUNTDOWN) {
         alert("Can't snipe yet - wait to countdown is over");
@@ -198,7 +198,7 @@ function markNotSnipe(_: MouseEvent) {
 }
 
 function markSnipe(_: MouseEvent) {
-    //dont think this needs to check game state
+    // don't think this needs to check game state
     // because if theres not game state the button will be hidden
     if (game.game.subState == game.inPlaySubStates.COUNTDOWN) {
         alert("Can't snipe yet - wait to countdown is over");
@@ -294,10 +294,6 @@ function initialization(msg: socketClient.ServerInitializationMsg) {
             }
         }
     }
-    //  else if (game.game.state == game.states.TARGETS_MADE) {
-    //     document.getElementById('not-started')!.hidden = false;
-    //     targetsMadeView();
-    // }
 };
 
 function badSnipe(msg: socketClient.ServerBadSnipeMsg) {
@@ -323,7 +319,13 @@ function createUserElement(username: string, publicId: number) {
     text.setAttribute('class', 'user-joined-text')
     text.innerText = username;
     li.appendChild(text);
-    if(publicId != 0){
+    if(publicId == 0){
+        var remove = document.createElement('button');
+        remove.setAttribute('class', 'delete-user-button')
+        remove.disabled = true;
+        remove.innerText = 'Creator';
+        li.appendChild(remove);
+    }else{
         var remove = document.createElement('button');
         remove.setAttribute('id', `delete-user-${publicId}`);
         remove.setAttribute('class', 'delete-user-button')
