@@ -54,7 +54,7 @@ export function createServer(useSentry = true, port = process.env.PORT || 3000) 
 
   http.listen(port);
 
-  setInterval(() => { socketHandler.checkGameTiming(games , io) }, 1000);
+  setInterval(() => { socketHandler.checkGameTiming(games , io) }, 10000);
 }
 
 function addSentry(app: express.Application) {

@@ -168,9 +168,20 @@ function setCurrentTarget() {
     targetElement.innerText = game.getTarget(publicId, undefined);
 }
 
-function updateTimeLeft() {
-    (<HTMLParagraphElement>document.getElementById('sub-state')!).innerText = game.game.subState!;
-    (<HTMLParagraphElement>document.getElementById('time-left')!).innerText = String(game.timeLeft());
+function updateTimeLeft(sync: boolean = true) {
+    let timeLeftElement = (<HTMLParagraphElement>document.getElementById('time-left')!)
+    if(sync){
+        (<HTMLParagraphElement>document.getElementById('sub-state')!).innerText = game.game.subState!;
+        timeLeftElement.innerText = String(game.timeLeft());
+    }else{
+        // todo: we should probably update it on the local gamestate
+        let localTimeLeft = parseInt(timeLeftElement.innerText)
+        localTimeLeft -= 1;
+        if(localTimeLeft < 0){
+            localTimeLeft = 0;
+        }
+        timeLeftElement.innerText = String(localTimeLeft);
+    }
 }
 
 function setSnipe(unset: boolean) {
@@ -366,6 +377,7 @@ function refreshSettings(msg: socketClient.ServerUpdateSettingsMsg) {
 function start(msg: socketClient.ServerStartMsg) {
     game.update(msg.gameState);
     inPlayView();
+    setInterval(() => updateTimeLeft(false), 1000)
 };
 
 function finished() {

@@ -57,9 +57,9 @@ export function getProposedTargetPairs(proposedTargetList: number[]){
 export function timeLeft(){
     //returns in seconds
     if(game.subState == inPlaySubStates.COUNTDOWN){
-        return (game.timeLeft! - game.chosenSettings.gameLength!) / 1000;
+        return Math.round((game.timeLeft! - game.chosenSettings.gameLength) / 1000);
     }else if(game.subState == inPlaySubStates.PLAYING){
-        return (game.timeLeft!) / 1000;
+        return Math.round((game.timeLeft!) / 1000);
     }else{
         console.log("error, timeleft called in invalid substate " + game.subState)
     }
