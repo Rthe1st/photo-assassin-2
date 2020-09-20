@@ -219,15 +219,13 @@ function inPlayView() {
     gps.setup((position) => socketClient.positionUpdate(socket, position));
 }
 
-function targetsMadeView() {
-    refreshProposedTargets(game.getSettings().proposedTargetList);
-    document.getElementById('make-targets')!.removeAttribute('disabled');
-    document.getElementById('make-targets')!.innerText = "Start";
-    document.getElementById('undo-make-targets')!.hidden = false;
-    (<HTMLInputElement>document.getElementById('game-length')).value = String(game.game.gameLength! / 1000 / 60);
+function readOnlyView() {
+    let settings = game.getSettings();
+    refreshProposedTargets(settings.proposedTargetList);
+    (<HTMLInputElement>document.getElementById('game-length')).value = String(settings.gameLength / 1000 / 60);
     document.getElementById('game-length')!.setAttribute('readonly', '');
     document.getElementById('game-length')!.setAttribute('class', 'look-disabled');
-    (<HTMLInputElement>document.getElementById('count-down')).value = String(game.game.countDown! / 1000 / 60);
+    (<HTMLInputElement>document.getElementById('count-down')).value = String(settings.countDown / 1000 / 60);
     document.getElementById('count-down')!.setAttribute('readonly', '');
     document.getElementById('count-down')!.setAttribute('class', 'look-disabled');
     (<HTMLButtonElement>document.getElementById('shuffle-targets')).disabled = true;
@@ -277,15 +275,14 @@ function initialization(msg: socketClient.ServerInitializationMsg) {
     } else if (game.game.state == game.states.NOT_STARTED) {
         document.getElementById('not-started')!.hidden = false;
         if(publicId != 0){
-            targetsMadeView();
+            readOnlyView();
         }else{
             proposedTargetList = game.getSettings().proposedTargetList;
             document.getElementById('not-started')!.hidden = false;
-            document.getElementById('undo-make-targets')!.hidden = true;
             refreshProposedTargets(proposedTargetList);
             // todo: move into game as isGameReady()
             if (Object.entries(game.game.userList).length > 1) {
-                document.getElementById('make-targets')!.removeAttribute('disabled');
+                document.getElementById('start')!.removeAttribute('disabled');
             }
             resetUserList(game.game.userList);
             let deleteButtons = document.getElementsByClassName('delete-user-button');
@@ -344,32 +341,25 @@ function newUser(msg: socketClient.NewUserMsg) {
     game.update(msg.gameState);
     proposedTargetList = game.getSettings().proposedTargetList;
     refreshProposedTargets(proposedTargetList);
-    if (Object.entries(game.game.userList).length > 1) {
-        document.getElementById('make-targets')!.removeAttribute('disabled');
+    if (publicId == 0 && Object.entries(game.game.userList).length > 1) {
+        document.getElementById('start')!.removeAttribute('disabled');
     }
     let newUser = game.getUsername(msg.publicId);
     var userList = document.getElementById('user-list')!;
     userList.append(createUserElement(newUser, msg.publicId));
 };
 
-//todo: merge this into maketargets as just another settings change
 function removeUser(msg: socketClient.RemoveUserMsg) {
     game.update(msg.gameState);
     proposedTargetList = game.getSettings().proposedTargetList;
     refreshProposedTargets(proposedTargetList);
     resetUserList(game.game.userList);
-    if (publicId == msg.publicId) {
-        //delete our cookie and reload
-        // so we look like a brandnew user
-        document.cookie = name + '=; Max-Age=-99999999;';
-        location.reload(true);
-    }
 };
 
-function makeTargets(msg: socketClient.ServerMakeTargetsMsg) {
+function refreshSettings(msg: socketClient.ServerUpdateSettingsMsg) {
     game.update(msg.gameState);
     if(publicId != 0){
-        targetsMadeView();
+        readOnlyView();
     }
 };
 
@@ -418,7 +408,7 @@ function chatMessage(msg: socketClient.ServerChatMessage) {
 function shuffleTargets() {
     proposedTargetList = shuffle(proposedTargetList);
     refreshProposedTargets(proposedTargetList);
-    sendMakeTargets();
+    updateSettings();
 }
 
 function hideSnipedScreen() {
@@ -465,10 +455,10 @@ function showGameInfo() {
     }
 }
 
-function sendMakeTargets(){
+function updateSettings(){
     var gameLength = Number((<HTMLInputElement>document.getElementById('game-length')).value) * 1000 * 60;
     var countDown = Number((<HTMLInputElement>document.getElementById('count-down')).value) * 1000 * 60;
-    socketClient.makeTargets(socket, { gameLength: gameLength, countDown: countDown, proposedTargetList: proposedTargetList });
+    socketClient.updateSettings(socket, { gameLength: gameLength, countDown: countDown, proposedTargetList: proposedTargetList });
 }
 
 // gameId needs to be decoded because it contains a '/'
@@ -492,7 +482,7 @@ window.onload = function () {
         badSnipe,
         newUser,
         removeUser,
-        makeTargets,
+        refreshSettings,
         start,
         finished,
         timeLeft,
@@ -523,11 +513,11 @@ window.onload = function () {
     document.getElementById('send-message')!.addEventListener('click', sendTextMessage);
     document.getElementById('send-photo-message')!.addEventListener('click', sendPhotoMessage);
 
-    (<HTMLInputElement>document.getElementById('count-down')).onchange = sendMakeTargets;
+    (<HTMLInputElement>document.getElementById('count-down')).onchange = updateSettings;
 
-    (<HTMLInputElement>document.getElementById('game-length')).onchange = sendMakeTargets;
+    (<HTMLInputElement>document.getElementById('game-length')).onchange = updateSettings;
 
-    document.getElementById('make-targets')!.onclick = function (_) {
+    document.getElementById('start')!.onclick = function (_) {
         if (confirm('Start the game?')) {
             var gameLength = Number((<HTMLInputElement>document.getElementById('game-length')).value) * 1000 * 60;
             var countDown = Number((<HTMLInputElement>document.getElementById('count-down')).value) * 1000 * 60;

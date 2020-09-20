@@ -60,7 +60,7 @@ function socketConnect(
     // todo: can we do a switch statement on socket event
     // and cast the event name to an enum, to check we cover all options?
   
-    socket.on('make targets', (msg) => socketHandler.makeTargets(msg, game, socket));
+    socket.on('update settings', (msg) => socketHandler.updateSettings(msg, game, socket));
   
     socket.on('remove user', (msg) => socketHandler.removeUser(msg, game, socket));
   
@@ -84,8 +84,8 @@ export function resizeDone(socket: SocketIO.Socket, msg: socketEvents.ServerResi
   socket.nsp.emit('resize done', msg);  
 }
 
-export function makeTargets(socket: SocketIO.Socket, msg: socketEvents.ServerMakeTargetsMsg){
-  socket.nsp.emit('make targets', msg);
+export function updateSettings(socket: SocketIO.Socket, msg: socketEvents.ServerUpdateSettingsMsg){
+  socket.nsp.emit('update settings', msg);
 }
 
 export function removeUser(socket: SocketIO.Socket, msg: socketEvents.RemoveUserMsg){

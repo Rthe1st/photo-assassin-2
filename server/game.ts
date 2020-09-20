@@ -8,15 +8,12 @@ import socketIo from 'socket.io'
 
 import { logger } from './logging.js'
 
-const states = Object.freeze({ "FINISHED": "FINISHED", "NOT_STARTED": "NOT STARTED", "IN_PLAY": "IN PLAY", "TARGETS_MADE": "TARGETS MADE" })
+const states = Object.freeze({ "FINISHED": "FINISHED", "NOT_STARTED": "NOT STARTED", "IN_PLAY": "IN PLAY" })
 
 const inPlaySubStates = Object.freeze({ COUNTDOWN: "COUNTDOWN", PLAYING: "PLAYING" })
 
 export interface Game {
-  // this is the settings chosen by the users before maketargets
-  // useful for settings that are now easy to derive from gamestate
-  // list proposed target list
-  chosenSettings: { gameLength?: number, countDown?: number, proposedTargetList: number[] },
+  chosenSettings: SharedGame.Settings,
   code: string,
   // todo: make enum
   state: string,
@@ -32,8 +29,6 @@ export interface Game {
   targetsGot: { [key: number]: number[] },
   positions: Map<number, any>,
   startTime: number | undefined,
-  gameLength: number | undefined,
-  countDown: number | undefined,
   timeLeft: number | undefined,
   nextCode: string | undefined,
   // this is used to look up the current head of a players snipeInfos
@@ -61,7 +56,10 @@ export interface Game {
 
 function newGame(code: string): Game {
   return {
-    chosenSettings: { proposedTargetList: [] },
+    chosenSettings: {
+      gameLength: 5 * 60 * 1000,
+      countDown: 5 * 60 * 1000,proposedTargetList: []
+    },
     code: code,
     state: states.NOT_STARTED,
     subState: undefined,
@@ -73,8 +71,6 @@ function newGame(code: string): Game {
     positions: new Map(),
     // we could avoid a lot of undefined if we put them on another type like `ingamestate`
     startTime: undefined,
-    gameLength: undefined,
-    countDown: undefined,
     timeLeft: undefined,
     nextCode: undefined,
     latestSnipeIndexes: [],
@@ -111,25 +107,23 @@ export function saveImage(game: Game, image: Buffer): {imageId: number, resizePr
 
 }
 
-function makeTargets(game: Game, gameLength: number, countDown: number, proposedTargetList: number[]) {
+function updateSettings(game: Game, gameLength: number, countDown: number, proposedTargetList: number[]) {
+  // todo: validate
   game.chosenSettings = { gameLength: gameLength, countDown: countDown, proposedTargetList: proposedTargetList };
-  game.gameLength = gameLength;
-  game.countDown = countDown;
+}
+
+function start(game: Game) {
+  game.startTime = Date.now();
   let chosenSettings = game.chosenSettings;
-  for (var i = 0; i < proposedTargetList.length; i++) {
+  for (var i = 0; i < game.chosenSettings.proposedTargetList.length; i++) {
     let targetsBeforePlayer = chosenSettings.proposedTargetList.slice(i + 1);
     let targetsAfterPlayer = chosenSettings.proposedTargetList.slice(0, i);
     let player = chosenSettings.proposedTargetList[i]
     game.targets[player] = targetsBeforePlayer.concat(targetsAfterPlayer);
     game.targetsGot[player] = [];
   }
-  // game.state = states.TARGETS_MADE;
-}
-
-function start(game: Game) {
-  game.startTime = Date.now();
   game.state = states.IN_PLAY;
-  if (game.countDown) {
+  if (game.chosenSettings.countDown) {
     game.subState = inPlaySubStates.COUNTDOWN;
   } else {
     game.subState = inPlaySubStates.PLAYING;
@@ -210,8 +204,6 @@ function gameStateForClient(game: Game) {
     userList: Object.fromEntries(game.userList),
     targets: game.targets,
     targetsGot: game.targetsGot,
-    gameLength: game.gameLength,
-    countDown: game.countDown,
     timeLeft: game.timeLeft,
     state: game.state,
     subState: game.subState,
@@ -318,4 +310,4 @@ function generateGame(numberOfGames: number) {
   return game;
 }
 
-export { newGame, makeTargets, states, start, inPlaySubStates, snipe, gameStateForClient, addPlayer, removePlayer, finishGame, updatePosition, badSnipe, generateGame };
+export { newGame, updateSettings, states, start, inPlaySubStates, snipe, gameStateForClient, addPlayer, removePlayer, finishGame, updatePosition, badSnipe, generateGame };

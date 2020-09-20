@@ -9,7 +9,7 @@ export function basicGame() {
     const { publicId: publicId2 } = Game.addPlayer(game, "player2");
     Game.addPlayer(game, "player3");
     Game.addPlayer(game, "player4");
-    Game.makeTargets(game, 40, 5, game.chosenSettings!.proposedTargetList);
+    Game.updateSettings(game, 40, 5, game.chosenSettings!.proposedTargetList);
     Game.start(game);
     Game.updatePosition(game, publicId2, { longitude: 1, latitude: 1 });
     var photo = fs.readFileSync('./server/sample_snipe_image.jpeg');

@@ -1,6 +1,6 @@
 import * as SharedGame from '../shared/game'
 
-export const states = Object.freeze({ "NOT_STARTED": "NOT STARTED", "IN_PLAY": "IN PLAY", "TARGETS_MADE": "TARGETS MADE" })
+export const states = Object.freeze({ "NOT_STARTED": "NOT STARTED", "IN_PLAY": "IN PLAY"})
 
 export const inPlaySubStates = Object.freeze({ COUNTDOWN: "COUNTDOWN", PLAYING: "PLAYING" })
 
@@ -57,7 +57,7 @@ export function getProposedTargetPairs(proposedTargetList: number[]){
 export function timeLeft(){
     //returns in seconds
     if(game.subState == inPlaySubStates.COUNTDOWN){
-        return (game.timeLeft! - game.gameLength!) / 1000;
+        return (game.timeLeft! - game.chosenSettings.gameLength!) / 1000;
     }else if(game.subState == inPlaySubStates.PLAYING){
         return (game.timeLeft!) / 1000;
     }else{

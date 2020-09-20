@@ -1,6 +1,6 @@
 import io from 'socket.io-client';
 export * from '../shared/socketEvents.js';
-export function setup(gameId, privateId, initialization, badSnipe, newUser, removeUser, makeTargets, start, finished, timeLeft, chatMessage, resizeDone, 
+export function setup(gameId, privateId, initialization, badSnipe, newUser, removeUser, updateSettings, start, finished, timeLeft, chatMessage, resizeDone, 
 // this only needs to be supplied when not in a browser
 // otherwise window.location is used
 hostname = '') {
@@ -19,7 +19,7 @@ hostname = '') {
     socket.on('initialization', initialization);
     socket.on('New user', newUser);
     socket.on('Remove user', removeUser);
-    socket.on('make targets', makeTargets);
+    socket.on('update settings', updateSettings);
     socket.on('start', start);
     // in game events
     socket.on('chat message', chatMessage);
@@ -38,8 +38,8 @@ export function chatMessage(socket, message) {
 export function badSnipe(socket, msg) {
     socket.emit('bad snipe', msg);
 }
-export function makeTargets(socket, msg) {
-    socket.emit('make targets', msg);
+export function updateSettings(socket, msg) {
+    socket.emit('update settings', msg);
 }
 export function startGame(socket, msg) {
     socket.emit('start game', msg);

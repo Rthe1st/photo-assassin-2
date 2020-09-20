@@ -58,7 +58,7 @@ body{
     flex-direction: row;
 }
 
-#make-targets, #undo-make-targets {
+#make-targets {
     margin: 1em;
 }
 

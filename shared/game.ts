@@ -1,7 +1,14 @@
+
+export interface Settings {
+  gameLength: number,
+  countDown: number,
+  proposedTargetList: number[]
+}
+
 // this is game, but stripped of any info players shouldn't know
 // and using types we can send of socketio (no Map)
 export interface ClientGame {
-  chosenSettings: { gameLength?: number, countDown?: number, proposedTargetList: number[] },
+  chosenSettings: Settings,
   state: string,
   subState: string | undefined,
   userList: UserList,
@@ -9,8 +16,6 @@ export interface ClientGame {
   targetsGot: { [key: number]: number[] } | undefined,
   // omitted until game over
   positions?: { [key: number]: any },
-  gameLength: number | undefined,
-  countDown: number | undefined,
   timeLeft: number | undefined,
   nextCode: string | undefined,
   winner: string | undefined,

@@ -13,7 +13,7 @@ export interface RemoveUserMsg {
     publicId: number, gameState: SharedGame.ClientGame
 }
 
-export interface ServerMakeTargetsMsg { gameState: SharedGame.ClientGame }
+export interface ServerUpdateSettingsMsg { gameState: SharedGame.ClientGame }
 
 export interface ServerBadSnipeMsg { gameState: SharedGame.ClientGame, undoneSnipeIndexes: number[] }
 
@@ -51,7 +51,9 @@ export interface ClientBadSnipe {
     snipeInfosIndex: number
 }
 
-export interface ClientMakeTargets {
+// todo: we could save bandwidth by making most of these optional
+// and only sending the one that changed
+export interface ClientUpdateSettings {
     gameLength: number,
     countDown: number,
     proposedTargetList: number[]
