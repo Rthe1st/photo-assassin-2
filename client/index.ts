@@ -219,6 +219,9 @@ function markSnipe(_: MouseEvent) {
 }
 
 function inPlayView() {
+    if(publicId != 0){
+        (<HTMLButtonElement>document.getElementById('stop-game')).hidden = true;
+    }
     updateTimeLeft();
     setCurrentTarget();
     document.getElementById('not-started')!.hidden = true;
