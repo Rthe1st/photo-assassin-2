@@ -95,7 +95,16 @@ function activePlayer(gameId: string, privateId: string, player: Player) {
             let message = {
                 "text": "gotya",
                 "image": file,
-                "position": { "latitude": player.position.latitude, "longitude": player.position.longitude },
+                "position": {
+                    longitude: player.position.longitude,
+                    latitude: player.position.latitude,
+                    accuracy: null,
+                    heading: null,
+                    speed: null,
+                    timestamp: null,
+                    altitude: null,
+                    altitudeAccuracy: null
+                },
                 "isSnipe": true,
             }
             socketClient.chatMessage(socket, message);
@@ -111,7 +120,16 @@ function activePlayer(gameId: string, privateId: string, player: Player) {
             let message = {
                 "text": "gotya",
                 "image": file,
-                "position": { "latitude": player.position.latitude, "longitude": player.position.longitude },
+                "position": {
+                    longitude: player.position.longitude,
+                    latitude: player.position.latitude,
+                    accuracy: null,
+                    heading: null,
+                    speed: null,
+                    timestamp: null,
+                    altitude: null,
+                    altitudeAccuracy: null
+                },
                 "isSnipe": randomGenerator(100) > 50,
             }
             socketClient.chatMessage(socket, message);
@@ -137,7 +155,16 @@ function passivePlayer(gameId: string, privateId: string, player: Player) {
         (_) => {
             player.position.latitude! += (Math.random() - 0.5) * 0.001;
             player.position.longitude! += (Math.random() - 0.5) * 0.001;
-            socketClient.positionUpdate(socket, { "latitude": player.position.latitude, "longitude": player.position.longitude });
+            socketClient.positionUpdate(socket, {
+                longitude: player.position.longitude,
+                latitude: player.position.latitude,
+                accuracy: null,
+                heading: null,
+                speed: null,
+                timestamp: null,
+                altitude: null,
+                altitudeAccuracy: null
+            });
         },
         () => {},
         domain
@@ -165,7 +192,16 @@ function listeningPlayer(gameId: string, privateId: string, player: Player, publ
                 let message = {
                     "text": "gotya",
                     "image": file,
-                    "position": { "latitude": player.position.latitude, "longitude": player.position.longitude },
+                    "position": {
+                        longitude: player.position.longitude,
+                        latitude: player.position.latitude,
+                        accuracy: null,
+                        heading: null,
+                        speed: null,
+                        timestamp: null,
+                        altitude: null,
+                        altitudeAccuracy: null
+                    },
                     "isSnipe": true,
                 }
                 socketClient.chatMessage(socket, message);
@@ -173,14 +209,32 @@ function listeningPlayer(gameId: string, privateId: string, player: Player, publ
                 console.log("moving");
                 player.position.latitude! += (Math.random() - 0.5) * 0.001;
                 player.position.longitude! += (Math.random() - 0.5) * 0.001;
-                socketClient.positionUpdate(socket, { "latitude": player.position.latitude, "longitude": player.position.longitude });
+                socketClient.positionUpdate(socket, {
+                    longitude: player.position.longitude,
+                    latitude: player.position.latitude,
+                    accuracy: null,
+                    heading: null,
+                    speed: null,
+                    timestamp: null,
+                    altitude: null,
+                    altitudeAccuracy: null
+                });
             } else if (command == "picture") {
                 console.log("pictureing");
                 let file = fs.readFileSync('./server/sample_snipe_image.jpeg');
                 let message = {
                     "text": "picture",
                     "image": file,
-                    "position": { "latitude": player.position.latitude, "longitude": player.position.longitude },
+                    "position": {
+                        longitude: player.position.longitude,
+                        latitude: player.position.latitude,
+                        accuracy: null,
+                        heading: null,
+                        speed: null,
+                        timestamp: null,
+                        altitude: null,
+                        altitudeAccuracy: null
+                    },
                     "isSnipe": false,
                 }
                 socketClient.chatMessage(socket, message);
@@ -188,7 +242,16 @@ function listeningPlayer(gameId: string, privateId: string, player: Player, publ
                 console.log("messging");
                 let message: socketClient.ClientChatMessage = {
                     text: "blahblah",
-                    position: { "latitude": player.position.latitude, "longitude": player.position.longitude },
+                    position: {
+                        longitude: player.position.longitude,
+                        latitude: player.position.latitude,
+                        accuracy: null,
+                        heading: null,
+                        speed: null,
+                        timestamp: null,
+                        altitude: null,
+                        altitudeAccuracy: null
+                    },
                     image: undefined,
                     isSnipe: undefined,
                 }
@@ -243,7 +306,16 @@ function listeningPlayer(gameId: string, privateId: string, player: Player, publ
             console.log("start move");
             player.position.latitude! += (Math.random() - 0.5) * 0.001;
             player.position.longitude! += (Math.random() - 0.5) * 0.001;
-            socketClient.positionUpdate(socket, { "latitude": player.position.latitude, "longitude": player.position.longitude });
+            socketClient.positionUpdate(socket, {
+                longitude: player.position.longitude,
+                latitude: player.position.latitude,
+                accuracy: null,
+                heading: null,
+                speed: null,
+                timestamp: null,
+                altitude: null,
+                altitudeAccuracy: null
+            });
         },
         () => {
             console.log("game over");
@@ -261,22 +333,58 @@ export function activeGame() {
         {
             name: 'simpleSloth',
             algo: activePlayer,
-            position: { latitude: 51.389, longitude: 0.012 }
+            position: {
+                longitude: 0.012,
+                latitude: 51.389,
+                accuracy: null,
+                heading: null,
+                speed: null,
+                timestamp: null,
+                altitude: null,
+                altitudeAccuracy: null
+            },
         },
         {
             name: 'p1',
             algo: passivePlayer,
-            position: { latitude: 51.389, longitude: 0.012 }
+            position: {
+                longitude: 0.012,
+                latitude: 51.389,
+                accuracy: null,
+                heading: null,
+                speed: null,
+                timestamp: null,
+                altitude: null,
+                altitudeAccuracy: null
+            },
         },
         {
             name: 'p2',
             algo: passivePlayer,
-            position: { latitude: 51.389, longitude: 0.012 }
+            position: {
+                longitude: 0.012,
+                latitude: 51.389,
+                accuracy: null,
+                heading: null,
+                speed: null,
+                timestamp: null,
+                altitude: null,
+                altitudeAccuracy: null
+            },
         },
         {
             name: 'p3',
             algo: passivePlayer,
-            position: { latitude: 51.389, longitude: 0.012 }
+            position: {
+                longitude: 0.012,
+                latitude: 51.389,
+                accuracy: null,
+                heading: null,
+                speed: null,
+                timestamp: null,
+                altitude: null,
+                altitudeAccuracy: null
+            },
         }],
         undefined);
 }
@@ -286,21 +394,57 @@ export function passiveGame(gameCode?: string) {
         {
             name: 'p1',
             algo: passivePlayer,
-            position: { latitude: 51.389, longitude: 0.012 }
+            position: {
+                longitude: 0.012,
+                latitude: 51.389,
+                accuracy: null,
+                heading: null,
+                speed: null,
+                timestamp: null,
+                altitude: null,
+                altitudeAccuracy: null
+            },
         },
         {
             name: 'p2',
             algo: passivePlayer,
-            position: { latitude: 51.389, longitude: 0.012 }
+            position: {
+                longitude: 0.012,
+                latitude: 51.389,
+                accuracy: null,
+                heading: null,
+                speed: null,
+                timestamp: null,
+                altitude: null,
+                altitudeAccuracy: null
+            },
         },
         {
             name: 'p3',
             algo: passivePlayer,
-            position: { latitude: 51.389, longitude: 0.012 }
+            position: {
+                longitude: 0.012,
+                latitude: 51.389,
+                accuracy: null,
+                heading: null,
+                speed: null,
+                timestamp: null,
+                altitude: null,
+                altitudeAccuracy: null
+            },
         }, {
             name: 'simpleSloth',
             algo: passivePlayer,
-            position: { latitude: 51.389, longitude: 0.012 }
+            position: {
+                longitude: 0.012,
+                latitude: 51.389,
+                accuracy: null,
+                heading: null,
+                speed: null,
+                timestamp: null,
+                altitude: null,
+                altitudeAccuracy: null
+            },
         }],
         gameCode);
 }
@@ -310,21 +454,57 @@ export function listenGame(gameCode?: string) {
         {
             name: 'p1',
             algo: listeningPlayer,
-            position: { latitude: 51.389, longitude: 0.012 }
+            position: {
+                longitude: 0.012,
+                latitude: 51.389,
+                accuracy: null,
+                heading: null,
+                speed: null,
+                timestamp: null,
+                altitude: null,
+                altitudeAccuracy: null
+            },
         },
         {
             name: 'p2',
             algo: listeningPlayer,
-            position: { latitude: 51.389, longitude: 0.012 }
+            position: {
+                longitude: 0.012,
+                latitude: 51.389,
+                accuracy: null,
+                heading: null,
+                speed: null,
+                timestamp: null,
+                altitude: null,
+                altitudeAccuracy: null
+            },
         },
         {
             name: 'p3',
             algo: listeningPlayer,
-            position: { latitude: 51.389, longitude: 0.012 }
+            position: {
+                longitude: 0.012,
+                latitude: 51.389,
+                accuracy: null,
+                heading: null,
+                speed: null,
+                timestamp: null,
+                altitude: null,
+                altitudeAccuracy: null
+            },
         }, {
             name: 'simpleSloth',
             algo: listeningPlayer,
-            position: { latitude: 51.389, longitude: 0.012 }
+            position: {
+                longitude: 0.012,
+                latitude: 51.389,
+                accuracy: null,
+                heading: null,
+                speed: null,
+                timestamp: null,
+                altitude: null,
+                altitudeAccuracy: null
+            },
         }],
         gameCode);
 }

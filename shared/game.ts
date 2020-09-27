@@ -15,7 +15,7 @@ export interface ClientGame {
   targets: { [key: number]: number[] } | undefined,
   targetsGot: { [key: number]: number[] } | undefined,
   // omitted until game over
-  positions?: { [key: number]: any },
+  positions?: { [key: number]: Position[] },
   timeLeft: number | undefined,
   nextCode: string | undefined,
   winner: string | undefined,
@@ -35,6 +35,12 @@ export interface UndoneSnipes {
 export interface Position {
   longitude: number | null,
   latitude: number | null,
+  accuracy: number | null,
+  heading: number | null,
+  speed: number | null,
+  timestamp: number | null,
+  altitude: number | null,
+  altitudeAccuracy: number | null,
   // todo: move this out, it's only stored this as a hack
   // for retrieving snipe data about an image
   snipeInfo?: {

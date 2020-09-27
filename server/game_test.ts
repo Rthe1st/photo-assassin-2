@@ -11,7 +11,17 @@ export function basicGame() {
     Game.addPlayer(game, "player4");
     Game.updateSettings(game, 40, 5, game.chosenSettings!.proposedTargetList);
     Game.start(game);
-    Game.updatePosition(game, publicId2, { longitude: 1, latitude: 1 });
+    let position = {
+        longitude: 1,
+        latitude: 1,
+        accuracy: null,
+        heading: null,
+        speed: null,
+        timestamp: null,
+        altitude: null,
+        altitudeAccuracy: null
+    }
+    Game.updatePosition(game, publicId2, position);
     var photo = fs.readFileSync('./server/sample_snipe_image.jpeg');
     let {imageId: imageId1} = Game.saveImage(game, photo);
     let {snipeInfo: snipeInfo} = Game.snipe(game, publicId2, imageId1);

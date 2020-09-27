@@ -27,7 +27,7 @@ export interface Game {
   userList: Map<number, any>,
   targets: { [key: number]: number[] },
   targetsGot: { [key: number]: number[] },
-  positions: Map<number, any>,
+  positions: Map<number, SharedGame.Position[]>,
   startTime: number | undefined,
   timeLeft: number | undefined,
   nextCode: string | undefined,
@@ -133,7 +133,7 @@ function start(game: Game) {
 function snipe(game: Game, sniperPublicId: number, imageId: number, position?: SharedGame.Position): {gameOver: boolean, snipeInfo: SharedGame.SnipeInfo, botMessage: string | undefined} {
   var snipedId = game.targets[sniperPublicId][0];
 
-  let targetPosition = game.positions.get(snipedId)[game.positions.get(snipedId).length - 1]
+  let targetPosition = game.positions.get(snipedId)![game.positions.get(snipedId)!.length - 1]
 
   var usernameWhoDidSniping = game.userList.get(sniperPublicId).username;
   var usernameThatGotSniped = game.userList.get(game.targets[sniperPublicId][0]).username;
@@ -268,7 +268,7 @@ function updatePosition(game: Game, publicId: number, position: SharedGame.Posit
     && position.latitude != null
     && game.state == states.IN_PLAY
   ) {
-    game.positions.get(publicId).push(position);
+    game.positions.get(publicId)!.push(position);
   }
 }
 

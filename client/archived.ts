@@ -189,8 +189,12 @@ function prepareMapData(gameState: SharedGame.ClientGame) {
         var path = [];
         let playerPublicId = parseInt(playerPublicIdString)
         mapData["playerSnipes"][playerPublicId] = [];
+        Sentry.captureEvent({
+            message: "raw gps data",
+            extra: {"positions": gameState.positions}
+        })
         for (var position of gameState.positions![playerPublicId]) {
-            var latlng: google.maps.ReadonlyLatLngLiteral = { lat: position.latitude, lng: position.longitude };
+            var latlng: google.maps.ReadonlyLatLngLiteral = { lat: position.latitude!, lng: position.longitude! };
             path.push(latlng);
         }
         var polyLine = new google.maps.Polyline({
