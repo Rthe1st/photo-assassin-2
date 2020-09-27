@@ -1,6 +1,7 @@
 import * as SharedGame from '../shared/game'
 
 import * as Sentry from '@sentry/browser';
+
 Sentry.init({ dsn: 'https://0622ee38668548dcb4af966730298b31@o428868.ingest.sentry.io/5374680' });
 if (process.env.SENTRY_TESTS == "true") {
     Sentry.captureException(new Error("sentry test archived.html"));
@@ -185,14 +186,23 @@ var playerColours = [
 ];
 
 function prepareMapData(gameState: SharedGame.ClientGame) {
+    let forSentry: {[key: string]: any[]} = {}
+    for(const [playerId, positions] of Object.entries(gameState.positions!)){
+        forSentry[playerId] = []
+        for(let position of positions){
+            forSentry[playerId].push(JSON.stringify(position))
+        }
+    }
+    console.log(gameState.positions)
+    console.log(forSentry)
+    Sentry.captureEvent({
+        message: "raw gps data",
+        extra: {"positions": forSentry}
+    })
     for (const [playerPublicIdString,] of Object.entries(gameState.userList)) {
         var path = [];
         let playerPublicId = parseInt(playerPublicIdString)
         mapData["playerSnipes"][playerPublicId] = [];
-        Sentry.captureEvent({
-            message: "raw gps data",
-            extra: {"positions": gameState.positions}
-        })
         for (var position of gameState.positions![playerPublicId]) {
             var latlng: google.maps.ReadonlyLatLngLiteral = { lat: position.latitude!, lng: position.longitude! };
             path.push(latlng);
