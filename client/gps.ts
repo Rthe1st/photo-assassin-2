@@ -27,18 +27,19 @@ function setup(callback: (position: SharedGame.Position) => void) {
         position.latitude = 51.389;
         position.longitude = 0.012;
         console.log(position);
-    } else {
-        console.log("real start pos");
-        navigator.geolocation.getCurrentPosition((geolocationPosition) => {
-            updatePosition(geolocationPosition, callback);
-        });
     }
-
-    navigator.geolocation.watchPosition(
-        (geolocationPosition) => updatePosition(geolocationPosition, callback),
-        dontUpdatePosition,
-        { "enableHighAccuracy": true, "maximumAge": 10000 }
-    );
+    setInterval(()=>{
+        // do all the nest callbacks here mean
+        // that positions could be added out of order?
+        navigator.geolocation.getCurrentPosition(
+            (geolocationPosition) => {
+                updatePosition(geolocationPosition, callback);
+            },
+            dontUpdatePosition,
+            { enableHighAccuracy: true}
+        ),
+        1000
+    })
 }
 
 function updatePosition(geolocationPosition: Position, callback: (position: SharedGame.Position) => void) {
