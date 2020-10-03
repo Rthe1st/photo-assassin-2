@@ -508,3 +508,79 @@ export function listenGame(gameCode?: string) {
         }],
         gameCode);
 }
+
+function gpsPlayer(gameId: string, privateId: string, _: Player) {
+    let socket = socketClient.setup(
+        gameId,
+        privateId,
+        (msg) => {
+            console.log("init, starting")
+            socketClient.startGame(socket, { gameLength: 60000, countDown: 0, proposedTargetList: msg.gameState.chosenSettings.proposedTargetList });
+        },
+        () => { },
+        () => { },
+        () => { },
+        () => { },
+        (_) => {
+            console.log("started")
+            var gpsData = JSON.parse(fs.readFileSync('gps_test_data3.json', 'utf8'))[0];
+            for(let position of gpsData){
+                socketClient.positionUpdate(socket, position);
+            }
+            socketClient.stopGame(socket);
+            // player.position.latitude! += (Math.random() - 0.5) * 0.001;
+            // player.position.longitude! += (Math.random() - 0.5) * 0.001;
+            // socketClient.positionUpdate(socket, {
+            //     longitude: player.position.longitude,
+            //     latitude: player.position.latitude,
+            //     accuracy: null,
+            //     heading: null,
+            //     speed: null,
+            //     timestamp: null,
+            //     altitude: null,
+            //     altitudeAccuracy: null
+            // });
+        },
+        () => { },
+        () => { },
+        () => { },
+        () => {},
+        domain
+    );
+    return socket;
+}
+
+
+export function gpsGame(gameCode?: string) {
+    gameSetup([
+        {
+            name: 'p1',
+            algo: gpsPlayer,
+            position: {
+                longitude: 0.012,
+                latitude: 51.389,
+                accuracy: null,
+                heading: null,
+                speed: null,
+                timestamp: null,
+                altitude: null,
+                altitudeAccuracy: null
+            },
+        },
+        {
+            name: 'p2',
+            algo: passivePlayer,
+            position: {
+                longitude: 0.012,
+                latitude: 51.389,
+                accuracy: null,
+                heading: null,
+                speed: null,
+                timestamp: null,
+                altitude: null,
+                altitudeAccuracy: null
+            },
+        }
+    ],
+    gameCode);
+}

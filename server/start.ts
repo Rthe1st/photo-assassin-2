@@ -47,6 +47,9 @@ if (process.env.NODE_ENV == "production") {
                 case "listen":
                     socketClient.listenGame(gameCode);
                     break;
+                case "gps":
+                    socketClient.gpsGame(gameCode);
+                    break;
                 default:
                     console.log('unrecognized arguments');
                     break;
