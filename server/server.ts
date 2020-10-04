@@ -11,7 +11,10 @@ import cookieParser from 'cookie-parser';
 import express from 'express';
 
 import socketIo from 'socket.io'
-import * as httpServer from 'http'
+import * as https from 'https'
+import * as http from 'http'
+
+import * as fs from 'fs';
 
 import * as Game from './game.js';
 import * as socketHandler from './socketHandler.js';
@@ -33,11 +36,25 @@ export function createServer(useSentry = true, port = process.env.PORT || 3000) 
   app.get('/game/:code/images/:id', (req, res) => getImage(req, res, games));
   app.get('/game/:code/low-res-images/:id', (req, res) => getImage(req, res, games));
 
-  var http = new httpServer.Server(app);
+  let httpServer;
+  if (process.env.NODE_ENV != "production") {
+    // counterintuitively, we only want https in dev mode
+    // because to use GPS in browser, the client needs an https connection
+    // In prod, this is provided by Cloudflare using flexible TLS
+    // and we can't do TLS from Cloudflare to origin because Heroku only support
+    // TLS for paid dynamos
+    let httpsOptions = {
+      key: fs.readFileSync('./secret/self_signed.key'),
+      cert: fs.readFileSync('./secret/self_signed.pem')
+    }
+    httpServer = <http.Server>(https.createServer(httpsOptions, app));
+  }else{
+    httpServer = http.createServer(app);
+  }
 
   //io needs to be accessablrwhen we setup game - pass it in
   // https://github.com/socketio/socket.io/issues/2276
-  var io = socketIo(http, {
+  var io = socketIo(httpServer, {
     cookie: false,
     // todo: this is a hack to prevent our connection being terminated
     // during large file uploads because we're blocking and can't reply to pongs
@@ -52,7 +69,7 @@ export function createServer(useSentry = true, port = process.env.PORT || 3000) 
   app.get('/make', (req, res) => make(req, res, games, io));
   app.get('/join', (req, res) => join(req, res, games));
 
-  http.listen(port);
+  httpServer.listen(port);
 
   setInterval(() => { socketHandler.checkGameTiming(games , io) }, 10000);
 }

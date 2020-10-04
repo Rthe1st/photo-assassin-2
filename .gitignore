@@ -7,3 +7,4 @@ public/*.js.map
 .env
 server/**/*.js
 client/**/*.js
+secret/*

@@ -7,18 +7,23 @@ import fetch from 'node-fetch';
 import fs from 'fs';
 import randomSeed from 'random-seed';
 import * as SharedGame from '../shared/game.js';
+import * as https from 'https';
 
-let domain = "http://localhost:3000";
+let domain = "https://localhost:3000";
 
 export function useProd() {
     domain = "https://photo-assassin.prangten.com";
 }
 
+const agent = new https.Agent({
+    rejectUnauthorized: false
+})
+
 function makeGame(username: string) {
     const url = `${domain}/make?username=${username}&format=json`;
 
     const getData = async (url: string) => {
-        const response = await fetch(url);
+        const response = await fetch(url, {agent});
         const json = await response.json();
         return json;
     };
@@ -31,7 +36,7 @@ function joinGame(username: string, gameId: string) {
     const url = `${domain}/join?code=${gameId}&username=${username}&format=json`;
 
     const getData = async (url: string) => {
-        const response = await fetch(url);
+        const response = await fetch(url, {agent});
         const json = await response.json();
         return json;
     };
@@ -528,18 +533,6 @@ function gpsPlayer(gameId: string, privateId: string, _: Player) {
                 socketClient.positionUpdate(socket, position);
             }
             socketClient.stopGame(socket);
-            // player.position.latitude! += (Math.random() - 0.5) * 0.001;
-            // player.position.longitude! += (Math.random() - 0.5) * 0.001;
-            // socketClient.positionUpdate(socket, {
-            //     longitude: player.position.longitude,
-            //     latitude: player.position.latitude,
-            //     accuracy: null,
-            //     heading: null,
-            //     speed: null,
-            //     timestamp: null,
-            //     altitude: null,
-            //     altitudeAccuracy: null
-            // });
         },
         () => { },
         () => { },
