@@ -31,7 +31,9 @@ export function setup(
             // todo: review - done to avoid the default size limit
             // of payloads when polling because large files will exceed this
             // see maxHttpBufferSize at https://socket.io/docs/server-api/#new-Server-httpServer-options
-            transports: ['websocket']
+            transports: ['websocket'],
+            // needed for local dev with self-signed cert
+            rejectUnauthorized: false
         }
     );
 
@@ -46,6 +48,7 @@ export function setup(
     socket.on('timeLeft', timeLeft);
     socket.on('game finished', finished);
     socket.on('error', (err: any) => console.log(err));
+    socket.on('connect_error', (err: any) => console.log(err));
     socket.on('disconnect', (reason: any) => console.log(reason));
     socket.on('disconnecting', (reason: any) => console.log(reason));
     socket.on('resize done', resizeDone);
