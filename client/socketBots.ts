@@ -528,7 +528,7 @@ function gpsPlayer(gameId: string, privateId: string, _: Player) {
         () => { },
         (_) => {
             console.log("started")
-            var gpsData = JSON.parse(fs.readFileSync('gps_test_data3.json', 'utf8'))[0];
+            var gpsData = JSON.parse(fs.readFileSync('gps_test_data.json', 'utf8'));
             for(let position of gpsData){
                 socketClient.positionUpdate(socket, position);
             }

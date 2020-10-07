@@ -1,4 +1,5 @@
 import * as SharedGame from '../shared/game'
+import * as kalman from './kalman'
 
 import * as Sentry from '@sentry/browser';
 
@@ -153,8 +154,13 @@ interface PlayerSnipe {
     arrow?: google.maps.Polyline
 }
 
-var mapData: { playerPaths: { [key: number]: google.maps.Polyline }, playerSnipes: { [key: number]: PlayerSnipe[] } } = {
+var mapData: {
+    playerPaths: { [key: number]: google.maps.Polyline },
+    rawPlayerPaths: { [key: number]: google.maps.Polyline },
+    playerSnipes: { [key: number]: PlayerSnipe[] }
+} = {
     playerPaths: [],
+    rawPlayerPaths: [],
     playerSnipes: [],
 };
 
@@ -195,18 +201,40 @@ function prepareMapData(gameState: SharedGame.ClientGame) {
     }
     console.log(gameState.positions)
     console.log(forSentry)
-    Sentry.captureEvent({
-        message: "raw gps data",
-        extra: {"positions": forSentry}
-    })
+    // Sentry.captureEvent({
+    //     message: "raw gps data",
+    //     extra: {"positions": forSentry}
+    // })
     for (const [playerPublicIdString,] of Object.entries(gameState.userList)) {
         var path = [];
+        let rawPath = [];
         let playerPublicId = parseInt(playerPublicIdString)
         mapData["playerSnipes"][playerPublicId] = [];
+        let firstPositionData;
+        if(gameState.positions![playerPublicId].length > 0){
+            firstPositionData = gameState.positions![playerPublicId][0]
+            kalman.init(firstPositionData.longitude!, firstPositionData.latitude!, firstPositionData.accuracy!)
+        }
         for (var position of gameState.positions![playerPublicId]) {
-            var latlng: google.maps.ReadonlyLatLngLiteral = { lat: position.latitude!, lng: position.longitude! };
+            let {
+                x: estLongitude,
+                y: estLatitude
+            } = kalman.update(position.longitude!, position.latitude!, position.accuracy!)
+            //estimates are wrong so some reason
+            console.log("estimated: " + estLongitude + ", " + estLatitude)
+            console.log("actual: " + position.longitude + ", " + position.latitude)
+            var rawLatlng: google.maps.ReadonlyLatLngLiteral = { lat: position.latitude!, lng: position.longitude! };
+            rawPath.push(rawLatlng);
+            var latlng: google.maps.ReadonlyLatLngLiteral = { lat: estLatitude!, lng: estLongitude };
             path.push(latlng);
         }
+        var rawPolyLine = new google.maps.Polyline({
+            path: rawPath,
+            geodesic: true,
+            strokeColor: getPlayerColor(playerPublicId + 1),
+            strokeOpacity: 1.0,
+            strokeWeight: 2
+        });
         var polyLine = new google.maps.Polyline({
             path: path,
             geodesic: true,
@@ -264,6 +292,7 @@ function prepareMapData(gameState: SharedGame.ClientGame) {
         //todo: this is undefined if player never sends position and so explodes
         //in annotation
         mapData["playerPaths"][playerPublicId] = polyLine;
+        mapData["rawPlayerPaths"][playerPublicId] = rawPolyLine;
     }
 }
 
@@ -286,6 +315,7 @@ function annotateMap(centerMap: boolean) {
         var checkbox = (<HTMLInputElement>document.getElementById(`show-player-${player["username"]}`));
         if (checkbox.checked) {
             mapData["playerPaths"][playerPublicId].setMap(map);
+            mapData["rawPlayerPaths"][playerPublicId].setMap(map);
             for (var snipe of mapData["playerSnipes"][playerPublicId]) {
                 snipe["marker"].setMap(map);
                 //this might not be set if the target never sent a position

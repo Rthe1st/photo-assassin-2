@@ -14,7 +14,9 @@ hostname = '') {
         // todo: review - done to avoid the default size limit
         // of payloads when polling because large files will exceed this
         // see maxHttpBufferSize at https://socket.io/docs/server-api/#new-Server-httpServer-options
-        transports: ['websocket']
+        transports: ['websocket'],
+        // needed for local dev with self-signed cert
+        rejectUnauthorized: false
     });
     socket.on('initialization', initialization);
     socket.on('New user', newUser);
@@ -27,6 +29,7 @@ hostname = '') {
     socket.on('timeLeft', timeLeft);
     socket.on('game finished', finished);
     socket.on('error', (err) => console.log(err));
+    socket.on('connect_error', (err) => console.log(err));
     socket.on('disconnect', (reason) => console.log(reason));
     socket.on('disconnecting', (reason) => console.log(reason));
     socket.on('resize done', resizeDone);

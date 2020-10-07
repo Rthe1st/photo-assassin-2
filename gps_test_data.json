@@ -1,5 +1,4 @@
-{
-    "0": [
+[
         {
             "latitude": 51.3977617,
             "longitude": 0.0151372,
@@ -851,4 +850,3 @@
             "altitudeAccuracy": 17
         }
     ]
-}
