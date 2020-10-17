@@ -213,13 +213,14 @@ function prepareMapData(gameState: SharedGame.ClientGame) {
         let firstPositionData;
         if(gameState.positions![playerPublicId].length > 0){
             firstPositionData = gameState.positions![playerPublicId][0]
-            kalman.init(firstPositionData.longitude!, firstPositionData.latitude!, firstPositionData.accuracy!)
+            kalman.init(firstPositionData.longitude!, firstPositionData.latitude!, firstPositionData.accuracy!, firstPositionData.speed!, firstPositionData.heading!, firstPositionData.timestamp!)
         }
         for (var position of gameState.positions![playerPublicId]) {
+            // todo: should we compress points where speed=0 into 1 point?
             let {
                 x: estLongitude,
                 y: estLatitude
-            } = kalman.update(position.longitude!, position.latitude!, position.accuracy!)
+            } = kalman.update(position.longitude!, position.latitude!, position.accuracy!, position.speed!, position.heading!, position.timestamp!)
             //estimates are wrong so some reason
             console.log("estimated: " + estLongitude + ", " + estLatitude)
             console.log("actual: " + position.longitude + ", " + position.latitude)
@@ -315,7 +316,29 @@ function annotateMap(centerMap: boolean) {
         var checkbox = (<HTMLInputElement>document.getElementById(`show-player-${player["username"]}`));
         if (checkbox.checked) {
             mapData["playerPaths"][playerPublicId].setMap(map);
+            for(let point of mapData["playerPaths"][playerPublicId].getPath().getArray()){
+                new google.maps.Circle({
+                    strokeColor: "#FF0000",
+                    strokeOpacity: 0.8,
+                    strokeWeight: 2,
+                    fillColor: "#FF0000",
+                    fillOpacity: 0.35,
+                    center: point,
+                    radius: 0.1
+                }).setMap(map);
+            }
             mapData["rawPlayerPaths"][playerPublicId].setMap(map);
+            for(let point of mapData["rawPlayerPaths"][playerPublicId].getPath().getArray()){
+                new google.maps.Circle({
+                    strokeColor: "#00FF00",
+                    strokeOpacity: 0.8,
+                    strokeWeight: 2,
+                    fillColor: "#00FF00",
+                    fillOpacity: 0.35,
+                    center: point,
+                    radius: 0.1
+                }).setMap(map);
+            }
             for (var snipe of mapData["playerSnipes"][playerPublicId]) {
                 snipe["marker"].setMap(map);
                 //this might not be set if the target never sent a position

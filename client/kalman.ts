@@ -1,5 +1,19 @@
 import * as mathjs from 'mathjs'
 
+//useful links
+// https://stackoverflow.com/questions/1253499/simple-calculations-for-working-with-lat-lon-and-km-distance
+// https://github.com/w3c/geolocation-api
+// https://developer.mozilla.org/en-US/docs/Web/API/GeolocationCoordinates/accuracy
+// https://www.kalmanfilter.net/multiSummary.html
+// https://www.kalmanfilter.net/kalman1d.html
+// https://www.visiondummy.com/2014/04/geometric-interpretation-covariance-matrix/
+
+//todo next: treat speed as an input
+// instead of a variable in the modelbn
+
+// possible heurstic: If points are closer then X to last point, combine them
+
+
 //todo: how do we translate the API accuracy into uncertainty estimate /covariance
 //can we assume 0 process noise at first to make it more simple?
 // this would accuratly model static positions
@@ -47,10 +61,14 @@ import * as mathjs from 'mathjs'
 // calculates the change to state variables based on
 // current state variables
 //what unit is time?
-function F(_: number): mathjs.Matrix{
+function F(t: number): mathjs.Matrix{
     return mathjs.matrix([
-        [ 1, 0],
-        [ 0, 1],
+        // [1, 0],
+        // [0, 1]
+        [ 1, 0, t, 0],
+        [ 0, 1, 0, t],
+        [ 0, 0, 1, 0],
+        [ 0, 0, 0, 1],
     ])
 }
 
@@ -111,9 +129,12 @@ function covarianceExtrapolation(
 }
 
 let H = mathjs.matrix([
-    [1, 0],
-    [0, 1],
-    // [0, 0, 1],
+    // [1, 0],
+    // [0, 1]
+    [1, 0, 0, 0],
+    [0, 1, 0, 0],
+    [0, 0, 1, 0],
+    [0, 0, 0, 1],
 ])
 
 function stateUpdateEquation(
@@ -123,7 +144,8 @@ function stateUpdateEquation(
     // H: mathjs.Matrix, //obervation matrix - I think identity matrix for us
 ): mathjs.Matrix{
     return <mathjs.Matrix>mathjs.add(
-        oldX,mathjs.multiply(
+        oldX,
+        mathjs.multiply(
             K,
             mathjs.subtract(
                 z,
@@ -140,7 +162,7 @@ function covarianceUpdateEquation(
     R: mathjs.Matrix, // measurement of uncertainty (measurement noise covariance matrix)
 ): mathjs.Matrix{
     //todo: 2 is not the right size
-    let I = mathjs.identity(2)
+    let I = mathjs.identity(4)
     let thing = <mathjs.Matrix>mathjs.subtract(I, mathjs.multiply(k, H))
     let nextP = mathjs.add(
         mathjs.multiply(
@@ -149,7 +171,7 @@ function covarianceUpdateEquation(
         ),
         mathjs.multiply(
             mathjs.multiply(k, R),
-            k
+            mathjs.transpose(k)
         )
     )
     return <mathjs.Matrix> nextP
@@ -161,6 +183,11 @@ function kalmanGain(
     R: mathjs.Matrix, // is a Measurement Uncertainty (measurement noise covariance matrix)
 ){
 
+    //todo: look at the ratios of the P values to the R values
+    // this might explain why Rs impact is not strong
+    //i.e. is K always coming out near 1, that means trust the measurement
+    // which implies small R relative to P
+    //settting R to 10000 does the reverse
     let hTranspose = mathjs.transpose(H)
 
     let toInverse: mathjs.Matrix = <mathjs.Matrix>mathjs.add(
@@ -207,8 +234,8 @@ let state: mathjs.Matrix = mathjs.matrix([
     [0],//x
     [0],//y
     // [0],//z
-    // [0], // x velocity
-    // [0], // y velocity
+    [0], // x velocity
+    [0], // y velocity
     // [0], // z velocity    
 ])
 
@@ -219,27 +246,74 @@ let state: mathjs.Matrix = mathjs.matrix([
 // but we know velcotiy must be between 0 and 10 m/s
 // so standard deviation is limited by that
 let p: mathjs.Matrix = mathjs.matrix([
-    [100, 0],//x, m^2
-    [0, 100],//y, m^2
+    [100, 0, 0, 0],//x, m^2
+    [0, 100, 0, 0],//y, m^2
     // [100],//z, m^2
-    // [100], // x velocity, (m/s)^2
-    // [100], // y velocity, (m/s)^2
+    [0, 0, 100, 0], // x velocity, (m/s)^2
+    [0, 0, 0, 100], // y velocity, (m/s)^2
     // [100], // z velocity, (m/s)^2
 ])
+
+function splitSpeed(speed: number, heading: number){
+    // check sin/cos units
+    let degree = mathjs.unit(heading, 'deg')  
+    let x = mathjs.sin(degree) * speed
+    let y = mathjs.cos(degree) * speed
+    return {x: x, y: y}
+}
+
+function metersToLatitude(meters: number){
+    // https://stackoverflow.com/a/1253545
+    return meters / (110.574 * 1000)
+}
+
+function metersToLongitude(meters: number, latitude: number){
+    // https://stackoverflow.com/a/1253545
+    return meters / (111.320*mathjs.cos(latitude) * 1000)
+
+}
+
+let lastTime: number | undefined = undefined
 
 export function init(
     x: number,
     y: number,
     accuracy: number, // x and y's accuray with 95% confidence
-    // not needed till our state is dynamic
-    // time: number
+    speed: number,
+    heading: number,
+    time: number
 ){
+
+    if(speed == undefined){
+        speed = 0
+    }
+    if(heading == undefined){
+        heading = 0
+    }
+
+    lastTime = time
+
+    let {x: xVel, y: yVel} = splitSpeed(speed, heading)
+
+
+
     // todo: we should probably accept a P as well
     // or at least as much of a P as we accept in the update stage
     state = mathjs.matrix([
         [x],
-        [y]
+        [y],
+        [metersToLongitude(xVel, y)],
+        [metersToLatitude(yVel)],
     ])
+    // accuracy is a circle
+    // I'm not sure splitting it into X Y is really this simple
+    let latitudeAccuracy = metersToLatitude(accuracy)
+    let longitudeAccuracy = metersToLongitude(accuracy, y)
+
+    // people can only go a max of 10 m/s
+    // so we can be more then 20 m/s out, worst case
+    let yVelocityStandardDeviation = metersToLatitude(10)
+    let xVelocityStandardDeviation = metersToLongitude(10, y)
 
     // accuracy is a 95% confidence interval in meters
     // https://developer.mozilla.org/en-US/docs/Web/API/GeolocationCoordinates/accuracy
@@ -247,8 +321,10 @@ export function init(
     // https://en.wikipedia.org/wiki/68%E2%80%9395%E2%80%9399.7_rule
     // do divide by 4 and square to get the variances we want
     p = mathjs.matrix([
-        [mathjs.square(accuracy/4), 0],
-        [0, mathjs.square(accuracy/4)],
+        [mathjs.square(longitudeAccuracy/4), 0, 0, 0],
+        [0, mathjs.square(latitudeAccuracy/4), 0, 0],
+        [0, 0, xVelocityStandardDeviation, 0],
+        [0, 0, 0, yVelocityStandardDeviation],
     ])
 }
 
@@ -257,26 +333,48 @@ export function update(
     y: number,
     accuracy: number, // x and y's accuray with 95% confidence
     // not needed till our state is dynamic
-    // time: number
+    speed: number | undefined,
+    heading: number,
+    time: number
     // z: mathjs.Matrix, R: mathjs.Matrix, timeDelta: number
 ){
 
+    if(speed == undefined){
+        speed = 0
+    }
+    if(heading == undefined){
+        heading = 0
+    }
+
+    let {x: xVel, y: yVel} = splitSpeed(speed, heading)
+
     let z = mathjs.matrix([
         [x],
-        [y]
+        [y],
+        [metersToLongitude(xVel, y)],
+        [metersToLatitude(yVel)],
     ])
 
-    let timeDelta = 0;
+    let timeDelta = (lastTime! - time)/1000;
+    lastTime = time
 
     let extrapolatedState = stateExtrapolation(F(timeDelta), state)
     let extrapolatedCovariance = covarianceExtrapolation(F(timeDelta), p)
 
-    let R = mathjs.matrix([
-        [mathjs.square(accuracy/4), 0],
-        [0, mathjs.square(accuracy/4)],
-    ])
+    let latitudeAccuracy = metersToLatitude(accuracy)
+    let longitudeAccuracy = metersToLongitude(accuracy, y)
 
+    let yVelocityStandardDeviation = metersToLatitude(10)
+    let xVelocityStandardDeviation = metersToLongitude(10, y)
+
+    let R = mathjs.matrix([
+        [mathjs.square(longitudeAccuracy/4), 0, 0, 0],
+        [0, mathjs.square(latitudeAccuracy/4), 0, 0],
+        [0, 0, xVelocityStandardDeviation, 0],
+        [0, 0, 0, yVelocityStandardDeviation],
+    ])
     let K = kalmanGain(extrapolatedCovariance, H, R)
+
     let estimatedState = stateUpdateEquation(extrapolatedState, K, z)
     let estimatedCovariance = covarianceUpdateEquation(extrapolatedCovariance, K, R)
 
