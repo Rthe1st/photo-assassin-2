@@ -19,14 +19,15 @@ const agent = new https.Agent({
     rejectUnauthorized: false
 })
 
+async function getData(url: string) {
+    const response = await fetch(url, {agent});
+    const json = await response.json();
+    return json;
+};
+
+
 function makeGame(username: string) {
     const url = `${domain}/make?username=${username}&format=json`;
-
-    const getData = async (url: string) => {
-        const response = await fetch(url, {agent});
-        const json = await response.json();
-        return json;
-    };
 
     return getData(url);
 
@@ -34,12 +35,6 @@ function makeGame(username: string) {
 
 function joinGame(username: string, gameId: string) {
     const url = `${domain}/join?code=${gameId}&username=${username}&format=json`;
-
-    const getData = async (url: string) => {
-        const response = await fetch(url, {agent});
-        const json = await response.json();
-        return json;
-    };
 
     return getData(url);
 }

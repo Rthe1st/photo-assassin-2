@@ -31,6 +31,8 @@ const getData = async () => {
     const response = await fetch(window.location.href + "?format=json");
     gameState = await response.json();
     console.log(gameState);
+    let archivedLink = `/archived#${JSON.stringify(gameState)}`;
+    (<HTMLLinkElement>document.getElementById("save-in-fragment")).href = archivedLink
     setUpPage(gameState);
     prepareMapData(gameState);
 
@@ -120,8 +122,25 @@ function setUpPage(gameState: SharedGame.ClientGame) {
     }
 }
 
+function getDataFromUrl(): SharedGame.ClientGame | undefined{
+    let data = decodeURIComponent(window.location.hash.substr(1));
+    // todo: we should check it's actually valid after parsing
+    if(data.length == 0){
+        return undefined
+    }else{
+        return <SharedGame.ClientGame>JSON.parse(data)
+    }
+}
+
 window.onload = function () {
-    getData();
+    // todo: also try load it from a variable
+    // for the case of data embedded in script itself
+    console.log('ffff')
+    let data = getDataFromUrl();
+    console.log(data)
+    if(data == undefined){
+        getData();
+    }
     document.getElementById('show-map')!.onclick = function () {
         document.getElementById('info')!.hidden = !document.getElementById('info')!.hidden;
         document.getElementById('options')!.hidden = !document.getElementById('options')!.hidden;

@@ -32,6 +32,10 @@ export function createServer(useSentry = true, port = process.env.PORT || 3000) 
   // todo: instead of hacking in games with arrow functions
   // have the middlewares fetch games from db or w/e
   app.get('/', (req, res) => root(req, res, games));
+  // for game's we've deleted but client has game data in URL fragment
+  // don't server this on game code specific URL
+  // so we can cache the page more
+  app.get('/archived', (_, res) => res.sendFile(staticDir + 'archived.html'))
   app.get('/game/:code', (req, res) => gamePage(req, res, games));
   app.get('/game/:code/images/:id', (req, res) => getImage(req, res, games));
   app.get('/game/:code/low-res-images/:id', (req, res) => getImage(req, res, games));
@@ -219,11 +223,7 @@ function gamePage(req: express.Request, res: express.Response, games: Map<string
   }
 
   if (req.query.format == "json") {
-    // if (req.query.publicId && req.query.index) {
-    //   res.write(Game.getImage(game, parseInt(req.query.publicId.toString()), parseInt(req.query.index.toString())));
-    // } else {
     res.json(Game.gameStateForClient(game));
-    // }
     return;
   } else if (game.state == Game.states.FINISHED) {
     res.sendFile(staticDir + 'archived.html');
