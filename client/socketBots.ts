@@ -98,12 +98,13 @@ function activePlayer(gameId: string, privateId: string, player: Player) {
                 "position": {
                     longitude: player.position.longitude,
                     latitude: player.position.latitude,
-                    accuracy: null,
-                    heading: null,
-                    speed: null,
-                    timestamp: null,
-                    altitude: null,
-                    altitudeAccuracy: null
+                    //todo: mock these more correctly
+                    accuracy: 1,
+                    heading: 0,
+                    speed: 1,
+                    timestamp: Date.now(),
+                    altitude: 0,
+                    altitudeAccuracy: 1
                 },
                 "isSnipe": true,
             }

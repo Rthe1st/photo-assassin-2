@@ -14,6 +14,15 @@ export function getSettings(){
     return game.chosenSettings;
 }
 
+export function getPublicIds(sortByProgress: boolean = false) {
+    let players = Object.keys(game.userList).map(x => parseInt(x))
+    if(sortByProgress){
+        players.sort((a, b) => game.targetsGot![b].length - game.targetsGot![a].length)
+    }
+
+    return players
+}
+
 export function getUsername(publicId: number){
     return game.userList[publicId].username;
 }
@@ -21,6 +30,17 @@ export function getUsername(publicId: number){
 export function getLastSnipedPlayerId(publicId: number){
     let targetsGot = game.targetsGot![publicId];
     return targetsGot[targetsGot.length - 1];
+}
+
+export function getSnipeInfos(publicId: number){
+    let snipeInfoIndex = game.latestSnipeIndexes[publicId]
+    let snipeInfos = []
+    while(snipeInfoIndex != undefined){
+        let snipeInfo = game.snipeInfos[snipeInfoIndex]
+        snipeInfos.push(snipeInfo)
+        snipeInfoIndex = snipeInfo.previousSnipe
+    }
+    return snipeInfos
 }
 
 export function getPlayerProgress(publicId: number){

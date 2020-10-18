@@ -329,15 +329,24 @@ export function init(
 }
 
 export function update(
-    x: number,
-    y: number,
-    accuracy: number, // x and y's accuray with 95% confidence
+    x: number | undefined,
+    y: number | undefined,
+    accuracy: number | undefined, // x and y's accuray with 95% confidence
     // not needed till our state is dynamic
     speed: number | undefined,
-    heading: number,
-    time: number
+    heading: number | undefined,
+    time: number | undefined
     // z: mathjs.Matrix, R: mathjs.Matrix, timeDelta: number
 ){
+
+    if(time == undefined || accuracy == undefined || x == undefined || y == undefined){
+        // without these we cannot accurately estimate
+        // return old result
+        return {
+            x: state.get([0,0]),
+            y: state.get([1,0])
+        }
+    }
 
     if(speed == undefined){
         speed = 0
