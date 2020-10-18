@@ -34,6 +34,7 @@ module.exports = {
   entry: {
     index: './client/index.ts',
     archived: './client/archived.ts',
+    archived: './client/archived.ts',
     lobby: './client/lobby.ts',
   },
   output: {
@@ -78,6 +79,16 @@ module.exports = {
     new HtmlWebpackPlugin({
       template: `./templates/archived.html`,
       filename: `archived.html`,
+      templateParameters: {
+        'key': envs["GOOGLE_MAPS_KEY"]
+      },
+      chunks: ['archived'],
+      inject: "head",
+      scriptLoading: "defer"
+    }),
+    new HtmlWebpackPlugin({
+      template: `./templates/archived_for_save.html`,
+      filename: `archived_for_save.html`,
       templateParameters: {
         'key': envs["GOOGLE_MAPS_KEY"]
       },

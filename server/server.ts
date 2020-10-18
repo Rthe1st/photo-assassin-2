@@ -37,6 +37,7 @@ export function createServer(useSentry = true, port = process.env.PORT || 3000) 
   // so we can cache the page more
   app.get('/archived', (_, res) => res.sendFile(staticDir + 'archived.html'))
   app.get('/game/:code', (req, res) => gamePage(req, res, games));
+  app.get('/game/:code/download', (req, res) => gameDownloadPage(req, res));
   app.get('/game/:code/images/:id', (req, res) => getImage(req, res, games));
   app.get('/game/:code/low-res-images/:id', (req, res) => getImage(req, res, games));
 
@@ -235,3 +236,10 @@ function gamePage(req: express.Request, res: express.Response, games: Map<string
   }
   res.sendFile(staticDir + 'index.html');
 };
+
+function gameDownloadPage(_: express.Request, res: express.Response){
+  //todo: replace $$gamedataplaceholder$$ in archived_for_save.html with the game data json
+  // then grab all the images and put them in a zip file with the html
+  res.sendFile(staticDir + 'archived_for_save.html');
+  return;
+}
