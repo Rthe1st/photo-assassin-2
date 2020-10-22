@@ -170,18 +170,25 @@ function setCurrentTarget() {
 
 function updateTimeLeft(sync: boolean = true) {
     let timeLeftElement = (<HTMLParagraphElement>document.getElementById('time-left')!)
+    let timeLeft = undefined
     if(sync){
         (<HTMLParagraphElement>document.getElementById('sub-state')!).innerText = game.game.subState!;
-        timeLeftElement.innerText = String(game.timeLeft());
+        timeLeft = game.game.timeLeft;
+        localTimeLeft = timeLeft!
     }else{
         // todo: we should probably update it on the local gamestate
-        let localTimeLeft = parseInt(timeLeftElement.innerText)
-        localTimeLeft -= 1;
+        // -1000 because localTimeLeft is in ms
+        // and we're called (at most) once per second
+        localTimeLeft -= 1000;
         if(localTimeLeft < 0){
             localTimeLeft = 0;
         }
-        timeLeftElement.innerText = String(localTimeLeft);
+        timeLeft = localTimeLeft
     }
+    let timeInSeconds = timeLeft! / 1000;
+    let timeMinutes = Math.floor(timeInSeconds / 60);
+    let timeSeconds = Math.floor(timeInSeconds % 60);
+    timeLeftElement.innerText = `${timeMinutes}m${timeSeconds}s`
 }
 
 function setSnipe(unset: boolean) {
@@ -223,11 +230,13 @@ function inPlayView() {
         (<HTMLButtonElement>document.getElementById('stop-game')).hidden = true;
     }
     updateTimeLeft();
+    if(updateTimeInterval == undefined){
+        updateTimeInterval = setInterval(() => updateTimeLeft(false), 1000)
+    }
     setCurrentTarget();
     document.getElementById('not-started')!.hidden = true;
     document.getElementById('in-play')!.hidden = false;
     document.getElementById('sub-state')!.innerText = game.game.subState!;
-    (<HTMLParagraphElement>document.getElementById('time-left')).innerText = String(game.game.timeLeft! / 1000);
 
     //the first time, before they move
     gps.setup((position) => socketClient.positionUpdate(socket, position));
@@ -268,7 +277,7 @@ function refreshProposedTargets(proposedTargetList: number[]) {
     targetList.innerHTML = '';
     for (var [sniper, target] of game.getProposedTargetPairs(proposedTargetList)) {
         var element = document.createElement('li');
-        var text = `${sniper} -> ${target}`;
+        var text = `${sniper}: ${target}`;
         element.innerText = text;
         targetList.appendChild(element);
     }
@@ -377,10 +386,12 @@ function refreshSettings(msg: socketClient.ServerUpdateSettingsMsg) {
     }
 };
 
+let updateTimeInterval: NodeJS.Timeout | undefined = undefined
+let localTimeLeft = 0
+
 function start(msg: socketClient.ServerStartMsg) {
     game.update(msg.gameState);
     inPlayView();
-    setInterval(() => updateTimeLeft(false), 1000)
 };
 
 function finished() {
@@ -400,11 +411,15 @@ function resizeDone(msg: socketClient.ServerResizeDone){
     console.log(a.src)
     console.log(msg)
     if(a != null){
-        a.src = window.location.href + `/low-res-images/${msg.imageId}`;
+        var img = new Image;
+        img.classList.add('message-image');
+        img.setAttribute('id', `image-${msg.imageId}`)
+        img.src = window.location.href + `/low-res-images/${msg.imageId}`;
+        img.onclick = () => a.onclick
+        // remake it to force a reload of the image
+        // changing source doesnt seem to work on firefox
+        a.replaceWith(img)
     }
-    a.hidden = true;
-    a.hidden = false;
-    console.log(a.src)
 }
 
 function chatMessage(msg: socketClient.ServerChatMessage) {

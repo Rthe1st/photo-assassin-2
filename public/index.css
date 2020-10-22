@@ -118,6 +118,33 @@ body{
     /* font-size: 1.5em; */
 }
 
+#snipe-image-overlay {
+    text-align:center;
+    width: 100%;
+    position: absolute;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    background-color: rgba(255, 255, 255, 0.75);
+    /* font-size: 1.5em; */
+}
+
+#sniped-screen {
+    font-size: 1em;
+    /* this has a gap at the bottom of the screen that isn't covered
+    might be due to URL bar in firefox mobile - think it might go away if scroll bar does*/
+    height: 100vh;
+    width: 100vw;
+    position: relative;
+    background-color: black;
+}
+
+#snipe-image {
+    height: 100vh;
+    width: 100vw;
+    object-fit: contain;
+}
+
 #preview-buttons {
     display: flex;
     flex-direction: row;

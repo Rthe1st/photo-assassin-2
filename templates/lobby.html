@@ -53,19 +53,6 @@
 
 <body>
   <h1 id="game-title">Photo-Assassin</h1>
-  <!--hide this by default, so that it does appear then disappear during page load-->
-  <div id="make-area" class="area" hidden>
-    <!-- todo: make these POSTs-->
-    <form id="make-form" action="/make">
-      <h2>New Game</h2>
-      <label>
-        Player Name
-        <input name="username" autocomplete="off" />
-      </label>
-      <button id="make-game">New game</button>
-    </form>
-  </div>
-  <hr id="area-divider" />
   <div id="join-area" class="area">
     <h2>Join game</h2>
     <form id="join-form" action="/join" method="GET">
@@ -78,6 +65,20 @@
         <input name="code" autocomplete="off" placeholder="XXXX-XXXX-X" />
       </label>
       <input value="Join game" type="submit" />
+    </form>
+  </div>
+  <hr id="area-divider" />
+  <!--hide this by default, so that it does appear then disappear during page load-->
+  <!-- put below join game, so that it doesnt move that element when it loads-->
+  <div id="make-area" class="area" hidden>
+    <!-- todo: make these POSTs-->
+    <form id="make-form" action="/make">
+      <h2>New Game</h2>
+      <label>
+        Player Name
+        <input name="username" autocomplete="off" />
+      </label>
+      <button id="make-game">New game</button>
     </form>
   </div>
 </body>
