@@ -107,6 +107,8 @@ function activePlayer(gameId: string, privateId: string, player: Player) {
                     altitudeAccuracy: 1
                 },
                 "isSnipe": true,
+                //we don't care about this
+                nonce: 1
             }
             socketClient.chatMessage(socket, message);
         },
@@ -132,6 +134,8 @@ function activePlayer(gameId: string, privateId: string, player: Player) {
                     altitudeAccuracy: null
                 },
                 "isSnipe": randomGenerator(100) > 50,
+                //we don't care about this
+                nonce: 1
             }
             socketClient.chatMessage(socket, message);
         },
@@ -204,6 +208,8 @@ function listeningPlayer(gameId: string, privateId: string, player: Player, publ
                         altitudeAccuracy: null
                     },
                     "isSnipe": true,
+                    //we don't care about this
+                    nonce: 1
                 }
                 socketClient.chatMessage(socket, message);
             } else if (command == "move") {
@@ -237,6 +243,8 @@ function listeningPlayer(gameId: string, privateId: string, player: Player, publ
                         altitudeAccuracy: null
                     },
                     "isSnipe": false,
+                    //we don't care about this
+                    nonce: 1
                 }
                 socketClient.chatMessage(socket, message);
             } else if (command == "message") {
@@ -255,6 +263,8 @@ function listeningPlayer(gameId: string, privateId: string, player: Player, publ
                     },
                     image: undefined,
                     isSnipe: undefined,
+                    //we don't care about this
+                    nonce: 1
                 }
                 socketClient.chatMessage(socket, message);
             } else if (command == "badsnipe" && parts.length == 3) {

@@ -35,7 +35,10 @@ export interface ServerChatMessage {
     botMessage?: string,
     //todo: remove this - it massivly explodes size of chathistory
     gameState: SharedGame.ClientGame,
-    resizeIsAvailable: boolean
+    resizeIsAvailable: boolean,
+    // a random number to match messages from the server with those sent from the client
+    // so we can confirm message X was received
+    nonce: number
   }
 
 export type ClientPositionUpdate = SharedGame.Position
@@ -44,7 +47,8 @@ export interface ClientChatMessage {
     text: string,
     image?: File | ArrayBuffer,
     position?: SharedGame.Position,
-    isSnipe?: boolean
+    isSnipe?: boolean,
+    nonce: number
 }
 
 export interface ClientBadSnipe {

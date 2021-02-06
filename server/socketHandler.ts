@@ -109,7 +109,8 @@ export function chatMsg(msg: socketEvents.ClientChatMessage, game: Game.Game, so
     gameState: clientState,
     snipeInfo: snipeInfo,
     botMessage: botMessage,
-    resizeIsAvailable: game.lowResImages[imageId!] != undefined
+    resizeIsAvailable: game.lowResImages[imageId!] != undefined,
+    nonce: msg.nonce
   }
 
   game.chatHistory.push(outgoingMsg);

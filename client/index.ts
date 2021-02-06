@@ -54,6 +54,7 @@ function createChatElement(sender: string, message: string, imageId?: number, sn
         if(message != ""){
             snipeScreenText += `, '${message}'`
         }
+        //todo: should we only add this once image is availble?
         img.onclick = () => showSnipedScreen(snipeScreenText, imageId);
         li.appendChild(img);
         if (snipeInfo != undefined) {
@@ -78,6 +79,7 @@ function createChatElement(sender: string, message: string, imageId?: number, sn
             }
         }
     }
+    return li
 }
 
 function processMsg(msg: socketClient.ServerChatMessage, isReplay: boolean) {
@@ -85,7 +87,14 @@ function processMsg(msg: socketClient.ServerChatMessage, isReplay: boolean) {
         createChatElement('Gamebot3000', msg.botMessage);
     }
 
+    if(msg.publicId == publicId){
+        if(game.clientOnly.unconfirmedMessages[msg.nonce]){
+            game.clientOnly.unconfirmedMessages[msg.nonce].placeHolderMessage.remove()
+        }
+    }
+
     createChatElement(game.getUsername(msg.publicId), msg.text, msg.imageId, msg.snipeInfo, msg.resizeIsAvailable);
+    
     if (isReplay) {
         return;
     }
@@ -122,17 +131,36 @@ function photoInput(event: Event) {
     document.getElementById("mark-snipe-question")!.innerText = `Is ${target} in the picture?`
 }
 
+function messagePlaceholder(text:string){
+    // before sending a message to the server, call this
+    // which will create a placeholder chat element
+    // for the message and which will be deleted when server broadcasts the message (confirming it recieved it)
+    // todo: fix left over placeholder messages if connection dies before confirmation
+    // could do that by just reloading message history from server whenever connection dies
+    let element = createChatElement(game.getUsername(publicId), text)
+    var array = new Uint32Array(1);
+    window.crypto.getRandomValues(array);
+    let nonce = array[0]
+    game.clientOnly.unconfirmedMessages[nonce] = {
+        placeHolderMessage: element
+    }
+    return nonce
+}
+
 function sendTextMessage(ev: MouseEvent) {
     let messageElement = <HTMLInputElement>document.getElementById('message');
     if (messageElement.value == '') {
         return;
     }
+    let nonce = messagePlaceholder(messageElement.value)
     let message: socketClient.ClientChatMessage = {
         text: messageElement.value,
         position: gps.position,
         image: undefined,
-        isSnipe: undefined
+        isSnipe: undefined,
+        nonce: nonce
     }
+
     socketClient.chatMessage(socket, message);
     messageElement.value = '';
     ev.preventDefault();
@@ -144,11 +172,16 @@ function sendTextMessage(ev: MouseEvent) {
 function sendPhotoMessage(ev: MouseEvent) {
     var file: File = (<HTMLInputElement>document.getElementById('photo-input')).files![0];
 
+    let text = (<HTMLInputElement>document.getElementById('photo-message')).value
+
+    let nonce = messagePlaceholder(text)
+
     let message = {
-        "text": (<HTMLInputElement>document.getElementById('photo-message')).value,
+        "text": text,
         "image": file,
         "position": gps.position,
         "isSnipe": (<HTMLInputElement>document.getElementById('is-snipe')).checked,
+        nonce: nonce
     }
     socketClient.chatMessage(socket, message);
     (<HTMLInputElement>document.getElementById('message')).value = '';

@@ -88,3 +88,15 @@ export function timeLeft(){
 export function getSnipeImageId(snipeInfoIndex: number ){
     return game.snipeInfos[snipeInfoIndex].imageId
 }
+
+export interface UnconfirmedMessage {
+    placeHolderMessage: HTMLLIElement
+}
+
+export interface ClientOnly {
+    unconfirmedMessages: { [id: number]: UnconfirmedMessage }
+}
+
+export let clientOnly: ClientOnly = {
+    unconfirmedMessages: []
+}
