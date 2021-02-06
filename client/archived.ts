@@ -1,6 +1,5 @@
 import * as SharedGame from '../shared/game';
 import * as kalman from './kalman';
-import * as otherKalman from './otherKalman';
 
 import * as Game from './game';
 
@@ -180,6 +179,11 @@ window.onload = function () {
         document.getElementById('main')!.hidden = false;
         (<HTMLImageElement>document.getElementById('photo')).src = window.location.href + "/shitty_loader.jpg";
     }
+
+    document.getElementById('time-lapse')!.onmouseup = function(){
+        let mapData = prepareMapData(gameState);
+        annotateMap(false, mapData, getPublicId());
+    };
 };
 
 interface PlayerSnipe {
@@ -189,11 +193,9 @@ interface PlayerSnipe {
 
 interface MapData {
     playerPaths: { [key: number]: google.maps.Polyline },
-    playerPaths2: { [key: number]: google.maps.Polyline },
     rawPlayerPaths: { [key: number]: google.maps.Polyline },
     playerSnipes: { [key: number]: PlayerSnipe[] },
     points: { [key: number]: google.maps.Circle[]},
-    points2: { [key: number]: google.maps.Circle[]},
     rawPoints: { [key: number]: google.maps.Circle[]}
 }
 
@@ -224,27 +226,14 @@ var playerColours = [
     "#232C16",  //Dark Olive Green
 ];
 
-function processedPath2(positions: SharedGame.Position[], playerPublicId: number){
+function processedPath(positions: SharedGame.Position[], playerPublicId: number, maxTime: number){
     let path = [];
-    let pointMarkers = []
-    // let firstPositionData;
-    // firstPositionData = positions[0]
-    const kalmanFilter = new otherKalman.GPSKalmanFilter()
-    // for (let index = 0; index < coords.length; index++) {
-    //     const { lat, lng, accuracy, timestampInMs } = coords[index]
-    //     updatedCoords[index] = kalmanFilter.process(lat, lng, accuracy, timestampInMs)
-    // }
+    let pointMarkers = [];
+    const kalmanFilter = new kalman.GPSKalmanFilter();
     for (var position of positions) {
-        // console.log(position);
-        // todo: should we compress points where speed=0 into 1 point?
         let updatedCoord = kalmanFilter.process(position.latitude!, position.longitude!, position.accuracy!, position.timestamp!)
-        // console.log(updatedCoord);
         const estLongitude = updatedCoord[0];
         const estLatitude = updatedCoord[1];
-        // let {
-        //     x: estLongitude,
-        //     y: estLatitude
-        // } = kalman.update(position.longitude!, position.latitude!, position.accuracy!, position.speed!, position.heading!, position.timestamp!)
         var latlng: google.maps.ReadonlyLatLngLiteral = { lat: estLatitude!, lng: estLongitude };
         path.push(latlng);
         pointMarkers.push(new google.maps.Circle({
@@ -255,9 +244,12 @@ function processedPath2(positions: SharedGame.Position[], playerPublicId: number
             fillOpacity: 0.35,
             center: latlng,
             radius: 0.1
+
         }));
+        if(position.timestamp! > maxTime){
+            break;
+        }
     }
-    console.log(playerPublicId)
     // todo: this makes the line dashed
     // once processed path is better then the raw
     // make the raw one dashed
@@ -270,7 +262,7 @@ function processedPath2(positions: SharedGame.Position[], playerPublicId: number
     var polyLine = new google.maps.Polyline({
         path: path,
         geodesic: true,
-        strokeColor: "#0000FF",
+        strokeColor: getPlayerColor(playerPublicId),
         strokeOpacity: 0,
         icons: [
           {
@@ -279,7 +271,6 @@ function processedPath2(positions: SharedGame.Position[], playerPublicId: number
             repeat: "20px",
           },
         ],
-        // strokeOpacity: 1.0,
         strokeWeight: 2
     });
     return {
@@ -287,68 +278,7 @@ function processedPath2(positions: SharedGame.Position[], playerPublicId: number
     }
 }
 
-function processedPath(positions: SharedGame.Position[], playerPublicId: number){
-    let path = [];
-    let pointMarkers = []
-    let firstPositionData;
-    firstPositionData = positions[0]
-    kalman.init(
-        firstPositionData.longitude!,
-        firstPositionData.latitude!,
-        firstPositionData.accuracy!,
-        firstPositionData.speed!,
-        firstPositionData.heading!,
-        firstPositionData.timestamp!)
-    for (var position of positions) {
-        // console.log(position)
-        // todo: should we compress points where speed=0 into 1 point?
-        let {
-            x: estLongitude,
-            y: estLatitude
-        } = kalman.update(position.longitude!, position.latitude!, position.accuracy!, position.speed!, position.heading!, position.timestamp!)
-        var latlng: google.maps.ReadonlyLatLngLiteral = { lat: estLatitude!, lng: estLongitude };
-        path.push(latlng);
-        pointMarkers.push(new google.maps.Circle({
-            strokeColor: "#00FF00",
-            strokeOpacity: 0.8,
-            strokeWeight: 2,
-            fillColor: "#00FF00",
-            fillOpacity: 0.35,
-            center: latlng,
-            radius: 0.1
-        }));
-    }
-
-    // todo: this makes the line dashed
-    // once processed path is better then the raw
-    // make the raw one dashed
-    const lineSymbol = {
-        path: "M 0,-1 0,1",
-        strokeOpacity: 1,
-        scale: 4,
-      };
-    getPlayerColor(playerPublicId)
-    var polyLine = new google.maps.Polyline({
-        path: path,
-        geodesic: true,
-        strokeColor: "#FF0000",
-        strokeOpacity: 0,
-        icons: [
-          {
-            icon: lineSymbol,
-            offset: "0",
-            repeat: "20px",
-          },
-        ],
-        // strokeOpacity: 1.0,
-        strokeWeight: 2
-    });
-    return {
-        polyLine: polyLine, points: pointMarkers
-    }
-}
-
-function rawPath(positions: SharedGame.Position[], playerPublicId: number){
+function rawPath(positions: SharedGame.Position[], playerPublicId: number, maxTime: number){
     let rawPath = [];
     let pointMarkers = []
     for (var position of positions) {
@@ -365,6 +295,9 @@ function rawPath(positions: SharedGame.Position[], playerPublicId: number){
             center: rawLatlng,
             radius: 0.1
         }));
+        if(position.timestamp! > maxTime){
+            break;
+        }
     }
 
     var rawPolyLine = new google.maps.Polyline({
@@ -384,27 +317,26 @@ function prepareMapData(gameState: SharedGame.ClientGame) {
 
     let mapData: MapData = {
         playerPaths: [],
-        playerPaths2: [],
         rawPlayerPaths: [],
         playerSnipes: [],
         points: [],
-        points2: [],
         rawPoints: [],
     };
 
+    let sliderValue = Number((<HTMLInputElement>document.getElementById('time-lapse')!).value);
     for (const playerPublicId of Game.getPublicIds()) {
         let positions = gameState.positions![playerPublicId]
         if(positions.length != 0){
-            let data2 = processedPath2(positions, playerPublicId);
-            mapData.points2[playerPublicId] = data2.points;
-            mapData.playerPaths2[playerPublicId] = data2.polyLine;
-            let data = processedPath(positions, playerPublicId);
+            
+            let minTime = positions[0].timestamp!;
+            let maxTime = positions[positions.length-1].timestamp!;
+            let scaledMaxTime = minTime + (maxTime - minTime) * (sliderValue/100);
+            let data = processedPath(positions, playerPublicId, scaledMaxTime);
             mapData.points[playerPublicId] = data.points;
             mapData.playerPaths[playerPublicId] = data.polyLine;
-            let rawData = rawPath(positions, playerPublicId);
+            let rawData = rawPath(positions, playerPublicId, scaledMaxTime);
             mapData.rawPoints[playerPublicId] = rawData.points;
             mapData.rawPlayerPaths[playerPublicId] = rawData.polyLine;
-            // console.log(mapData);
         }
 
         mapData.playerSnipes[playerPublicId] = [];
@@ -484,11 +416,6 @@ function annotateMap(centerMap: boolean, mapData: MapData, publicId?: number) {
             for(let point of mapData.points[playerPublicId]){
                 point.setMap(map)
             }
-            mapData.playerPaths2[playerPublicId].setMap(map);
-            for(let point of mapData.points2[playerPublicId]){
-                point.setMap(map)
-            }
-            // console.log(mapData);
             mapData.rawPlayerPaths[playerPublicId].setMap(map);
             for(let point of mapData.rawPoints[playerPublicId]){
                 point.setMap(map)
@@ -503,10 +430,6 @@ function annotateMap(centerMap: boolean, mapData: MapData, publicId?: number) {
         } else {
             mapData.playerPaths[playerPublicId].setMap(null);
             for(let point of mapData.points[playerPublicId]){
-                point.setMap(null)
-            }
-            mapData.playerPaths2[playerPublicId].setMap(null);
-            for(let point of mapData.points2[playerPublicId]){
                 point.setMap(null)
             }
             mapData.rawPlayerPaths[playerPublicId].setMap(null);
