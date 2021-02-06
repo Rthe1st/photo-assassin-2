@@ -34,7 +34,6 @@ module.exports = {
   entry: {
     index: './client/index.ts',
     archived: './client/archived.ts',
-    archived: './client/archived.ts',
     lobby: './client/lobby.ts',
   },
   output: {
