@@ -526,7 +526,9 @@ function gpsPlayer(gameId: string, privateId: string, _: Player) {
         privateId,
         (msg) => {
             console.log("init, starting")
-            socketClient.startGame(socket, { gameLength: 60000, countDown: 0, proposedTargetList: msg.gameState.chosenSettings.proposedTargetList });
+            var gpsData = JSON.parse(fs.readFileSync('gps_test_data.json', 'utf8'));
+            let gameLength = gpsData[gpsData.length-1]["timestamp"] - gpsData[0]["timestamp"];
+            socketClient.startGame(socket, { gameLength: gameLength, countDown: 0, proposedTargetList: msg.gameState.chosenSettings.proposedTargetList });
         },
         () => { },
         () => { },

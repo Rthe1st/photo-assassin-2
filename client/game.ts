@@ -23,6 +23,23 @@ export function getPublicIds(sortByProgress: boolean = false) {
     return players
 }
 
+export function startTime(): number{
+    //todo: this should be stored on the game obj by server
+    // instead of trying to work it out
+    let earliestTime = Number.POSITIVE_INFINITY;
+    for (const playerPublicId of getPublicIds()) {
+        let firstPosition = game.positions![playerPublicId][0];
+        if(firstPosition != undefined){
+            earliestTime = Math.min(earliestTime, firstPosition.timestamp!);
+        }
+    }
+    return earliestTime;
+}
+
+export function endTime(): number{
+    return startTime() + game.chosenSettings.countDown + game.chosenSettings.gameLength;
+}
+
 export function getUsername(publicId: number){
     return game.userList[publicId].username;
 }

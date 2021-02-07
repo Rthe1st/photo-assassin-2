@@ -1,11 +1,9 @@
 import * as SharedGame from '../shared/game';
-import * as kalman from './kalman';
-
+// import * as kalman from './kalman';
+import {MapData} from './mapAnnotations';
 import * as Game from './game';
 
 import * as Sentry from '@sentry/browser';
-// import { game } from './game';
-// import { rejects } from 'assert';
 
 Sentry.init({ dsn: 'https://0622ee38668548dcb4af966730298b31@o428868.ingest.sentry.io/5374680' });
 if (process.env.SENTRY_TESTS == "true") {
@@ -63,7 +61,7 @@ function buildTargetsState(playerPublicId: number){
     return outerLi
 }
 
-function buildPlayerTickBox(publicId: number, username: string, mapData: MapData){
+function buildPlayerTickBox(publicId: number, username: string){
     var labelItem = document.createElement("li");
     let inputId = `show-player-${username}`
     var label = document.createElement("label");
@@ -75,7 +73,12 @@ function buildPlayerTickBox(publicId: number, username: string, mapData: MapData
     input.setAttribute("type", "checkbox");
     input.setAttribute("checked", "true");
     input.addEventListener('change', () => {
-        annotateMap(false, mapData, publicId);
+        var checkbox = (<HTMLInputElement>document.getElementById(`show-player-${username}`));
+        if (checkbox.checked) {
+            mapData.showPlayer(publicId);
+        }else{
+            mapData.hidePlayer(publicId);
+        }
     });
     input.setAttribute("id", inputId);
     labelItem.appendChild(label);
@@ -83,7 +86,7 @@ function buildPlayerTickBox(publicId: number, username: string, mapData: MapData
     return labelItem
 }
 
-function setUpPage(gameState: SharedGame.ClientGame, mapData: MapData, publicId?: number) {
+function setUpPage(gameState: SharedGame.ClientGame, publicId?: number) {
     if (publicId) {
         const username = gameState.userList[publicId].username;
         document.getElementById("username")!.innerText = username;
@@ -115,7 +118,7 @@ function setUpPage(gameState: SharedGame.ClientGame, mapData: MapData, publicId?
 
     var options = document.getElementById("options")!;
     for (let playerPublicId of Game.getPublicIds()) {
-        let labelItem = buildPlayerTickBox(playerPublicId, Game.getUsername(playerPublicId), mapData)
+        let labelItem = buildPlayerTickBox(playerPublicId, Game.getUsername(playerPublicId))
         options.appendChild(labelItem);
     }
 }
@@ -139,7 +142,9 @@ async function getDataFromApi(){
     return gameState;
 }
 
-let gameState: SharedGame.ClientGame
+var map: google.maps.Map;
+let gameState: SharedGame.ClientGame;
+let mapData: MapData;
 
 window.onload = function () {
     // todo: also try load it from a variable
@@ -155,8 +160,7 @@ window.onload = function () {
 
         Game.update(gameState)
 
-        let mapData = prepareMapData(gameState);
-        setUpPage(gameState, mapData, publicId);
+        setUpPage(gameState, publicId);
         map = new google.maps.Map(document.getElementById('map')!, {
             zoom: 17,
             mapTypeId: 'satellite',
@@ -167,7 +171,14 @@ window.onload = function () {
             // changing the option doesn't seem to quite be working
             // disableDefaultUI: false,
         });
-        annotateMap(true, mapData, publicId);
+
+        mapData = new MapData(gameState, map, showPhoto, playerColours);
+        // observers won't have a public ID
+        if(publicId){
+            mapData.center(publicId);
+        }else{
+            mapData.center();
+        }
     })
 
     document.getElementById('show-map')!.onclick = function () {
@@ -180,24 +191,19 @@ window.onload = function () {
         (<HTMLImageElement>document.getElementById('photo')).src = window.location.href + "/shitty_loader.jpg";
     }
 
-    document.getElementById('time-lapse')!.onmouseup = function(){
-        let mapData = prepareMapData(gameState);
-        annotateMap(false, mapData, getPublicId());
+    document.getElementById('time-lapse')!.oninput = function(){
+        let sliderValue = Number.parseInt((<HTMLInputElement>document.getElementById('time-lapse')).value);
+
+        let sliderPercent = sliderValue / 1000;
+
+        let startTime = Game.startTime();
+        let endTime = Game.endTime();
+
+        let scaledMaxTime = startTime + (endTime - startTime)*sliderPercent;
+
+        mapData.changeTimeRange(0, scaledMaxTime);
     };
 };
-
-interface PlayerSnipe {
-    marker: google.maps.Marker,
-    arrow?: google.maps.Polyline
-}
-
-interface MapData {
-    playerPaths: { [key: number]: google.maps.Polyline },
-    rawPlayerPaths: { [key: number]: google.maps.Polyline },
-    playerSnipes: { [key: number]: PlayerSnipe[] },
-    points: { [key: number]: google.maps.Circle[]},
-    rawPoints: { [key: number]: google.maps.Circle[]}
-}
 
 // hardcode distinct colours, and reuse if too many players
 // todo: find a js library to handle colour generation
@@ -226,232 +232,9 @@ var playerColours = [
     "#232C16",  //Dark Olive Green
 ];
 
-function processedPath(positions: SharedGame.Position[], playerPublicId: number, maxTime: number){
-    let path = [];
-    let pointMarkers = [];
-    const kalmanFilter = new kalman.GPSKalmanFilter();
-    for (var position of positions) {
-        let updatedCoord = kalmanFilter.process(position.latitude!, position.longitude!, position.accuracy!, position.timestamp!)
-        const estLongitude = updatedCoord[0];
-        const estLatitude = updatedCoord[1];
-        var latlng: google.maps.ReadonlyLatLngLiteral = { lat: estLatitude!, lng: estLongitude };
-        path.push(latlng);
-        pointMarkers.push(new google.maps.Circle({
-            strokeColor: "#00FF00",
-            strokeOpacity: 0.8,
-            strokeWeight: 2,
-            fillColor: "#00FF00",
-            fillOpacity: 0.35,
-            center: latlng,
-            radius: 0.1
-
-        }));
-        if(position.timestamp! > maxTime){
-            break;
-        }
-    }
-    // todo: this makes the line dashed
-    // once processed path is better then the raw
-    // make the raw one dashed
-    const lineSymbol = {
-        path: "M 0,-1 0,1",
-        strokeOpacity: 1,
-        scale: 4,
-      };
-
-    var polyLine = new google.maps.Polyline({
-        path: path,
-        geodesic: true,
-        strokeColor: getPlayerColor(playerPublicId),
-        strokeOpacity: 0,
-        icons: [
-          {
-            icon: lineSymbol,
-            offset: "0",
-            repeat: "20px",
-          },
-        ],
-        strokeWeight: 2
-    });
-    return {
-        polyLine: polyLine, points: pointMarkers
-    }
-}
-
-function rawPath(positions: SharedGame.Position[], playerPublicId: number, maxTime: number){
-    let rawPath = [];
-    let pointMarkers = []
-    for (var position of positions) {
-        let rawLatlng: google.maps.ReadonlyLatLngLiteral = { lat: position.latitude!, lng: position.longitude! };
-        rawPath.push(rawLatlng);
-
-
-        pointMarkers.push(new google.maps.Circle({
-            strokeColor: "#00FF00",
-            strokeOpacity: 0.8,
-            strokeWeight: 2,
-            fillColor: "#00FF00",
-            fillOpacity: 0.35,
-            center: rawLatlng,
-            radius: 0.1
-        }));
-        if(position.timestamp! > maxTime){
-            break;
-        }
-    }
-
-    var rawPolyLine = new google.maps.Polyline({
-        path: rawPath,
-        geodesic: true,
-        strokeColor: getPlayerColor(playerPublicId),
-        strokeOpacity: 1.0,
-        strokeWeight: 2
-    });
-
-    return {
-        polyLine: rawPolyLine, points: pointMarkers
-    }
-}
-
-function prepareMapData(gameState: SharedGame.ClientGame) {
-
-    let mapData: MapData = {
-        playerPaths: [],
-        rawPlayerPaths: [],
-        playerSnipes: [],
-        points: [],
-        rawPoints: [],
-    };
-
-    let sliderValue = Number((<HTMLInputElement>document.getElementById('time-lapse')!).value);
-    for (const playerPublicId of Game.getPublicIds()) {
-        let positions = gameState.positions![playerPublicId]
-        if(positions.length != 0){
-            
-            let minTime = positions[0].timestamp!;
-            let maxTime = positions[positions.length-1].timestamp!;
-            let scaledMaxTime = minTime + (maxTime - minTime) * (sliderValue/100);
-            let data = processedPath(positions, playerPublicId, scaledMaxTime);
-            mapData.points[playerPublicId] = data.points;
-            mapData.playerPaths[playerPublicId] = data.polyLine;
-            let rawData = rawPath(positions, playerPublicId, scaledMaxTime);
-            mapData.rawPoints[playerPublicId] = rawData.points;
-            mapData.rawPlayerPaths[playerPublicId] = rawData.polyLine;
-        }
-
-        mapData.playerSnipes[playerPublicId] = [];
-        //todo: plot non-snipe images as well
-        for(let snipeInfo of gameState.snipeInfos){
-            if(snipeInfo.undone){
-                //todo: show them but greyed out or w/e
-                continue
-            }
-            var sniper = Game.getUsername(snipeInfo.snipePlayer);
-            var target = Game.getUsername(snipeInfo.target);
-            let latlng: google.maps.ReadonlyLatLngLiteral
-            if(snipeInfo.position != undefined){
-                latlng = { lat: snipeInfo.position.latitude!, lng: snipeInfo.position.longitude! }; 
-            }else{
-                // todo: choose a default point
-                // middle of the map? interpolation between known positions?
-                latlng = { lat: 0, lng: 0 };
-            }
-            let title = `${sniper} got ${target}`
-            var marker = new google.maps.Marker({
-                position: latlng,
-                title: title
-            });
-            marker.addListener('click', function () {
-                showPhoto(title, snipeInfo.imageId);
-            });
-
-            var obj: PlayerSnipe = { marker: marker, arrow: undefined };
-
-            if (snipeInfo.targetPosition != undefined) {
-                var lineSymbol = {
-                    path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW
-                };
-                var targetLatLng: google.maps.ReadonlyLatLngLiteral = {
-                    lat: snipeInfo.targetPosition.latitude!,
-                    lng: snipeInfo.targetPosition.longitude!,
-                };
-                var arrow = new google.maps.Polyline({
-                    path: [latlng, targetLatLng],
-                    icons: [{
-                        icon: lineSymbol,
-                        offset: '100%'
-                    }],
-                });
-                obj.arrow = arrow;
-            }
-            mapData.playerSnipes[playerPublicId].push(obj);
-        }
-    }
-    return mapData
-}
-
 function showPhoto(text: string, imageIndex: number) {
     document.getElementById('photo-div')!.hidden = false;
     document.getElementById('main')!.hidden = true;
     document.getElementById('photo-text')!.innerText = text;
     (<HTMLImageElement>document.getElementById('photo')).src = window.location.href + `/images/${imageIndex}`;
-}
-
-var map: google.maps.Map;
-
-function annotateMap(centerMap: boolean, mapData: MapData, publicId?: number) {
-    // it's more efficient if we just add/remove the relevant bits when
-    // for a specific option that's been changed
-    // but this is more flexible for now
-
-    for (const [playerPublicIdString, player] of Object.entries(gameState.userList)) {
-        let playerPublicId = parseInt(playerPublicIdString)
-        var checkbox = (<HTMLInputElement>document.getElementById(`show-player-${player["username"]}`));
-        // todo: check all the mapData objects instead of only playerPaths and assuming they're in sync
-        if(!mapData.playerPaths[playerPublicId]){
-            continue
-        }
-        if (checkbox.checked) {
-            mapData.playerPaths[playerPublicId].setMap(map);
-            for(let point of mapData.points[playerPublicId]){
-                point.setMap(map)
-            }
-            mapData.rawPlayerPaths[playerPublicId].setMap(map);
-            for(let point of mapData.rawPoints[playerPublicId]){
-                point.setMap(map)
-            }
-            for (var snipe of mapData["playerSnipes"][playerPublicId]) {
-                snipe["marker"].setMap(map);
-                //this might not be set if the target never sent a position
-                if (snipe["arrow"]) {
-                    snipe["arrow"].setMap(map);
-                }
-            }
-        } else {
-            mapData.playerPaths[playerPublicId].setMap(null);
-            for(let point of mapData.points[playerPublicId]){
-                point.setMap(null)
-            }
-            mapData.rawPlayerPaths[playerPublicId].setMap(null);
-            for(let point of mapData.rawPoints[playerPublicId]){
-                point.setMap(null)
-            }
-            for (var snipe of mapData["playerSnipes"][playerPublicId]) {
-                snipe["marker"].setMap(null);
-                if (snipe["arrow"]) {
-                    snipe["arrow"].setMap(null);
-                }
-            }
-        }
-    }
-    //center on when they started
-    //instead we should capture the agreed starting point of the game and use that
-    //current approach also breaks for observers without a publicId
-    if(centerMap){
-        if (publicId) {
-            map.setCenter(mapData["playerPaths"][publicId].getPath().getAt(0));
-        } else {
-            map.setCenter(mapData["playerPaths"][0].getPath().getAt(0));
-        }
-    }
 }
