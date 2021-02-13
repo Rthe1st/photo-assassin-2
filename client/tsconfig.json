@@ -11,6 +11,6 @@
         "noEmitOnError": true,
         "noUnusedParameters": true,
         "forceConsistentCasingInFileNames": true,
-        "noUnusedLocals": true
+        "noUnusedLocals": true,
     },
 }

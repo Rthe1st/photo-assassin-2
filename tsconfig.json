@@ -1,15 +1,17 @@
 {
     "compilerOptions": {
+        "outDir": "./server_out",
         "module": "ESNext",
         "target": "ESNext",
         "moduleResolution": "node",
         "allowSyntheticDefaultImports": true,
+        "esModuleInterop": true,
         "strict": true,
         "noEmitOnError": true,
         "noUnusedParameters": true,
         "forceConsistentCasingInFileNames": true,
         "noUnusedLocals": true
     },
-    "include": ["server/*", "client/socketClient.ts"],
+    "include": ["server/*", "client/socketClient.ts", "api_tests/*"],
     "exclude": ["client/*"]
 }

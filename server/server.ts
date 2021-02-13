@@ -3,9 +3,10 @@
 import * as path from 'path';
 import { fileURLToPath } from 'url';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const staticDir = path.join(__dirname, '../public/')
-import Sentry from '@sentry/node';
+let __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+const staticDir = path.join(__dirname, '../../public/')
+import * as Sentry from '@sentry/node';
 
 import cookieParser from 'cookie-parser';
 import express from 'express';
@@ -21,7 +22,7 @@ import * as socketHandler from './socketHandler.js';
 import * as socketInterface from './socketInterface.js';
 import { logger } from './logging.js';
 
-export function createServer(useSentry = true, port = process.env.PORT || 3000) {
+export function createServer(useSentry = true, port = process.env.PORT || 3000): http.Server {
   var games: Map<string, Game.Game> = new Map();
   var app = express();
   if (useSentry) {
@@ -77,6 +78,8 @@ export function createServer(useSentry = true, port = process.env.PORT || 3000) 
   httpServer.listen(port);
 
   setInterval(() => { socketHandler.checkGameTiming(games , io) }, 10000);
+
+  return httpServer;
 }
 
 function addSentry(app: express.Application) {

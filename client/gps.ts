@@ -37,7 +37,7 @@ function setup(callback: (position: SharedGame.Position) => void) {
     );
 }
 
-function updatePosition(geolocationPosition: Position, callback: (position: SharedGame.Position) => void) {
+function updatePosition(geolocationPosition: GeolocationPosition, callback: (position: SharedGame.Position) => void) {
     if (dev.testMode()) {
         console.log("mock pos update");
         mockCords();
@@ -57,7 +57,7 @@ function updatePosition(geolocationPosition: Position, callback: (position: Shar
 
 let userNotified = false;
 
-function dontUpdatePosition(err: PositionError): void {
+function dontUpdatePosition(err: GeolocationPositionError): void {
     if(!userNotified){
         userNotified = true;
         alert("geo faild");

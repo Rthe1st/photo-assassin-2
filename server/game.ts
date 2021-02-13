@@ -1,7 +1,7 @@
 import * as crypto from 'crypto';
 import { shuffle } from '../shared/shuffle.js'
 import * as SharedGame from '../shared/game.js'
-import * as SocketEvents from '../shared/socketEvents'
+import * as SocketEvents from '../shared/socketEvents.js'
 import sharp from 'sharp'
 
 import socketIo from 'socket.io'
