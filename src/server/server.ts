@@ -5,7 +5,8 @@ import { fileURLToPath } from 'url';
 
 let __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const staticDir = path.join(__dirname, '../../public/')
+//todo: this breaks jest api tests, where file is run from a different place
+const staticDir = path.join(__dirname, '../public/')
 import * as Sentry from '@sentry/node';
 
 import cookieParser from 'cookie-parser';
@@ -17,10 +18,10 @@ import * as http from 'http'
 
 import * as fs from 'fs';
 
-import * as Game from './game.js';
-import * as socketHandler from './socketHandler.js';
-import * as socketInterface from './socketInterface.js';
-import { logger } from './logging.js';
+import * as Game from './game';
+import * as socketHandler from './socketHandler';
+import * as socketInterface from './socketInterface';
+import { logger } from './logging';
 
 export function createServer(useSentry = true, port = process.env.PORT || 3000): http.Server {
   var games: Map<string, Game.Game> = new Map();

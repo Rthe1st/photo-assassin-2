@@ -1,6 +1,5 @@
 {
     "compilerOptions": {
-        "outDir": "./server_out",
         "module": "ESNext",
         "target": "ESNext",
         "moduleResolution": "node",
@@ -10,8 +9,6 @@
         "noEmitOnError": true,
         "noUnusedParameters": true,
         "forceConsistentCasingInFileNames": true,
-        "noUnusedLocals": true
+        "noUnusedLocals": true,
     },
-    "include": ["server/*", "client/socketClient.ts", "api_tests/*"],
-    "exclude": ["client/*"]
 }

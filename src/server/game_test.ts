@@ -1,4 +1,4 @@
-import * as Game from './game.js';
+import * as Game from './game';
 import * as assert from 'assert';
 import * as fs from 'fs'
 
@@ -22,7 +22,7 @@ export function basicGame() {
         altitudeAccuracy: null
     }
     Game.updatePosition(game, publicId2, position);
-    var photo = fs.readFileSync('./server/sample_snipe_image.jpeg');
+    var photo = fs.readFileSync('./src/server/sample_snipe_image.jpeg');
     let {imageId: imageId1} = Game.saveImage(game, photo);
     let {snipeInfo: snipeInfo} = Game.snipe(game, publicId2, imageId1);
     // publicId2 is undoing their own snipe

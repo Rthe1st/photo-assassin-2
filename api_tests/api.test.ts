@@ -2,7 +2,7 @@ import fetch from 'node-fetch';
 import * as https from 'https';
 import * as http from 'http'
 
-import * as Server from '../server/server.js';
+import * as Server from '../src/server/server';
 
 let s: http.Server;
 
@@ -18,6 +18,8 @@ afterAll((done) => {
 let domain = "https://localhost:3000";
 
 test('GET /', async () => {
+    console.log(s);
+    console.log(Server);
     const agent = new https.Agent({
         rejectUnauthorized: false
     })

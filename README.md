@@ -2,39 +2,69 @@
 
 This project is an app to make playing [Photo Assassin](https://github.com/Rthe1st/photo_assassin) more fun.
 
-
 ## Build process
 
-We need to support running code in 3 enviroments
+We build for 3 situations, starting from typescript source code and es6 module syntax preferred over commonjs.
 
-1) node (for server code)
-2) in the browser via webpack
-3) In Jest
+1) code to be run with node
 
-Node requires imports to include .js explicitly
-but webpack/ts-loader cannot map a .js import to it's .js file
-Jester needs commonjs code
+    * compile typescript files into Javascript
+        * build with `tsc`
+    * support use of import.metadata.url by running as es6 modules
+        * set `"type": "module"` in package.json
+        * https://nodejs.org/api/esm.html#esm_enabling
+    * Node requires explicit .js extensions on imports, and typescript does not add these
+        * use [a transform](https://github.com/Zoltu/typescript-transformer-append-js-extension) to add them
+        * don't add .js extensions explicitly to typescript source. We have shared code that is used in both node and browser contexts (and just-for-node code must build with jest for testing). tsc can resolve explicit .js import to .ts files but webpack + ts-awesome-loader and jest + test-jest cannot (couldn't find good reference for why/if that is a bug)
+            * https://github.com/Microsoft/TypeScript/issues/16577
+    * tsc doesn't support plugin configuration in tsconfig.json
+        * use `ttsc` when buidling for node, which support a `plugins` key for tsconfig
+    * Output the compiled JS to a new directory so it's harder for any tooling to accidentally start resolving to js version of a file instead of the ts version
+2) code to be run in a browser
+    * bundle JS dependencies / build static assets from templates
+    * use webpack
+    * compile typescript files into Javascript
+        * use ts-awesome-loader webpack plugin
+        * as noted above, webpack + ts-awesome-loader means we can't use explicit .js extensions in imports
+3) code to be run in Jest tests
+    * compile typescript files into Javascript
+        * ts-jest jest transform
+        * as noted above, jest + ts-jest means we can't use explicit .js extensions in imports
+    * use es6 module syntax like import.metadata.url
+        * Current stable ts-jest (v26) does not support es6 module code, so we use v27-next and config to force jest/ts-jest into es6 module mode
+            * https://jestjs.io/docs/en/ecmascript-modules
+            * https://kulshekhar.github.io/ts-jest/docs/next/guides/esm-support
+        * I couldn't work out how to get jest-babel to transpile that to a common-js equivalent (__dirname)
+        * ts-jest also offers [some advantages](https://jestjs.io/docs/en/getting-started#using-typescript) of babel-jest
 
-Solution:
+We could of solved the .js -> .ts resolution problem by specifying .js in typescript imports and stripping the extension with webpack/jest transforms. Its a choice between using webpack and jest transforms to strip it vs a tsc transform to add it and ttsc to use the plugin.
 
-Do not use .js in typescript imports
-when transpiling server code, append .js to local import paths
-    (with a transform or with seperate script after)
-Webpack should just work
-Use babel to transform typescript into common js for jester
-Run tsc on the jester tests to validate their types
-    Jester suport for esmodules is comming in next major release 0.27.0
-    when that is out we should switch to ts-jester + jester over babel + jester
+Solving this took me forever and I don't understand why this isn't a more common problem. I suppose code that uses typescript + es6 syntax + jest + webpack + runs in node such a niche setup? I feel like I must be missing a bigger architecure problem or something.
 
-Also ./client should only be for code running in a browser
-bots (clients running in node) should be in ./server
-./shared code should run in both runtime enviroments
+Our jest setup doesn't support testing of ./src/client scripts yet, we need to add a jest config for that
+
+### folder structure
+
+* ./src: our typescript source code and unit tests for it (when I write some - lul)
+
+  * ./src/server: code can only rely on running in the node-runtime environment, built with `ttsc`
+  * ./src/client: code can only rely on running in a browser, built with webpack
+  * ./src/shared: code must be able to run on both, used in both webpack and ttsc builds
+
+  * ./src/shared code causes the mess with import extensions - when running in node, we must specify .js, when in webpack/jest we must not specify it. Oh my.
+
+* ./assets: all non-js static files to server to clients, including templates that are modified during the build process.
+
+* ./dist: After building, this contains all the code needed to run the server.
+  * ./dist/public should contain all static assets that need to be served to clients
+
+* ./api_tests: jest tests for integration testing our api. Spins up the full server and connects to it as a client.
+
+* ./secret: files that we can't leak to version control, api keys, certificate keys
+
+* ./logs: logs generated by the server while running
 
 ## Resources
-
-We have to include .js extensions in module import paths because of this
-https://github.com/microsoft/TypeScript/issues/40878
-which seems crazy but :shrug:
 
 * [Deployment](https://dashboard.heroku.com/apps/photo-assassin/deploy/github)
 * [demo socket-io project](https://github.com/socketio/chat-example)

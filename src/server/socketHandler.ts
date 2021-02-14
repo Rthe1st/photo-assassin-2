@@ -1,7 +1,7 @@
-import { logger } from './logging.js'
-import * as Game from './game.js'
-import * as socketInterface from './socketInterface.js'
-import * as socketEvents from '../shared/socketEvents.js'
+import { logger } from './logging'
+import * as Game from './game'
+import * as socketInterface from './socketInterface'
+import * as socketEvents from '../shared/socketEvents'
 
 export function updateSettings(msg: socketEvents.ClientUpdateSettings, game: Game.Game, socket: SocketIO.Socket) {
   if (game.state != Game.states.NOT_STARTED) {

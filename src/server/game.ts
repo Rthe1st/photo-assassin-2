@@ -1,12 +1,12 @@
 import * as crypto from 'crypto';
-import { shuffle } from '../shared/shuffle.js'
-import * as SharedGame from '../shared/game.js'
-import * as SocketEvents from '../shared/socketEvents.js'
+import { shuffle } from '../shared/shuffle'
+import * as SharedGame from '../shared/game'
+import * as SocketEvents from '../shared/socketEvents'
 import sharp from 'sharp'
 
 import socketIo from 'socket.io'
 
-import { logger } from './logging.js'
+import { logger } from './logging'
 
 const states = Object.freeze({ "FINISHED": "FINISHED", "NOT_STARTED": "NOT STARTED", "IN_PLAY": "IN PLAY" })
 

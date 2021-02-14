@@ -1,5 +1,5 @@
-import * as Server from './server.js';
-import * as Logging from './logging.js';
+import * as Server from './server';
+import * as Logging from './logging';
 import dotenv from 'dotenv'
 import * as fs from 'fs'
 
@@ -12,11 +12,16 @@ if (process.env.NODE_ENV == "production") {
     Logging.setUpLogging('realGame');
     Server.createServer();
 } else {
+    // todo: I'm not sure comment below this is good logic
+    // if it's for tests only, put it in test code explicitly
+    // if it might be useful on the server, should always be installed
+
     // wrap in an async so we can dynamically import socketClient
     // which means we don't need to install dev dependencies in production
     // where socketClient is never used
     (async () => {
-        let socketClient = await import('../client/socketBots');
+        // we need an explicit extension here as typescript-transformer-append-js-extension doesn't recognize dynamic imports
+        let socketClient = await import('./socketBots.js');
         let gameCodeSpecified = process.argv.indexOf("--game-code")
         if (process.argv.includes("--prod")) {
             socketClient.useProd();

@@ -2,6 +2,7 @@ const dotenv = require('dotenv')
 const path = require('path');
 const webpack = require('webpack');
 
+const CopyPlugin = require("copy-webpack-plugin");
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 // this is used to upload map files to sentry
@@ -13,13 +14,12 @@ if (envs == undefined) {
 }
 
 // error if variables we depend on aren't set
-// because I lost 2 hours from setting BROWER_SENTRY
+// because I lost 2 hours from setting BROWSER_SENTRY
 let expected_vars = [
   "BROWSER_SENTRY",
   "NODE_SENTRY",
   "NODE_ENV",
-  // wether to true to log artificial errors to sentry to prove that it's working
-  // anything else to turn off
+  // if true log artificial errors to sentry to prove that it's working
   "SENTRY_TESTS",
   "GOOGLE_MAPS_KEY"
 ];
@@ -32,13 +32,13 @@ for (let env of expected_vars) {
 
 module.exports = {
   entry: {
-    index: './client/index.ts',
-    archived: './client/archived.ts',
-    lobby: './client/lobby.ts',
+    index: './src/client/index.ts',
+    archived: './src/client/archived.ts',
+    lobby: './src/client/lobby.ts',
   },
   output: {
     publicPath: '/static',
-    path: path.resolve(__dirname, 'public')
+    path: path.resolve(__dirname, 'dist/public')
   },
   mode: 'development',
   devtool: 'source-map',
@@ -49,7 +49,7 @@ module.exports = {
   module: {
     rules: [
       // All files with a '.ts' or '.tsx' extension will be handled by 'awesome-typescript-loader'.
-      { test: /\.tsx?$/, loader: "awesome-typescript-loader", options: { configFileName: './client/tsconfig.json' } },
+      { test: /\.tsx?$/, loader: "awesome-typescript-loader", options: { configFileName: './src/client/tsconfig.json' } },
 
       // All output '.js' files will have any sourcemaps re-processed by 'source-map-loader'.
       { test: /\.js$/, loader: "source-map-loader" }
@@ -60,7 +60,7 @@ module.exports = {
       'process.env': JSON.stringify(envs)
     }),
     new HtmlWebpackPlugin({
-      template: `./templates/error.html`, // relative path to the HTML files
+      template: `./assets/templates/error.html`, // relative path to the HTML files
       filename: `game_doesnt_exist.html`, // output HTML files
       templateParameters: {
         'error': 'Can\'t join - game doesn\'t exist'
@@ -68,7 +68,7 @@ module.exports = {
       chunks: []
     }),
     new HtmlWebpackPlugin({
-      template: `./templates/error.html`,
+      template: `./assets/templates/error.html`,
       filename: `game_in_progress.html`,
       templateParameters: {
         'error': 'Can\'t join - game already in progress'
@@ -76,7 +76,7 @@ module.exports = {
       chunks: []
     }),
     new HtmlWebpackPlugin({
-      template: `./templates/archived.html`,
+      template: `./assets/templates/archived.html`,
       filename: `archived.html`,
       templateParameters: {
         'key': envs["GOOGLE_MAPS_KEY"]
@@ -86,7 +86,7 @@ module.exports = {
       scriptLoading: "defer"
     }),
     new HtmlWebpackPlugin({
-      template: `./templates/archived_for_save.html`,
+      template: `./assets/templates/archived_for_save.html`,
       filename: `archived_for_save.html`,
       templateParameters: {
         'key': envs["GOOGLE_MAPS_KEY"]
@@ -94,7 +94,13 @@ module.exports = {
       chunks: ['archived'],
       inject: "head",
       scriptLoading: "defer"
-    })
+    }),
+    new CopyPlugin({
+      patterns: [
+        { from: "./assets/css", to: "." },
+        { from: "./assets/images", to: "." },
+      ],
+    }),
     // ,
     // new SentryWebpackPlugin({
     //   include: '.',
@@ -106,7 +112,7 @@ module.exports = {
     .concat(
       ['index', 'lobby'].map(name => {
         return new HtmlWebpackPlugin({
-          template: `./templates/${name}.html`, // relative path to the HTML files
+          template: `./assets/templates/${name}.html`, // relative path to the HTML files
           filename: `${name}.html`, // output HTML files
           chunks: [`${name}`], // respective JS files
           inject: "head",

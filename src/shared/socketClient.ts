@@ -1,7 +1,9 @@
+// use by browser code but also by robot clients running in node
+
 import io from 'socket.io-client';
 
-import * as SocketEvents from '../shared/socketEvents.js'
-export * from '../shared/socketEvents.js'
+import * as SocketEvents from './socketEvents'
+export * from './socketEvents'
 
 export function setup(
     gameId: string,

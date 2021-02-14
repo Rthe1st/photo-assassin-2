@@ -2,11 +2,11 @@
 // and allowing AI opponents
 // without the need for a browser
 
-import * as socketClient from './socketClient.js';
+import * as socketClient from '../shared/socketClient';
 import fetch from 'node-fetch';
 import fs from 'fs';
 import randomSeed from 'random-seed';
-import * as SharedGame from '../shared/game.js';
+import * as SharedGame from '../shared/game';
 import * as https from 'https';
 
 let domain = "https://localhost:3000";
@@ -91,7 +91,7 @@ function activePlayer(gameId: string, privateId: string, player: Player) {
         () => { },
         (_) => {
             console.log('start')
-            let file = fs.readFileSync('./server/sample_snipe_image.jpeg');
+            let file = fs.readFileSync('./src/server/sample_snipe_image.jpeg');
             let message = {
                 "text": "gotya",
                 "image": file,
@@ -119,7 +119,7 @@ function activePlayer(gameId: string, privateId: string, player: Player) {
         (_) => {
             player.position.latitude! += (Math.random() - 0.5) * 0.001;
             player.position.longitude! += (Math.random() - 0.5) * 0.001;
-            let file = fs.readFileSync('./server/sample_snipe_image.jpeg');
+            let file = fs.readFileSync('./src/server/sample_snipe_image.jpeg');
             let message = {
                 "text": "gotya",
                 "image": file,
@@ -193,7 +193,7 @@ function listeningPlayer(gameId: string, privateId: string, player: Player, publ
             console.log(name);
             if (command == "snipe") {
                 console.log("sniping");
-                let file = fs.readFileSync('./server/sample_snipe_image.jpeg');
+                let file = fs.readFileSync('./src/server/sample_snipe_image.jpeg');
                 let message = {
                     "text": "gotya",
                     "image": file,
@@ -228,7 +228,7 @@ function listeningPlayer(gameId: string, privateId: string, player: Player, publ
                 });
             } else if (command == "picture") {
                 console.log("pictureing");
-                let file = fs.readFileSync('./server/sample_snipe_image.jpeg');
+                let file = fs.readFileSync('./src/server/sample_snipe_image.jpeg');
                 let message = {
                     "text": "picture",
                     "image": file,
@@ -526,7 +526,7 @@ function gpsPlayer(gameId: string, privateId: string, _: Player) {
         privateId,
         (msg) => {
             console.log("init, starting")
-            var gpsData = JSON.parse(fs.readFileSync('gps_test_data.json', 'utf8'));
+            var gpsData = JSON.parse(fs.readFileSync('./src/server/gps_test_data.json', 'utf8'));
             let gameLength = gpsData[gpsData.length-1]["timestamp"] - gpsData[0]["timestamp"];
             socketClient.startGame(socket, { gameLength: gameLength, countDown: 0, proposedTargetList: msg.gameState.chosenSettings.proposedTargetList });
         },

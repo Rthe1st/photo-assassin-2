@@ -1,20 +1,20 @@
 module.exports = {
-  // preset: 'ts-jest',
   testEnvironment: 'jest-environment-node',
-  roots: ["<rootDir>/server_out/api_tests"],
+  roots: ["<rootDir>/api_tests"],
   transform: {
-    // "\\.ts$": "ts-jest",
+    "\\.ts$": "ts-jest",
   },
-  // extensionsToTreatAsEsm: [".js"],
-  // transform: {},
+  extensionsToTreatAsEsm: [".ts"],
   moduleDirectories: [
     'node_modules'
   ],
-  moduleFileExtensions: ['js'],
-  // globals: {
-  //   "ts-jest": {
-  //     "tsconfig": '<rootDir>/tsconfig.json',
-  //     "useESM": true,
-  //   }
-  // },
+  moduleFileExtensions: ['ts', "js"],
+  globals: {
+    "ts-jest": {
+      // when we start testing client side ts
+      // where going to have to choose a tsconfig based on what we're testing?
+      tsconfig: '<rootDir>/tsconfig.json',
+      useESM: true
+    }
+  }
 };

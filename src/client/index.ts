@@ -1,7 +1,7 @@
 import * as gps from './gps'
 import * as game from './game'
 import * as SharedGame from '../shared/game'
-import * as socketClient from './socketClient'
+import * as socketClient from '../shared/socketClient'
 
 import * as Sentry from '@sentry/browser';
 import { shuffle } from '../shared/shuffle';

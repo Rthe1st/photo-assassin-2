@@ -1,7 +1,7 @@
-import { logger } from './logging.js'
-import * as Game from './game.js'
-import * as socketEvents from '../shared/socketEvents.js'
-import * as socketHandler from './socketHandler.js'
+import { logger } from './logging'
+import * as Game from './game'
+import * as socketEvents from '../shared/socketEvents'
+import * as socketHandler from './socketHandler'
 
 export function setup(
     games: Map<string, Game.Game>,
