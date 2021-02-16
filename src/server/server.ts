@@ -1,21 +1,13 @@
-// only import path and use path.join
-// to avoid name collision with join function
-import * as path from 'path';
-import { fileURLToPath } from 'url';
-
-let __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-//todo: this breaks jest api tests, where file is run from a different place
-const staticDir = path.join(__dirname, '../public/')
 import * as Sentry from '@sentry/node';
 
 import cookieParser from 'cookie-parser';
-import express from 'express';
+import express, { NextFunction, Request, Response } from 'express';
 
 import socketIo from 'socket.io'
 import * as https from 'https'
 import * as http from 'http'
 
+import * as path from 'path';
 import * as fs from 'fs';
 
 import * as Game from './game';
@@ -23,7 +15,17 @@ import * as socketHandler from './socketHandler';
 import * as socketInterface from './socketInterface';
 import { logger } from './logging';
 
-export function createServer(useSentry = true, port = process.env.PORT || 3000): http.Server {
+function defaultErrorHandler(err: any, req: Request, res: Response, _: NextFunction){
+  console.log("express error")
+  // I think this is safe as it should just call to string on the vars
+  console.log(`path: ${req.path}`)
+  console.log(`query string: ${Object.entries(req.query)}`)
+  console.error(err.stack)
+  res.status(500).send('Internal server error')
+}
+
+export function createServer(staticDir="dist/public/", useSentry = true, port = process.env.PORT || 3000): http.Server {
+  staticDir = path.resolve(staticDir) + "/"
   var games: Map<string, Game.Game> = new Map();
   var app = express();
   if (useSentry) {
@@ -33,15 +35,17 @@ export function createServer(useSentry = true, port = process.env.PORT || 3000):
   app.use('/static', express.static(staticDir));
   // todo: instead of hacking in games with arrow functions
   // have the middlewares fetch games from db or w/e
-  app.get('/', (req, res) => root(req, res, games));
+  app.get('/', (req, res) => root(staticDir, req, res, games));
   // for game's we've deleted but client has game data in URL fragment
   // don't server this on game code specific URL
   // so we can cache the page more
   app.get('/archived', (_, res) => res.sendFile(staticDir + 'archived.html'))
-  app.get('/game/:code', (req, res) => gamePage(req, res, games));
-  app.get('/game/:code/download', (req, res) => gameDownloadPage(req, res));
+  app.get('/game/:code', (req, res) => gamePage(staticDir, req, res, games));
+  app.get('/game/:code/download', (req, res) => gameDownloadPage(staticDir, req, res));
   app.get('/game/:code/images/:id', (req, res) => getImage(req, res, games));
   app.get('/game/:code/low-res-images/:id', (req, res) => getImage(req, res, games));
+
+  app.use(defaultErrorHandler)
 
   let httpServer;
   if (process.env.NODE_ENV != "production") {
@@ -95,8 +99,7 @@ function addSentry(app: express.Application) {
 
 }
 
-function root(req: express.Request, res: express.Response, games: Map<string, Game.Game>) {
-
+function root(staticDir: string, req: express.Request, res: express.Response, games: Map<string, Game.Game>) {
   if (req.query.code == undefined) {
     res.sendFile(staticDir + 'lobby.html');
     return;
@@ -217,7 +220,7 @@ function getImage(req: express.Request, res: express.Response, games: Map<string
   res.write(image);
 }
 
-function gamePage(req: express.Request, res: express.Response, games: Map<string, Game.Game>) {
+function gamePage(staticDir: string, req: express.Request, res: express.Response, games: Map<string, Game.Game>) {
   //todo: convey errors to user (template error page?)
   logger.log("debug", `Accessing game: ${req.params.code}`);
   var game = games.get(req.params.code);
@@ -241,7 +244,7 @@ function gamePage(req: express.Request, res: express.Response, games: Map<string
   res.sendFile(staticDir + 'index.html');
 };
 
-function gameDownloadPage(_: express.Request, res: express.Response){
+function gameDownloadPage(staticDir: string, _: express.Request, res: express.Response){
   //todo: replace $$gamedataplaceholder$$ in archived_for_save.html with the game data json
   // then grab all the images and put them in a zip file with the html
   res.sendFile(staticDir + 'archived_for_save.html');

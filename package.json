@@ -22,7 +22,7 @@
     "prepublish": "npm run build-server && npm run build-client",
     "pretest": "npm run build-server && npm run build-client",
     "test": "node ./dist/server/test.js",
-    "api_test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
+    "jtest": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
   },
   "engines": {
     "node": "14.6.x",
