@@ -29,7 +29,12 @@ export function createServer(staticDir="dist/public/", useSentry = true, port = 
   var games: Map<string, Game.Game> = new Map();
   var app = express();
   if (useSentry) {
-    addSentry(app);
+    Sentry.init({ dsn: process.env.NODE_SENTRY });
+    if (process.env.SENTRY_TESTS == "true") {
+      Sentry.captureException(new Error("sentry test server.js"));
+    }
+    // The request handler must be the first middleware on the app
+    app.use(Sentry.Handlers.requestHandler());
   }
   app.use(cookieParser());
   app.use('/static', express.static(staticDir));
@@ -45,6 +50,10 @@ export function createServer(staticDir="dist/public/", useSentry = true, port = 
   app.get('/game/:code/images/:id', (req, res) => getImage(req, res, games));
   app.get('/game/:code/low-res-images/:id', (req, res) => getImage(req, res, games));
 
+  if(useSentry){
+    // The error handler must be before any other error middleware and after all controllers
+    app.use(Sentry.Handlers.errorHandler());
+  }
   app.use(defaultErrorHandler)
 
   let httpServer;
@@ -85,18 +94,6 @@ export function createServer(staticDir="dist/public/", useSentry = true, port = 
   setInterval(() => { socketHandler.checkGameTiming(games , io) }, 10000);
 
   return httpServer;
-}
-
-function addSentry(app: express.Application) {
-  Sentry.init({ dsn: process.env.NODE_SENTRY });
-  if (process.env.SENTRY_TESTS == "true") {
-    Sentry.captureException(new Error("sentry test server.js"));
-  }
-  // The request handler must be the first middleware on the app
-  app.use(Sentry.Handlers.requestHandler());
-  // The error handler must be before any other error middleware and after all controllers
-  app.use(Sentry.Handlers.errorHandler());
-
 }
 
 function root(staticDir: string, req: express.Request, res: express.Response, games: Map<string, Game.Game>) {
