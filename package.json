@@ -21,8 +21,7 @@
     "build-client": "webpack --config webpack.config.ts",
     "prepublish": "npm run build-server && npm run build-client",
     "pretest": "npm run build-server && npm run build-client",
-    "test": "node ./dist/server/test.js",
-    "jtest": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
+    "test": "node --experimental-vm-modules --unhandled-rejections=strict node_modules/jest/bin/jest.js"
   },
   "engines": {
     "node": "14.6.x",

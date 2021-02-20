@@ -9,7 +9,7 @@ import randomSeed from 'random-seed';
 import * as SharedGame from '../shared/game';
 import * as https from 'https';
 
-let domain = "https://localhost:3000";
+let domain:string = "https://localhost:3000";
 
 export function useProd() {
     domain = "https://photo-assassin.prangten.com";
@@ -19,22 +19,22 @@ const agent = new https.Agent({
     rejectUnauthorized: false
 })
 
-async function getData(url: string) {
+export async function getData(url: string) {
     const response = await fetch(url, {agent});
     const json = await response.json();
     return json;
 };
 
 
-function makeGame(username: string) {
-    const url = `${domain}/make?username=${username}&format=json`;
+export function makeGame(username: string, host:string=domain) {
+    const url = `${host}/make?username=${username}&format=json`;
 
     return getData(url);
 
 }
 
-function joinGame(username: string, gameId: string) {
-    const url = `${domain}/join?code=${gameId}&username=${username}&format=json`;
+export function joinGame(username: string, gameId: string, host:string=domain) {
+    const url = `${host}/join?code=${gameId}&username=${username}&format=json`;
 
     return getData(url);
 }
@@ -57,8 +57,6 @@ async function gameSetup(players: Player[], gameId: string|undefined) {
     if(!wasGamePremade){
         hostPlayer = players.shift()!;
         details = await makeGame(hostPlayer.name);
-        console.log(details);
-        console.log(`${domain}/game/${details["gameId"]}`);
         gameId = details.gameId;
     }
     let sockets = new Map();
@@ -149,7 +147,7 @@ function passivePlayer(gameId: string, privateId: string, player: Player) {
     let socket = socketClient.setup(
         gameId,
         privateId,
-        () => { },
+        () => { console.log("passive init") },
         () => { },
         () => { },
         () => { },
@@ -339,8 +337,8 @@ function listeningPlayer(gameId: string, privateId: string, player: Player, publ
     return socket;
 }
 
-export function activeGame() {
-    gameSetup([
+export async function activeGame() {
+    await gameSetup([
         {
             name: 'simpleSloth',
             algo: activePlayer,

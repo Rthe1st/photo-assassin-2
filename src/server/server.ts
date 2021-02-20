@@ -15,7 +15,7 @@ import * as socketHandler from './socketHandler';
 import * as socketInterface from './socketInterface';
 import { logger } from './logging';
 
-function defaultErrorHandler(err: any, req: Request, res: Response, _: NextFunction){
+function defaultErrorHandler(err: any, req: Request, res: Response, _: NextFunction) {
   console.log("express error")
   // I think this is safe as it should just call to string on the vars
   console.log(`path: ${req.path}`)
@@ -24,10 +24,11 @@ function defaultErrorHandler(err: any, req: Request, res: Response, _: NextFunct
   res.status(500).send('Internal server error')
 }
 
-export function createServer(staticDir="dist/public/", useSentry = true, port = process.env.PORT || 3000): http.Server {
+export function createServer(port = process.env.PORT || 3000, staticDir = "dist/public/", useSentry = true): http.Server {
   staticDir = path.resolve(staticDir) + "/"
   var games: Map<string, Game.Game> = new Map();
   var app = express();
+  app.use(defaultErrorHandler)
   if (useSentry) {
     Sentry.init({ dsn: process.env.NODE_SENTRY });
     if (process.env.SENTRY_TESTS == "true") {
@@ -36,6 +37,7 @@ export function createServer(staticDir="dist/public/", useSentry = true, port = 
     // The request handler must be the first middleware on the app
     app.use(Sentry.Handlers.requestHandler());
   }
+  app.use(defaultErrorHandler)
   app.use(cookieParser());
   app.use('/static', express.static(staticDir));
   // todo: instead of hacking in games with arrow functions
@@ -50,11 +52,10 @@ export function createServer(staticDir="dist/public/", useSentry = true, port = 
   app.get('/game/:code/images/:id', (req, res) => getImage(req, res, games));
   app.get('/game/:code/low-res-images/:id', (req, res) => getImage(req, res, games));
 
-  if(useSentry){
+  if (useSentry) {
     // The error handler must be before any other error middleware and after all controllers
     app.use(Sentry.Handlers.errorHandler());
   }
-  app.use(defaultErrorHandler)
 
   let httpServer;
   if (process.env.NODE_ENV != "production") {
@@ -68,7 +69,7 @@ export function createServer(staticDir="dist/public/", useSentry = true, port = 
       cert: fs.readFileSync('./secret/self_signed.pem')
     }
     httpServer = <http.Server>(https.createServer(httpsOptions, app));
-  }else{
+  } else {
     httpServer = http.createServer(app);
   }
 
@@ -91,7 +92,7 @@ export function createServer(staticDir="dist/public/", useSentry = true, port = 
 
   httpServer.listen(port);
 
-  setInterval(() => { socketHandler.checkGameTiming(games , io) }, 10000);
+  setInterval(() => { socketHandler.checkGameTiming(games, io) }, 10000);
 
   return httpServer;
 }
@@ -188,7 +189,7 @@ function join(req: express.Request, res: express.Response, games: Map<string, Ga
   }
 };
 
-function getImage(req: express.Request, res: express.Response, games: Map<string, Game.Game>){
+function getImage(req: express.Request, res: express.Response, games: Map<string, Game.Game>) {
   var game = games.get(req.params.code);
   if (game == undefined) {
     logger.log("verbose", `Accessing invalid game: ${req.params.code}`);
@@ -196,21 +197,21 @@ function getImage(req: express.Request, res: express.Response, games: Map<string
     return;
   }
 
-  if(req.params.id == undefined || game.actualImages.length <= parseInt(req.params.id)){
+  if (req.params.id == undefined || game.actualImages.length <= parseInt(req.params.id)) {
     logger.log("verbose", `Accessing invalid image: ${req.params.code}, ${req.params.id}`);
     res.sendStatus(404)
     return;
   }
 
   let image;
-  if(req.path.indexOf('low-res-images') != -1){
-  // if(req.query.lowRes != undefined){
+  if (req.path.indexOf('low-res-images') != -1) {
+    // if(req.query.lowRes != undefined){
     image = Game.getActualImage(game, parseInt(req.params.id), true)
-    if(image == undefined){
+    if (image == undefined) {
       // this happens when sharp hasn't finished resizing the image
       res.sendStatus(404)
     }
-  }else{
+  } else {
     image = Game.getActualImage(game, parseInt(req.params.id), false)
   }
 
@@ -241,7 +242,7 @@ function gamePage(staticDir: string, req: express.Request, res: express.Response
   res.sendFile(staticDir + 'index.html');
 };
 
-function gameDownloadPage(staticDir: string, _: express.Request, res: express.Response){
+function gameDownloadPage(staticDir: string, _: express.Request, res: express.Response) {
   //todo: replace $$gamedataplaceholder$$ in archived_for_save.html with the game data json
   // then grab all the images and put them in a zip file with the html
   res.sendFile(staticDir + 'archived_for_save.html');
