@@ -76,6 +76,14 @@ module.exports = {
       chunks: []
     }),
     new HtmlWebpackPlugin({
+      template: `./assets/templates/error.html`,
+      filename: `no_username.html`,
+      templateParameters: {
+        'error': 'No username supplied'
+      },
+      chunks: []
+    }),
+    new HtmlWebpackPlugin({
       template: `./assets/templates/archived.html`,
       filename: `archived.html`,
       templateParameters: {

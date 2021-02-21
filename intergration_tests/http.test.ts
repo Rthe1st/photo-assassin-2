@@ -1,3 +1,7 @@
+// these tests are only concerned with testing
+// HTTP calls, not socket behavior
+// except where socket interaction is needed to setup test state
+
 import fetch from 'node-fetch';
 import * as https from 'https';
 import * as http from 'http'
@@ -10,6 +14,7 @@ Logging.setUpLogging('realGame');
 import * as socketClient from '../src/shared/socketClient';
 import * as Server from '../src/server/server';
 import * as socketHelpers from './socketHelpers';
+import * as httpHelpers from './httpHelpers';
 
 import { jest } from '@jest/globals'
 // needed for messy socket tests that don't clean themselves up well
@@ -74,15 +79,15 @@ test('GET / for game that already started', async () => {
 
 // test /make
 
-test("GET /make", async () => {
-    const response = await fetch(`${domain}/make?username=myusername`, { agent });
+test("POST /make", async () => {
+    const response = await httpHelpers.post(`${domain}/make`, "username=player1");
 
     expect(response.status).toBe(200)
     expect(response.body.read().toString()).toContain("<!-- lobby page -->")
 });
 
-test("GET /make JSON", async () => {
-    const response = await fetch(`${domain}/make?username=myusername&format=json`, { agent });
+test("POST /make JSON", async () => {
+    const response = await httpHelpers.post(`${domain}/make`, "username=player1&format=json");
     expect(response.status).toBe(200)
     // for api requests we should really accept not set cookies
     // and auth using the private ID (/an apikey)
@@ -97,6 +102,13 @@ test("GET /make JSON", async () => {
         "gameId": expect.stringMatching(/[a-f\d]+-[a-f\d]+-\d/),
     })
 
+});
+
+test("POST /make no username", async () => {
+    const response = await httpHelpers.post(`${domain}/make`, "");
+
+    expect(response.status).toBe(400)
+    expect(response.body.read().toString()).toContain("No username supplied")
 });
 
 // todo: a test that triggers an error to check out default error logger works

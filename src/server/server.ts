@@ -28,7 +28,7 @@ export function createServer(port = process.env.PORT || 3000, staticDir = "dist/
   staticDir = path.resolve(staticDir) + "/"
   var games: Map<string, Game.Game> = new Map();
   var app = express();
-  app.use(defaultErrorHandler)
+  app.use(express.urlencoded({ extended: true }));
   if (useSentry) {
     Sentry.init({ dsn: process.env.NODE_SENTRY });
     if (process.env.SENTRY_TESTS == "true") {
@@ -87,7 +87,7 @@ export function createServer(port = process.env.PORT || 3000, staticDir = "dist/
 
   // todo make this a post
   // because its not idempotent
-  app.get('/make', (req, res) => make(req, res, games, io));
+  app.post('/make', (req, res) => make(staticDir, req, res, games, io));
   app.get('/join', (req, res) => join(req, res, games));
 
   httpServer.listen(port);
@@ -136,17 +136,18 @@ function addUserToGame(game: Game.Game, res: express.Response, username: string)
   return [privateId, publicId];
 }
 
-function make(req: express.Request, res: express.Response, games: Map<string, Game.Game>, io: socketIo.Server) {
-  if (!req.query.username) {
-    res.redirect('/');
+function make(staticDir:string, req: express.Request, res: express.Response, games: Map<string, Game.Game>, io: socketIo.Server) {
+  if (!req.body.username) {
+    res.status(400);
+    res.sendFile(`${staticDir}/no_username.html`);
     return;
   }
   let game = socketInterface.setup(
     games,
     io
   )
-  var [privateId, publicId] = addUserToGame(game, res, req.query.username.toString());
-  if (req.query.format == 'json') {
+  var [privateId, publicId] = addUserToGame(game, res, req.body.username.toString());
+  if (req.body.format == 'json') {
     res.json({ publicId: publicId, privateId: privateId, gameId: game.code });
   } else {
     res.redirect(`/game/${game.code}`);

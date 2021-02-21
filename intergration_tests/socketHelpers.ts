@@ -1,5 +1,6 @@
 import * as socketClient from '../src/shared/socketClient';
 import * as https from 'https';
+import * as httpHelpers from './httpHelpers'
 import fetch from 'node-fetch';
 
 //todo: have this buffer events it recieves
@@ -30,10 +31,9 @@ export async function makeSocket(domain: string, gameId: string, privateId: stri
 }
 
 export async function makeGame(domain: string, username: string){
-    const agent = new https.Agent({
-        rejectUnauthorized: false
-    })
-    let details = await (await fetch(`${domain}/make?username=${username}&format=json`, { agent })).json();
+    const details = await (await httpHelpers.post(`${domain}/make`, `username=${username}&format=json`)).json();
+    // let details = await (await fetch(`${domain}/make`, {method: "POST", agent: agent, body: `username=${username}&format=json` })).json();
+    
     return [await makeSocket(domain, details.gameId, details.privateId), details.gameId]
 }
 

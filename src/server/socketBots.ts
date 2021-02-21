@@ -26,10 +26,12 @@ export async function getData(url: string) {
 };
 
 
-export function makeGame(username: string, host:string=domain) {
-    const url = `${host}/make?username=${username}&format=json`;
+export async function makeGame(username: string, host:string=domain) {
+    const url = `${host}/make`;
 
-    return getData(url);
+    let requestOptions = {method: "POST", agent: agent, body: `username=${username}&format=json`, headers:{ 'Content-Type': 'application/x-www-form-urlencoded' }};
+
+    return (await fetch(url, requestOptions)).json();
 
 }
 
