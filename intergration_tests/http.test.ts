@@ -2,7 +2,7 @@
 // HTTP calls, not socket behavior
 // except where socket interaction is needed to setup test state
 
-import fetch from 'node-fetch';
+import fetch, { RequestInit } from 'node-fetch';
 import * as https from 'https';
 import * as http from 'http'
 import * as Logging from '../src/server/logging';
@@ -80,10 +80,21 @@ test('GET / for game that already started', async () => {
 // test /make
 
 test("POST /make", async () => {
-    const response = await httpHelpers.post(`${domain}/make`, "username=player1");
 
-    expect(response.status).toBe(200)
-    expect(response.body.read().toString()).toContain("<!-- lobby page -->")
+    let requestOptions: RequestInit = { redirect: 'manual' }
+
+    const response = await httpHelpers.post(`${domain}/make`, "username=player1", requestOptions);
+
+    expect(response.status).toBe(302)
+    expect(response.headers.raw()).toMatchObject({
+        location: expect.arrayContaining([
+            expect.stringMatching(new RegExp(`${domain}/game/[a-f\\d]{4}-[a-f\\d]{4}-\\d+`))
+        ]),
+        "set-cookie": expect.arrayContaining([
+            expect.stringMatching(/gameId=[a-f\d]+-[a-f\d]+-\d/), expect.stringMatching(/privateId=[a-f\d]{512}-\d/),
+            expect.stringMatching(/publicId=\d/)
+        ])
+    })
 });
 
 test("POST /make JSON", async () => {
@@ -108,6 +119,7 @@ test("POST /make no username", async () => {
     const response = await httpHelpers.post(`${domain}/make`, "");
 
     expect(response.status).toBe(400)
+    expect(response.headers.raw()).not.toHaveProperty('set-cookie')
     expect(response.body.read().toString()).toContain("No username supplied")
 });
 
