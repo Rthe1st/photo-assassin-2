@@ -18,6 +18,8 @@ jest.setTimeout(8000);
 let s: http.Server;
 
 beforeAll(() => {
+    // todo: need a way to make server global across all tests
+    // to avoid needing a new one per test file
     s = Server.createServer();
 });
 
@@ -31,6 +33,8 @@ let domain = "https://localhost:3000";
 const agent = new https.Agent({
     rejectUnauthorized: false
 })
+
+// test /
 
 test('GET /', async () => {
 
@@ -67,6 +71,8 @@ test('GET / for game that already started', async () => {
     player1.close();
     player2.close();
 });
+
+// test /make
 
 test("GET /make", async () => {
     const response = await fetch(`${domain}/make?username=myusername`, { agent });

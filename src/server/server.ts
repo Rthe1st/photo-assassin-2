@@ -110,6 +110,9 @@ function root(staticDir: string, req: express.Request, res: express.Response, ga
     res.status(404);
     res.sendFile(`${staticDir}/game_doesnt_exist.html`);
   }else if (games.get(code)!.state != Game.states.NOT_STARTED) {
+    // todo: what if user is already in the game?
+    // maybe root should leave this case for /join to handle
+    // (same with code doesnt exist as well?)
     logger.log("verbose", "/ Attempt to join game " + code + " that has already started");
     res.status(403);
     res.sendFile(`${staticDir}/game_in_progress.html`);

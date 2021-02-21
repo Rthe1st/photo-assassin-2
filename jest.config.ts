@@ -1,6 +1,6 @@
 module.exports = {
   testEnvironment: 'jest-environment-node',
-  roots: ["<rootDir>/api_tests", "<rootDir>/src"],
+  roots: ["<rootDir>/intergration_tests", "<rootDir>/src"],
   transform: {
     "\\.ts$": "ts-jest",
   },
