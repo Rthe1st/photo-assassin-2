@@ -65,7 +65,7 @@ test('GET / for game that already started', async () => {
     let gameSettings = {
         gameLength: 60000,
         countDown: 0,
-        proposedTargetList: [0,1]
+        proposedTargetList: [0, 1]
     };
     socketClient.startGame(player1, gameSettings);
 

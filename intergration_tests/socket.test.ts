@@ -41,7 +41,7 @@ test('whole game', async () => {
     let gameSettings = {
         gameLength: 60000,
         countDown: 0,
-        proposedTargetList: [0,1]
+        proposedTargetList: [0, 1]
     };
     socketClient.startGame(player1, gameSettings);
     // todo: wait till start game is confirmed before stopping

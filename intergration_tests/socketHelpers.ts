@@ -30,14 +30,14 @@ export async function makeSocket(domain: string, gameId: string, privateId: stri
     });
 }
 
-export async function makeGame(domain: string, username: string){
+export async function makeGame(domain: string, username: string) {
     const details = await (await httpHelpers.post(`${domain}/make`, `username=${username}&format=json`)).json();
     // let details = await (await fetch(`${domain}/make`, {method: "POST", agent: agent, body: `username=${username}&format=json` })).json();
-    
+
     return [await makeSocket(domain, details.gameId, details.privateId), details.gameId]
 }
 
-export async function joinGame(domain: string, gameId:string, username: string){
+export async function joinGame(domain: string, gameId: string, username: string) {
     const agent = new https.Agent({
         rejectUnauthorized: false
     })
