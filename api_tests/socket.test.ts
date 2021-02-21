@@ -3,6 +3,7 @@ import { jest } from '@jest/globals'
 // needed for messy socket tests that don't clean themselves up well
 jest.setTimeout(10000);
 import * as Logging from '../src/server/logging';
+import * as socketHelpers from './socketHelpers'
 
 // todo: have logs per test
 // and make optional (if it speeds things up)
@@ -29,40 +30,13 @@ afterAll((done) => {
 
 let domain = "https://localhost:30001";
 
-//todo: have this buffer events it recieves
-async function makeSocket(gameId: string, privateId: string) {
-
-    return new Promise<SocketIOClient.Socket>((resolve, reject) => {
-
-        let socket = socketClient.setup(
-            gameId,
-            privateId,
-            () => { resolve(socket) },
-            () => { },
-            () => { },
-            () => { },
-            () => { },
-            () => { },
-            () => { },
-            () => { },
-            (_) => { },
-            () => { },
-            domain
-        );
-
-        //assume 5 seconds is enough to get an init message from server
-        setTimeout(reject, 5000)
-
-    });
-}
-
 // todo: make this way more promise/event callback friendly
 test('whole game', async () => {
     let details = await socketBots.makeGame("hostplayer", domain);
-    let player1 = await makeSocket(details.gameId, details.privateId)
+    let player1 = await socketHelpers.makeSocket(domain, details.gameId, details.privateId)
     let gameId = details.gameId;
     details = await socketBots.joinGame("passiveplayer", gameId!, domain);
-    let player2 = await makeSocket(details.gameId, details.privateId);
+    let player2 = await socketHelpers.makeSocket(domain, details.gameId, details.privateId);
 
     let gameSettings = {
         gameLength: 60000,

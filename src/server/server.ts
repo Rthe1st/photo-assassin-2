@@ -105,20 +105,16 @@ function root(staticDir: string, req: express.Request, res: express.Response, ga
 
   let code = req.query.code.toString();
 
-  if (games.has(code)) {
-    var game = games.get(code)!;
-    if (game.state != Game.states.NOT_STARTED) {
-      logger.log("verbose", "/ Attempt to join game " + code + " that has already started");
-      res.redirect(`/static/game_in_progress.html`);
-      return;
-    } else {
-      res.sendFile(staticDir + 'lobby.html');
-      return;
-    }
-  } else {
+  if (!games.has(code)) {
     logger.log("verbose", `/ Accessing invalid game: ${code}`);
-    res.redirect(`/static/game_doesnt_exist.html`);
-    return;
+    res.status(404);
+    res.sendFile(`${staticDir}/game_doesnt_exist.html`);
+  }else if (games.get(code)!.state != Game.states.NOT_STARTED) {
+    logger.log("verbose", "/ Attempt to join game " + code + " that has already started");
+    res.status(403);
+    res.sendFile(`${staticDir}/game_in_progress.html`);
+  }else{
+    res.sendFile(staticDir + 'lobby.html');
   }
 };
 
