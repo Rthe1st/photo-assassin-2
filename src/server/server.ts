@@ -15,13 +15,12 @@ import * as socketHandler from './socketHandler';
 import * as socketInterface from './socketInterface';
 import { logger } from './logging';
 
-function defaultErrorHandler(err: any, req: Request, res: Response, _: NextFunction) {
+function devErrorHandler(err: any, req: Request, res: Response, _: NextFunction) {
   console.log("express error")
-  // I think this is safe as it should just call to string on the vars
   console.log(`path: ${req.path}`)
   console.log(`query string: ${Object.entries(req.query)}`)
   console.error(err.stack)
-  res.status(500).send('Internal server error')
+  res.status(500).send('Internal server error - dev handler')
 }
 
 export function createServer(port = process.env.PORT || 3000, staticDir = "dist/public/", useSentry = true): http.Server {
@@ -37,7 +36,6 @@ export function createServer(port = process.env.PORT || 3000, staticDir = "dist/
     // The request handler must be the first middleware on the app
     app.use(Sentry.Handlers.requestHandler());
   }
-  app.use(defaultErrorHandler)
   app.use(cookieParser());
   app.use('/static', express.static(staticDir));
   // todo: instead of hacking in games with arrow functions
@@ -51,11 +49,6 @@ export function createServer(port = process.env.PORT || 3000, staticDir = "dist/
   app.get('/game/:code/download', (req, res) => gameDownloadPage(staticDir, req, res));
   app.get('/game/:code/images/:id', (req, res) => getImage(req, res, games));
   app.get('/game/:code/low-res-images/:id', (req, res) => getImage(req, res, games));
-
-  if (useSentry) {
-    // The error handler must be before any other error middleware and after all controllers
-    app.use(Sentry.Handlers.errorHandler());
-  }
 
   let httpServer;
   if (process.env.NODE_ENV != "production") {
@@ -89,6 +82,16 @@ export function createServer(port = process.env.PORT || 3000, staticDir = "dist/
   // because its not idempotent
   app.post('/make', (req, res) => make(staticDir, req, res, games, io));
   app.get('/join', (req, res) => join(req, res, games));
+
+  if (useSentry) {
+    // The error handler must be before any other error middleware and after all controllers
+    app.use(Sentry.Handlers.errorHandler());
+  }
+  if (process.env.NODE_ENV != "production") {
+    app.use('/deliberate-error', () => {throw new Error("test error")})
+    app.use(devErrorHandler)
+  }
+
 
   httpServer.listen(port);
 

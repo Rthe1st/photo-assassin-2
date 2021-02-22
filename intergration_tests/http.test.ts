@@ -123,5 +123,10 @@ test("POST /make no username", async () => {
     expect(response.body.read().toString()).toContain("No username supplied")
 });
 
-// todo: a test that triggers an error to check out default error logger works
-// (but how would we confirm the error is logged to the console/)
+// todo: is it possible to suppress the console.error() this produces
+test("dev error handler", async () => {
+    const response = await fetch(`${domain}/deliberate-error`, {agent});
+
+    expect(response.status).toBe(500)
+    expect(response.body.read().toString()).toContain("Internal server error - dev handler")
+});
