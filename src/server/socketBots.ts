@@ -35,10 +35,13 @@ export async function makeGame(username: string, host:string=domain) {
 
 }
 
-export function joinGame(username: string, gameId: string, host:string=domain) {
-    const url = `${host}/join?code=${gameId}&username=${username}&format=json`;
+export async function joinGame(username: string, gameId: string, host:string=domain) {
 
-    return getData(url);
+    const url = `${host}/join`;
+
+    let requestOptions = {method: "POST", agent: agent, body: `code=${gameId}&username=${username}&format=json`, headers:{ 'Content-Type': 'application/x-www-form-urlencoded' }};
+
+    return (await fetch(url, requestOptions)).json();
 }
 
 interface Player {

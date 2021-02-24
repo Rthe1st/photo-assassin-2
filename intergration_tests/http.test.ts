@@ -2,7 +2,7 @@
 // HTTP calls, not socket behavior
 // except where socket interaction is needed to setup test state
 
-import fetch, { RequestInit } from 'node-fetch';
+import fetch, { Headers, RequestInit } from 'node-fetch';
 import * as https from 'https';
 import * as http from 'http'
 import * as Logging from '../src/server/logging';
@@ -39,6 +39,15 @@ const agent = new https.Agent({
     rejectUnauthorized: false
 })
 
+function checkCookies(headers: Headers){
+    expect(headers.raw()).toMatchObject({
+        "set-cookie": expect.arrayContaining([
+            expect.stringMatching(/gameId=[a-f\d]+-[a-f\d]+-\d/), expect.stringMatching(/privateId=[a-f\d]{512}-\d/),
+            expect.stringMatching(/publicId=\d/)
+        ])
+    })
+}
+
 // test /
 
 test('GET /', async () => {
@@ -60,7 +69,6 @@ test('GET / for non-existent game', async () => {
 test('GET / for game that already started', async () => {
     let [player1, gameId] = await socketHelpers.makeGame(domain, 'player1')
     let player2 = await socketHelpers.joinGame(domain, gameId, 'player2')
-
     //todo: move into some default settings object
     let gameSettings = {
         gameLength: 60000,
@@ -123,10 +131,30 @@ test("POST /make no username", async () => {
     expect(response.body.read().toString()).toContain("No username supplied")
 });
 
+// test error logging
+
 // todo: is it possible to suppress the console.error() this produces
 test("dev error handler", async () => {
     const response = await fetch(`${domain}/deliberate-error`, {agent});
 
     expect(response.status).toBe(500)
     expect(response.body.read().toString()).toContain("Internal server error - dev handler")
+});
+
+// test /join
+
+test("POST /join valid game", async () => {
+
+    let gameDetails = await (await httpHelpers.post(`${domain}/make`, "username=player1&format=json")).json();
+
+    let requestOptions: RequestInit = { redirect: 'manual' }
+    const response = await httpHelpers.post(`${domain}/join`, `username=player2&code=${gameDetails.gameId}`, requestOptions);
+    expect(response.status).toBe(302)
+    checkCookies(response.headers);
+
+    expect(response.headers.raw()).toMatchObject({
+        location: expect.arrayContaining([
+            expect.stringMatching(new RegExp(`${domain}/game/[a-f\\d]{4}-[a-f\\d]{4}-\\d+`))
+        ]),
+    })
 });

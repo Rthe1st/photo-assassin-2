@@ -78,11 +78,10 @@ export function createServer(port = process.env.PORT || 3000, staticDir = "dist/
     pingInterval: 250000
   });
 
-  // todo make this a post
-  // because its not idempotent
+  // todo: should these be .use()
+  // so we can redirect if someone navigate there by mistake
   app.post('/make', (req, res) => make(staticDir, req, res, games, io));
-  app.get('/join', (req, res) => join(req, res, games));
-
+  app.post('/join', (req, res) => join(req, res, games));
   if (useSentry) {
     // The error handler must be before any other error middleware and after all controllers
     app.use(Sentry.Handlers.errorHandler());
@@ -160,15 +159,15 @@ function make(staticDir:string, req: express.Request, res: express.Response, gam
 function join(req: express.Request, res: express.Response, games: Map<string, Game.Game>) {
   logger.log("verbose", "join game redirect");
   //todo: convey errors to user
-  if (req.query.code == undefined) {
+  if (req.body.code == undefined) {
     logger.log("debug", 'no code supplied');
     res.redirect('/static/game_doesnt_exist.html');
     return;
   }
-  var code = req.query.code.toString();
+  var code = req.body.code.toString();
   let game = games.get(code)
   if (game == undefined) {
-    logger.log("verbose", `Accessing invalid game: ${req.query.code}`);
+    logger.log("verbose", `Accessing invalid game: ${req.body.code}`);
     res.redirect(`/static/game_doesnt_exist.html`);
     return;
   }
@@ -178,14 +177,14 @@ function join(req: express.Request, res: express.Response, games: Map<string, Ga
     return;
   }
   logger.log("debug", 'adding to game');
-  if (req.query.username == undefined) {
+  if (req.body.username == undefined) {
     logger.log("verbose", "Attempt to join game " + code + " without a username");
     // todo: redirect them back to game join screen
     return;
   }
-  var [privateId, publicId] = addUserToGame(game, res, req.query.username.toString());
+  var [privateId, publicId] = addUserToGame(game, res, req.body.username.toString());
 
-  if (req.query.format == 'json') {
+  if (req.body.format == 'json') {
     res.json({ publicId: publicId, privateId: privateId, gameId: code });
   } else {
     res.redirect(`/game/${code}`);
