@@ -30,6 +30,42 @@ for (let env of expected_vars) {
   }
 }
 
+let errorPages = [
+  {
+    name: "game_doesnt_exist.html",
+    message: 'Can\'t join - game doesn\'t exist'
+  },
+  {
+    name: "game_in_progress.html",
+    message: 'Can\'t join - game already in progress'
+  },
+  {
+    name: "no_username.html",
+    message: 'No username supplied'
+  },
+  {
+    name: "no_code.html",
+    message: 'No game code supplied'
+  },
+];
+
+function generateStaticErrorPages(errorPages: { name: string, message: string }[]){
+  let plugins = [];
+
+  for (let errorPage of errorPages) {
+    let plugin = new HtmlWebpackPlugin({
+      template: `./assets/templates/error.html`, // relative path to the HTML files
+      filename: errorPage.name, // output HTML files
+      templateParameters: {
+        'error': errorPage.message
+      },
+      chunks: []
+    })
+    plugins.push(plugin);
+  }
+  return plugins;
+}
+
 module.exports = {
   entry: {
     index: './src/client/index.ts',
@@ -58,30 +94,6 @@ module.exports = {
   plugins: [
     new webpack.DefinePlugin({
       'process.env': JSON.stringify(envs)
-    }),
-    new HtmlWebpackPlugin({
-      template: `./assets/templates/error.html`, // relative path to the HTML files
-      filename: `game_doesnt_exist.html`, // output HTML files
-      templateParameters: {
-        'error': 'Can\'t join - game doesn\'t exist'
-      },
-      chunks: []
-    }),
-    new HtmlWebpackPlugin({
-      template: `./assets/templates/error.html`,
-      filename: `game_in_progress.html`,
-      templateParameters: {
-        'error': 'Can\'t join - game already in progress'
-      },
-      chunks: []
-    }),
-    new HtmlWebpackPlugin({
-      template: `./assets/templates/error.html`,
-      filename: `no_username.html`,
-      templateParameters: {
-        'error': 'No username supplied'
-      },
-      chunks: []
     }),
     new HtmlWebpackPlugin({
       template: `./assets/templates/archived.html`,
@@ -117,6 +129,9 @@ module.exports = {
     //   configFile: 'sentry.properties'
     // })
   ]
+    .concat(
+      generateStaticErrorPages(errorPages)
+    )
     .concat(
       ['index', 'lobby'].map(name => {
         return new HtmlWebpackPlugin({

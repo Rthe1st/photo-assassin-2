@@ -158,3 +158,80 @@ test("POST /join valid game", async () => {
         ]),
     })
 });
+
+test("POST /join json", async () => {
+
+    let gameDetails = await (await httpHelpers.post(`${domain}/make`, "username=player1&format=json")).json();
+
+    let requestOptions: RequestInit = { redirect: 'manual' }
+    const response = await httpHelpers.post(`${domain}/join`, `username=player2&code=${gameDetails.gameId}&format=json`, requestOptions);
+    expect(response.status).toBe(200)
+    checkCookies(response.headers);
+
+    let json = await response.json();
+
+    // todo: workout how to only check publicId is positive int
+    expect(json).toEqual({
+        "publicId": 1,
+        "privateId": expect.stringMatching(/[a-f\d]{512}-\d/),
+        "gameId": expect.stringMatching(/[a-f\d]+-[a-f\d]+-\d/),
+    })
+});
+
+test("POST /join no code", async () => {
+
+    const response = await httpHelpers.post(`${domain}/join`, `username=player2`);
+    expect(response.status).toBe(403);
+
+    expect(response.body.read().toString()).toContain("No game code supplied");
+});
+
+test("POST /join no username", async () => {
+    let gameDetails = await (await httpHelpers.post(`${domain}/make`, "username=player1&format=json")).json();
+
+    const response = await httpHelpers.post(`${domain}/join`, `code=${gameDetails.gameId}`);
+    expect(response.status).toBe(403);
+    expect(response.body.read().toString()).toContain("No username supplied");
+});
+
+test("POST /join invalid code", async () => {
+    const response = await httpHelpers.post(`${domain}/join`, `username=player2&code=123`);
+    expect(response.status).toBe(404);
+    expect(response.body.read().toString()).toContain('Can\'t join - game doesn\'t exist');
+});
+
+test('POST /join for game that already started', async () => {
+    let [player1, gameId] = await socketHelpers.makeGame(domain, 'player1')
+    let player2 = await socketHelpers.joinGame(domain, gameId, 'player2')
+    //todo: move into some default settings object
+    let gameSettings = {
+        gameLength: 60000,
+        countDown: 0,
+        proposedTargetList: [0, 1]
+    };
+    socketClient.startGame(player1, gameSettings);
+
+    const response = await httpHelpers.post(`${domain}/join`, `username=player3&code=${gameId}`);
+
+    expect(response.status).toBe(403)
+    expect(response.body.read().toString()).toContain("Can't join - game already in progress");
+    player1.close();
+    player2.close();
+});
+
+// test /archived
+
+test('GET /archived', async () => {
+
+    const response = await fetch(`${domain}/archived`, { agent });
+    expect(response.status).toBe(200)
+    expect(response.body.read().toString()).toContain("<!-- archived page -->")
+});
+
+// /game/:code
+
+// todo
+
+// /game/:code/*
+
+// todo

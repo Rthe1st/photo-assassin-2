@@ -137,6 +137,7 @@ function getDataFromUrlFragment(): Promise<SharedGame.ClientGame>{
 }
 
 async function getDataFromApi(){
+    //todo: change to post
     const response = await fetch(window.location.href + "?format=json");
     let gameState: SharedGame.ClientGame = await response.json();
     return gameState;

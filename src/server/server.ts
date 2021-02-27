@@ -44,7 +44,7 @@ export function createServer(port = process.env.PORT || 3000, staticDir = "dist/
   // for game's we've deleted but client has game data in URL fragment
   // don't server this on game code specific URL
   // so we can cache the page more
-  app.get('/archived', (_, res) => res.sendFile(staticDir + 'archived.html'))
+  app.get('/archived', (_, res) => res.sendFile(staticDir + 'archived.html'));
   app.get('/game/:code', (req, res) => gamePage(staticDir, req, res, games));
   app.get('/game/:code/download', (req, res) => gameDownloadPage(staticDir, req, res));
   app.get('/game/:code/images/:id', (req, res) => getImage(req, res, games));
@@ -81,7 +81,7 @@ export function createServer(port = process.env.PORT || 3000, staticDir = "dist/
   // todo: should these be .use()
   // so we can redirect if someone navigate there by mistake
   app.post('/make', (req, res) => make(staticDir, req, res, games, io));
-  app.post('/join', (req, res) => join(req, res, games));
+  app.post('/join', (req, res) => join(staticDir, req, res, games));
   if (useSentry) {
     // The error handler must be before any other error middleware and after all controllers
     app.use(Sentry.Handlers.errorHandler());
@@ -156,30 +156,32 @@ function make(staticDir:string, req: express.Request, res: express.Response, gam
   }
 };
 
-function join(req: express.Request, res: express.Response, games: Map<string, Game.Game>) {
-  logger.log("verbose", "join game redirect");
-  //todo: convey errors to user
+function join(staticDir: string, req: express.Request, res: express.Response, games: Map<string, Game.Game>) {
   if (req.body.code == undefined) {
     logger.log("debug", 'no code supplied');
-    res.redirect('/static/game_doesnt_exist.html');
+    res.status(403);
+    res.sendFile(`${staticDir}/no_code.html`);
     return;
   }
   var code = req.body.code.toString();
   let game = games.get(code)
   if (game == undefined) {
     logger.log("verbose", `Accessing invalid game: ${req.body.code}`);
-    res.redirect(`/static/game_doesnt_exist.html`);
+    res.status(404);
+    res.sendFile(`${staticDir}/game_doesnt_exist.html`);
     return;
   }
   if (game.state != Game.states.NOT_STARTED) {
     logger.log("verbose", "Attempt to join game " + code + " that has already started");
-    res.redirect(`/static/game_in_progress.html`);
+    res.status(403);
+    res.sendFile(`${staticDir}/game_in_progress.html`);
     return;
   }
   logger.log("debug", 'adding to game');
   if (req.body.username == undefined) {
     logger.log("verbose", "Attempt to join game " + code + " without a username");
-    // todo: redirect them back to game join screen
+    res.status(403);
+    res.sendFile(`${staticDir}/no_username.html`);
     return;
   }
   var [privateId, publicId] = addUserToGame(game, res, req.body.username.toString());
