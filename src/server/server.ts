@@ -24,31 +24,8 @@ function devErrorHandler(err: any, req: Request, res: Response, _: NextFunction)
 }
 
 export function createServer(port = process.env.PORT || 3000, staticDir = "dist/public/", useSentry = true): http.Server {
-  staticDir = path.resolve(staticDir) + "/"
-  var games: Map<string, Game.Game> = new Map();
   var app = express();
   app.use(express.urlencoded({ extended: true }));
-  if (useSentry) {
-    Sentry.init({ dsn: process.env.NODE_SENTRY });
-    if (process.env.SENTRY_TESTS == "true") {
-      Sentry.captureException(new Error("sentry test server.js"));
-    }
-    // The request handler must be the first middleware on the app
-    app.use(Sentry.Handlers.requestHandler());
-  }
-  app.use(cookieParser());
-  app.use('/static', express.static(staticDir));
-  // todo: instead of hacking in games with arrow functions
-  // have the middlewares fetch games from db or w/e
-  app.get('/', (req, res) => root(staticDir, req, res, games));
-  // for game's we've deleted but client has game data in URL fragment
-  // don't server this on game code specific URL
-  // so we can cache the page more
-  app.get('/archived', (_, res) => res.sendFile(staticDir + 'archived.html'));
-  app.get('/game/:code', (req, res) => gamePage(staticDir, req, res, games));
-  app.get('/game/:code/download', (req, res) => gameDownloadPage(staticDir, req, res));
-  app.get('/game/:code/images/:id', (req, res) => getImage(req, res, games));
-  app.get('/game/:code/low-res-images/:id', (req, res) => getImage(req, res, games));
 
   let httpServer;
   if (process.env.NODE_ENV != "production") {
@@ -78,6 +55,31 @@ export function createServer(port = process.env.PORT || 3000, staticDir = "dist/
     pingInterval: 250000
   });
 
+  if (useSentry) {
+    Sentry.init({ dsn: process.env.NODE_SENTRY });
+    if (process.env.SENTRY_TESTS == "true") {
+      Sentry.captureException(new Error("sentry test server.js"));
+    }
+    // The request handler must be the first middleware on the app
+    app.use(Sentry.Handlers.requestHandler());
+  }
+  app.use(cookieParser());
+  app.use('/static', express.static(staticDir));
+
+  staticDir = path.resolve(staticDir) + "/"
+  var games: Map<string, Game.Game> = new Map();
+
+  // todo: instead of hacking in games with arrow functions
+  // have the middlewares fetch games from db or w/e
+  app.get('/', (req, res) => root(staticDir, req, res, games));
+  // for game's we've deleted but client has game data in URL fragment
+  // don't server this on game code specific URL
+  // so we can cache the page more
+  app.get('/archived', (_, res) => res.sendFile(staticDir + 'archived.html'));
+  app.get('/game/:code', (req, res) => gamePage(staticDir, req, res, games));
+  app.get('/game/:code/download', (req, res) => gameDownloadPage(staticDir, req, res));
+  app.get('/game/:code/images/:id', (req, res) => getImage(req, res, games));
+  app.get('/game/:code/low-res-images/:id', (req, res) => getImage(req, res, games));
   // todo: should these be .use()
   // so we can redirect if someone navigate there by mistake
   app.post('/make', (req, res) => make(staticDir, req, res, games, io));
@@ -87,10 +89,9 @@ export function createServer(port = process.env.PORT || 3000, staticDir = "dist/
     app.use(Sentry.Handlers.errorHandler());
   }
   if (process.env.NODE_ENV != "production") {
-    app.use('/deliberate-error', () => {throw new Error("test error")})
+    app.use('/deliberate-error', () => { throw new Error("test error") })
     app.use(devErrorHandler)
   }
-
 
   httpServer.listen(port);
 
@@ -111,14 +112,14 @@ function root(staticDir: string, req: express.Request, res: express.Response, ga
     logger.log("verbose", `/ Accessing invalid game: ${code}`);
     res.status(404);
     res.sendFile(`${staticDir}/game_doesnt_exist.html`);
-  }else if (games.get(code)!.state != Game.states.NOT_STARTED) {
+  } else if (games.get(code)!.state != Game.states.NOT_STARTED) {
     // todo: what if user is already in the game?
     // maybe root should leave this case for /join to handle
     // (same with code doesnt exist as well?)
     logger.log("verbose", "/ Attempt to join game " + code + " that has already started");
     res.status(403);
     res.sendFile(`${staticDir}/game_in_progress.html`);
-  }else{
+  } else {
     res.sendFile(staticDir + 'lobby.html');
   }
 };
@@ -138,7 +139,7 @@ function addUserToGame(game: Game.Game, res: express.Response, username: string)
   return [privateId, publicId];
 }
 
-function make(staticDir:string, req: express.Request, res: express.Response, games: Map<string, Game.Game>, io: socketIo.Server) {
+function make(staticDir: string, req: express.Request, res: express.Response, games: Map<string, Game.Game>, io: socketIo.Server) {
   if (!req.body.username) {
     res.status(400);
     res.sendFile(`${staticDir}/no_username.html`);
