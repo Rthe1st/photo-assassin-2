@@ -84,6 +84,16 @@ test:
 npm test
 ```
 
+Integration tests require you to spin up a server yourself
+because I can't get globalsetup to work with jest (more notes in the jest config file).
+
+```bash
+# in one terminal
+npm run-script start
+# in another
+npm run-script integration-test
+```
+
 build:
 
 ```bash

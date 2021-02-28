@@ -4,34 +4,14 @@
 
 import fetch, { Headers, RequestInit } from 'node-fetch';
 import * as https from 'https';
-import * as http from 'http'
-import * as Logging from '../src/server/logging';
-
-// todo: have logs per test
-// and make optional (if it speeds things up)
-Logging.setUpLogging('realGame');
 
 import * as socketClient from '../src/shared/socketClient';
-import * as Server from '../src/server/server';
 import * as socketHelpers from './socketHelpers';
 import * as httpHelpers from './httpHelpers';
 
 import { jest } from '@jest/globals'
 // needed for messy socket tests that don't clean themselves up well
 jest.setTimeout(8000);
-
-let s: http.Server;
-
-beforeAll(() => {
-    // todo: need a way to make server global across all tests
-    // to avoid needing a new one per test file
-    s = Server.createServer();
-});
-
-afterAll((done) => {
-    //todo, why doesn't this tear down the server
-    s.close(done);
-});
 
 let domain = "https://localhost:3000";
 
@@ -135,9 +115,6 @@ test("POST /make no username", async () => {
 
 // todo: is it possible to suppress the console.error() this produces
 test("dev error handler", async () => {
-
-    console.error = jest.fn()
-    console.log = jest.fn()
     
     // todo: we should add a mock handle to an normal endpoint (/make)
     // that throws, instead of using this fake endpoint
@@ -145,7 +122,6 @@ test("dev error handler", async () => {
 
     expect(response.status).toBe(500)
     expect(response.body.read().toString()).toContain("Internal server error - dev handler")
-    expect(console.error).toHaveBeenCalled();
 });
 
 // test /join
