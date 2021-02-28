@@ -1,5 +1,3 @@
-// use by browser code but also by robot clients running in node
-
 import io from 'socket.io-client';
 
 import * as SocketEvents from './socketEvents'
@@ -20,7 +18,8 @@ export function setup(
     resizeDone: (msg: SocketEvents.ServerResizeDone) => void,
     // this only needs to be supplied when not in a browser
     // otherwise window.location is used
-    hostname = ''
+    hostname = '',
+    disconnect= (reason: any) => console.log(reason),
 ): SocketIOClient.Socket {
     let socket = io(
         // leading slash is needed so IO nows we're giving it a path
@@ -51,7 +50,7 @@ export function setup(
     socket.on('game finished', finished);
     socket.on('error', (err: any) => console.log(err));
     socket.on('connect_error', (err: any) => console.log(err));
-    socket.on('disconnect', (reason: any) => console.log(reason));
+    socket.on('disconnect', disconnect);
     socket.on('disconnecting', (reason: any) => console.log(reason));
     socket.on('resize done', resizeDone);
     return socket;

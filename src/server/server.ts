@@ -75,7 +75,9 @@ export function createServer(port = process.env.PORT || 3000, staticDir = "dist/
   // for game's we've deleted but client has game data in URL fragment
   // don't server this on game code specific URL
   // so we can cache the page more
+  // todo: does the caching logic above even make sense?
   app.get('/archived', (_, res) => res.sendFile(staticDir + 'archived.html'));
+
   app.get('/game/:code', (req, res) => gamePage(staticDir, req, res, games));
   app.get('/game/:code/download', (req, res) => gameDownloadPage(staticDir, req, res));
   app.get('/game/:code/images/:id', (req, res) => getImage(req, res, games));

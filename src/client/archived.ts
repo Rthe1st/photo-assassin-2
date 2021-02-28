@@ -20,7 +20,6 @@ function getPublicId(): number|undefined{
     // we only let users have cookies for one game at a time at the moment
     // so check they're for the current and treat the as observer if not
     if (cookieGameId == urlGameId) {
-        // privateId = document.cookie.replace(/(?:(?:^|.*;\s*)privateId\s*\=\s*([^;]*).*$)|^.*$/, "$1");
         publicId = parseInt(document.cookie.replace(/(?:(?:^|.*;\s*)publicId\s*\=\s*([^;]*).*$)|^.*$/, "$1"));
         return publicId
     }

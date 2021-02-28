@@ -135,10 +135,17 @@ test("POST /make no username", async () => {
 
 // todo: is it possible to suppress the console.error() this produces
 test("dev error handler", async () => {
+
+    console.error = jest.fn()
+    console.log = jest.fn()
+    
+    // todo: we should add a mock handle to an normal endpoint (/make)
+    // that throws, instead of using this fake endpoint
     const response = await fetch(`${domain}/deliberate-error`, {agent});
 
     expect(response.status).toBe(500)
     expect(response.body.read().toString()).toContain("Internal server error - dev handler")
+    expect(console.error).toHaveBeenCalled();
 });
 
 // test /join
@@ -227,11 +234,3 @@ test('GET /archived', async () => {
     expect(response.status).toBe(200)
     expect(response.body.read().toString()).toContain("<!-- archived page -->")
 });
-
-// /game/:code
-
-// todo
-
-// /game/:code/*
-
-// todo

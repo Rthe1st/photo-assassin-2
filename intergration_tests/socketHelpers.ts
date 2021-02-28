@@ -19,7 +19,8 @@ export async function makeSocket(domain: string, gameId: string, privateId: stri
             () => { },
             (_) => { },
             () => { },
-            domain
+            domain,
+            () => {}
         );
 
         //assume 5 seconds is enough to get an init message from server
