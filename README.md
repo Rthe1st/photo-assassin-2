@@ -58,7 +58,7 @@ Our jest setup doesn't support testing of ./src/client scripts yet, we need to a
 * ./dist: After building, this contains all the code needed to run the server.
   * ./dist/public should contain all static assets that need to be served to clients
 
-* ./intergration_tests: jest tests for integration testing our api. Spins up the full server and connects to it as a client.
+* ./integration_tests: jest tests for integration testing our api. Spins up the full server and connects to it as a client.
 
 * ./secret: files that we can't leak to version control, api keys, certificate keys
 

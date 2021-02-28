@@ -1,5 +1,5 @@
 module.exports = {
-  // todo: '<rootDir>/intergration_tests' should be in here to
+  // todo: '<rootDir>/integration_tests' should be in here to
   // however these tests need the webserver to be spun up first
   // and I can't get jest's global setup to work with typescript + es6 modules
   // resources on that:
