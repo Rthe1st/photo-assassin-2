@@ -1,4 +1,5 @@
 import * as SharedGame from '../shared/game';
+import * as api from '../shared/clientApi';
 // import * as kalman from './kalman';
 import {MapData} from './mapAnnotations';
 import * as Game from './game';
@@ -10,16 +11,20 @@ if (process.env.SENTRY_TESTS == "true") {
     Sentry.captureException(new Error("sentry test archived.html"));
 }
 
+function urlGameId(): string{
+    return window.location.href.split('/').pop()!;
+}
+
 function getPublicId(): number|undefined{
     const cookieGameId = decodeURIComponent(document.cookie.replace(/(?:(?:^|.*;\s*)gameId\s*\=\s*([^;]*).*$)|^.*$/, "$1"));
 
-    let urlGameId = window.location.href.split('/').pop()
+
     let publicId: number;
     //todo: use to let people download results
     // let privateId: string;
     // we only let users have cookies for one game at a time at the moment
     // so check they're for the current and treat the as observer if not
-    if (cookieGameId == urlGameId) {
+    if (cookieGameId == urlGameId()) {
         publicId = parseInt(document.cookie.replace(/(?:(?:^|.*;\s*)publicId\s*\=\s*([^;]*).*$)|^.*$/, "$1"));
         return publicId
     }
@@ -135,10 +140,9 @@ function getDataFromUrlFragment(): Promise<SharedGame.ClientGame>{
     return a;
 }
 
-async function getDataFromApi(){
-    //todo: change to post
-    const response = await fetch(window.location.href + "?format=json");
-    let gameState: SharedGame.ClientGame = await response.json();
+async function getDataFromApi(): Promise<SharedGame.ClientGame>{
+    let gameId = urlGameId();
+    let gameState = api.gameJson(gameId);
     return gameState;
 }
 

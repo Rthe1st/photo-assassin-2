@@ -129,3 +129,24 @@ sudo ./adb devices`
 * plug phone in usb, aurthise debug, etc
 * Find the device on about:debugging in firefox and connect
 * connect to server using local network IP, like: http://192.168.8.117:3000
+
+## test structure/philosophy
+
+Tests need to give us confidence that the deployed branch is bug free - enough confidence to invite X friends to a park and not worry about wasting everyones time if a bug blows up the game halfway though.
+
+Integration test should test HTTP APIs and Socket APIs work and that sequential calls to our stateful APIs (i.e. by playing the game) work as expected.
+
+We should have integration tests that call the exact functions use by the clients (browser and socket bots) to talk to the API.
+Browser and socket bots should probably only share API calling code when browser code will be called from JS for JSON endpoints. Makes less sense for HTTP endpoints.
+As a result, all code for talking to HTTP/Socket APIs should be in the shared folder.
+Other integration tests should probably not use this same code - as it likely has different needs (ability to provide incorrect data to trigger errors for example)
+
+We should pull any static URLs from html/css and confirm we have integration tests hitting those endpoints.
+
+Integration tests should be runnable against the production environment to test the deployed version is working at any point. 
+
+Client unit tests should test JS logic but not HTTP/socket handling code
+(that should be tests via the code shared with integration tests)
+Client unit tests should test effects on webpage HTML.
+
+Server unit tests should test JS logic but not HTTP/socket handling code

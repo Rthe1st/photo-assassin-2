@@ -63,6 +63,7 @@ async function gameSetup(players: Player[], gameId: string|undefined) {
         hostPlayer = players.shift()!;
         details = await makeGame(hostPlayer.name);
         gameId = details.gameId;
+        console.log(`https://localhost:3000/game/${gameId}`)
     }
     let sockets = new Map();
     for (let player of players) {
@@ -78,7 +79,6 @@ async function gameSetup(players: Player[], gameId: string|undefined) {
 
 function activePlayer(gameId: string, privateId: string, player: Player) {
     var randomGenerator = randomSeed.create("seedvalue");
-
     let socket = socketClient.setup(
         gameId,
         privateId,

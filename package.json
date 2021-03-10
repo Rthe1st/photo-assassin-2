@@ -6,6 +6,7 @@
     "@sentry/browser": "^5.20.1",
     "@sentry/node": "^5.20.1",
     "cookie-parser": "^1.4.5",
+    "cross-fetch": "^3.0.6",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "mathjs": "^7.3.0",
