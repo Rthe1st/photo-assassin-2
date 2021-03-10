@@ -4,7 +4,6 @@ jest.setTimeout(10000);
 import * as socketHelpers from './socketHelpers'
 
 import * as socketBots from '../src/server/socketBots';
-import * as socketClient from '../src/shared/socketClient';
 
 let domain = "https://localhost:3000";
 
@@ -21,11 +20,40 @@ test('whole game', async () => {
         countDown: 0,
         proposedTargetList: [0, 1]
     };
-    socketClient.startGame(player1, gameSettings);
-    // todo: wait till start game is confirmed before stopping
-    socketClient.stopGame(player1);
-    // assume 5 seconds is long enough
-    await new Promise(resolve => setTimeout(resolve, 5000));
+
+    let msg = await socketHelpers.startGame(player1, gameSettings);
+    let expectedGameState = {
+        "chosenSettings": {
+            "countDown": 0,
+            "gameLength": 60000,
+            "proposedTargetList": [0,1,],
+        },
+        "latestSnipeIndexes": [],
+        "snipeInfos": [],
+        "state": "IN PLAY",
+        "subState": "PLAYING",
+        "targets": {
+        "0": [1,],
+        "1": [0,],
+        },
+        "targetsGot": {"0": [],"1": [],},
+        "userList": {
+            "0": {
+                "username": "hostplayer",
+            },
+            "1": {
+                "username": "passiveplayer",
+            },
+        },
+    };
+    expect(msg).toMatchObject({gameState: expectedGameState});
+
+    let finishedMsg = await socketHelpers.stopGame(player1);
+    expect(finishedMsg).toMatchObject({
+        "nextCode": expect.stringMatching(/[a-f\d]+-[a-f\d]+-\d/),
+        "winner": "game stopped",
+    });
+
     player1.close();
     player2.close();
 })

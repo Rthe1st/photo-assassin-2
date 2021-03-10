@@ -21,7 +21,7 @@ if (process.env.NODE_ENV == "test") {
 
 // todo: server should use same type when sending it
 // like we do for sockets
-export async function gameJson(gameId: string, domain: string): Promise<SharedGame.ClientGame>{
+export async function gameJson(gameId: string, domain=""): Promise<SharedGame.ClientGame>{
     let url = `${domain}/game/${gameId}?format=json`;
     const response = await fetch(url, requestOptions);
     return response.json();
