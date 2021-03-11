@@ -5,12 +5,12 @@ import * as SocketEvents from '../src/shared/socketEvents';
 //todo: have this buffer events it recieves
 export async function makeSocket(domain: string, gameId: string, privateId: string) {
 
-    return new Promise<SocketIOClient.Socket>((resolve, reject) => {
+    return new Promise<{socket: SocketIOClient.Socket, msg: SocketEvents.ServerInitializationMsg}>((resolve, reject) => {
 
         let socket = socketClient.setup(
             gameId,
             privateId,
-            () => { resolve(socket) },
+            (msg) => { resolve({socket, msg})},
             () => { },
             () => { },
             () => { },
@@ -23,8 +23,7 @@ export async function makeSocket(domain: string, gameId: string, privateId: stri
             domain,
             () => {}
         );
-
-        //assume 5 seconds is enough to get an init message from server
+        
         setTimeout(reject, 2000)
 
     });
@@ -50,14 +49,15 @@ export function stopGame(socket: SocketIOClient.Socket): Promise<SocketEvents.Se
     return socketCall(emit_fn, resolve_fn);
 }
 
-
-
 export async function makeGame(domain: string, username: string) {
     const details = await (await httpHelpers.post(`${domain}/make`, `username=${username}&format=json`)).json();
-    return [await makeSocket(domain, details.gameId, details.privateId), details.gameId]
+    
+    let {socket: socket} = await makeSocket(domain, details.gameId, details.privateId);
+    return [socket, details.gameId]
 }
 
 export async function joinGame(domain: string, gameId: string, username: string) {
     const details = await (await httpHelpers.post(`${domain}/join`, `code=${gameId}&username=${username}&format=json`)).json();
-    return await makeSocket(domain, gameId, details.privateId)
+    let {socket: socket} = await makeSocket(domain, gameId, details.privateId);
+    return socket
 }

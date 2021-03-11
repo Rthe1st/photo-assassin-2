@@ -58,7 +58,8 @@ function newGame(code: string): Game {
   return {
     chosenSettings: {
       gameLength: 5 * 60 * 1000,
-      countDown: 5 * 60 * 1000,proposedTargetList: []
+      countDown: 5 * 60 * 1000,
+      proposedTargetList: []
     },
     code: code,
     state: states.NOT_STARTED,

@@ -10,10 +10,21 @@ let domain = "https://localhost:3000";
 // todo: make this way more promise/event callback friendly
 test('whole game', async () => {
     let details = await socketBots.makeGame("hostplayer", domain);
-    let player1 = await socketHelpers.makeSocket(domain, details.gameId, details.privateId)
+    let {socket: player1, msg: initMessage} = await socketHelpers.makeSocket(domain, details.gameId, details.privateId)
+
+    expect(initMessage).toMatchObject({
+        gameState: expect.anything(),
+        chatHistory: [],
+    })
+
     let gameId = details.gameId;
     details = await socketBots.joinGame("passiveplayer", gameId!, domain);
-    let player2 = await socketHelpers.makeSocket(domain, details.gameId, details.privateId);
+    let {socket: player2, msg: initMessage2} = await socketHelpers.makeSocket(domain, details.gameId, details.privateId);
+
+    expect(initMessage2).toMatchObject({
+        gameState: expect.anything(),
+        chatHistory: [],
+    })
 
     let gameSettings = {
         gameLength: 60000,
