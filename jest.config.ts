@@ -7,5 +7,5 @@ module.exports = {
   // https://github.com/kulshekhar/ts-jest/issues/411
   // as a work around, we run then with `npm run-script integration-tests` for now
   // todo: we probably want separate projects for server/client/shared
-  projects: ['<rootDir>/src'],
+  projects: ['<rootDir>/src/server', '<rootDir>/src/client'],
 };

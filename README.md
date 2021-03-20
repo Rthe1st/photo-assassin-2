@@ -143,7 +143,7 @@ Other integration tests should probably not use this same code - as it likely ha
 
 We should pull any static URLs from html/css and confirm we have integration tests hitting those endpoints.
 
-Integration tests should be runnable against the production environment to test the deployed version is working at any point. 
+Integration tests should be runnable against the production environment to test the deployed version is working at any point.
 
 Client unit tests should test JS logic but not HTTP/socket handling code
 (that should be tests via the code shared with integration tests)

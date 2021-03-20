@@ -269,7 +269,11 @@ function updatePosition(game: Game, publicId: number, position: SharedGame.Posit
     && position.latitude != null
     && game.state == states.IN_PLAY
   ) {
+    logger.log("verbose", "good pos update", { game: game, publicId: publicId, position: position });
+    // so there was no positions entry for one of our players?
     game.positions.get(publicId)!.push(position);
+  }else{
+    logger.log("verbose", "bad position update", { game: game, publicId: publicId, position: position });
   }
 }
 

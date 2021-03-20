@@ -14,8 +14,11 @@
 <body>
   <!--todo: use semantic elements-->
   <div class="container" id="not-started" hidden>
+      <!-- used to show tool tips and errors-->
+    <div class="notification" id="not-started-notification" hidden></div>
     <div class="top area">
       <p class="username current-username" style="grid-column: 1;grid-row: 1;"></p>
+      <button id="game-link" style="grid-column: 2;grid-row: 1;">Invite</button>
       <button id="start" style="grid-column: 3;grid-row: 1;" disabled>Start?</button>
     </div>
     <div class="middle-2">
@@ -60,6 +63,8 @@
       </div>
     </div>
     <div id="main-in-play" class="container">
+      <!-- used to show tool tips and errors-->
+      <p class="notification"></p>
       <div class="top area">
         <p class="username current-username" style="grid-column: 1;grid-row: 1;"></p>
         <p id="sub-state" style="grid-column: 2;grid-row: 1;"></p>

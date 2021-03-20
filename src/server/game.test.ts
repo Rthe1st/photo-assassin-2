@@ -1,7 +1,10 @@
 import * as Game from './game';
 import * as fs from 'fs'
 
+import * as logging from './logging'
+
 test('basic game', async () => {
+    logging.setupJestLogging();
     var game = Game.newGame("fakegamecode");
     const { publicId: publicId } = Game.addPlayer(game, "player1");
     Game.removePlayer(game, publicId);

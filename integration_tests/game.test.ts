@@ -7,7 +7,6 @@ import * as socketBots from '../src/server/socketBots';
 
 let domain = "https://localhost:3000";
 
-// todo: make this way more promise/event callback friendly
 test('whole game', async () => {
     let details = await socketBots.makeGame("hostplayer", domain);
     let {socket: player1, msg: initMessage} = await socketHelpers.makeSocket(domain, details.gameId, details.privateId)

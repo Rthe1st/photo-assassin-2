@@ -3,6 +3,8 @@ import * as game from './game'
 import * as SharedGame from '../shared/game'
 import * as socketClient from '../shared/socketClient'
 
+import * as notifications from './notifications';
+
 import * as Sentry from '@sentry/browser';
 import { shuffle } from '../shared/shuffle';
 
@@ -592,5 +594,15 @@ window.onload = function () {
         if (confirm('Finish the game?')) {
             socketClient.stopGame(socket);
         }
+    }
+
+    const gameLink = document.getElementById("game-link")!;
+    let notStartedNotification = new notifications.GameNotification(document.getElementById("not-started-notification")!);
+
+    gameLink.onclick = function() {
+        navigator.clipboard.writeText(window.location.href)
+        .then(()=>{
+            notStartedNotification.notify("Link copied");
+        });
     }
 };

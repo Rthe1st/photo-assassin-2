@@ -12,7 +12,7 @@ module.exports = {
     "ts-jest": {
       // when we start testing client side ts
       // where going to have to choose a tsconfig based on what we're testing?
-      tsconfig: '<rootDir>/../tsconfig.json',
+      tsconfig: '<rootDir>/tsconfig.json',
       useESM: true
     }
   }

@@ -264,3 +264,12 @@ input[type=checkbox] {
     display: flex;
     flex-direction: row;
 }
+
+.notification {
+    background-color: yellow;
+    justify-content: center;
+    text-align: center;
+    position:absolute;
+    top: 0px;
+    width: 100%;
+}
