@@ -67,25 +67,24 @@ export function createServer(port = process.env.PORT || 3000, staticDir = "dist/
   app.use('/static', express.static(staticDir));
 
   staticDir = path.resolve(staticDir) + "/"
-  var games: Map<string, Game.Game> = new Map();
 
   // todo: instead of hacking in games with arrow functions
   // have the middlewares fetch games from db or w/e
-  app.get('/', (req, res) => root(staticDir, req, res, games));
+  app.get('/', (req, res) => root(staticDir, req, res));
   // for game's we've deleted but client has game data in URL fragment
   // don't server this on game code specific URL
   // so we can cache the page more
   // todo: does the caching logic above even make sense?
   app.get('/archived', (_, res) => res.sendFile(staticDir + 'archived.html'));
 
-  app.get('/game/:code', (req, res) => gamePage(staticDir, req, res, games));
+  app.get('/game/:code', (req, res) => gamePage(staticDir, req, res));
   app.get('/game/:code/download', (req, res) => gameDownloadPage(staticDir, req, res));
-  app.get('/game/:code/images/:id', (req, res) => getImage(req, res, games));
-  app.get('/game/:code/low-res-images/:id', (req, res) => getImage(req, res, games));
+  app.get('/game/:code/images/:id', (req, res) => getImage(req, res));
+  app.get('/game/:code/low-res-images/:id', (req, res) => getImage(req, res));
   // todo: should these be .use()
   // so we can redirect if someone navigate there by mistake
-  app.post('/make', (req, res) => make(staticDir, req, res, games, io));
-  app.post('/join', (req, res) => join(staticDir, req, res, games));
+  app.post('/make', (req, res) => make(staticDir, req, res, io));
+  app.post('/join', (req, res) => join(staticDir, req, res));
   if (useSentry) {
     // The error handler must be before any other error middleware and after all controllers
     app.use(Sentry.Handlers.errorHandler());
@@ -97,28 +96,27 @@ export function createServer(port = process.env.PORT || 3000, staticDir = "dist/
 
   httpServer.listen(port);
 
-  setInterval(() => { socketHandler.checkGameTiming(games, io) }, 10000);
+  setInterval(() => { socketHandler.checkGameTiming(Game.games, io) }, 10000);
 
   return httpServer;
 }
 
-function root(staticDir: string, req: express.Request, res: express.Response, games: Map<string, Game.Game>) {
+function root(staticDir: string, req: express.Request, res: express.Response) {
   if (req.query.code == undefined) {
     res.sendFile(staticDir + 'lobby.html');
     return;
   }
 
-  let code = req.query.code.toString();
-
-  if (!games.has(code)) {
-    logger.log("verbose", `/ Accessing invalid game: ${code}`);
+  var game = Game.getGame(req.query.code.toString());
+  if (game == undefined) {
+    logger.log("verbose", `/ Accessing invalid game: ${req.query.code}`);
     res.status(404);
     res.sendFile(`${staticDir}/game_doesnt_exist.html`);
-  } else if (games.get(code)!.state != Game.states.NOT_STARTED) {
+  } else if (game.state != Game.states.NOT_STARTED) {
     // todo: what if user is already in the game?
     // maybe root should leave this case for /join to handle
     // (same with code doesnt exist as well?)
-    logger.log("verbose", "/ Attempt to join game " + code + " that has already started");
+    logger.log("verbose", "/ Attempt to join game " + req.query.code + " that has already started");
     res.status(403);
     res.sendFile(`${staticDir}/game_in_progress.html`);
   } else {
@@ -141,14 +139,13 @@ function addUserToGame(game: Game.Game, res: express.Response, username: string)
   return [privateId, publicId];
 }
 
-function make(staticDir: string, req: express.Request, res: express.Response, games: Map<string, Game.Game>, io: socketIo.Server) {
+function make(staticDir: string, req: express.Request, res: express.Response, io: socketIo.Server) {
   if (!req.body.username) {
     res.status(400);
     res.sendFile(`${staticDir}/no_username.html`);
     return;
   }
   let game = socketInterface.setup(
-    games,
     io
   )
   var [privateId, publicId] = addUserToGame(game, res, req.body.username.toString());
@@ -159,15 +156,14 @@ function make(staticDir: string, req: express.Request, res: express.Response, ga
   }
 };
 
-function join(staticDir: string, req: express.Request, res: express.Response, games: Map<string, Game.Game>) {
+function join(staticDir: string, req: express.Request, res: express.Response) {
   if (req.body.code == undefined) {
     logger.log("debug", 'no code supplied');
     res.status(403);
     res.sendFile(`${staticDir}/no_code.html`);
     return;
   }
-  var code = req.body.code.toString();
-  let game = games.get(code)
+  let game = Game.getGame(req.body.code);
   if (game == undefined) {
     logger.log("verbose", `Accessing invalid game: ${req.body.code}`);
     res.status(404);
@@ -175,14 +171,14 @@ function join(staticDir: string, req: express.Request, res: express.Response, ga
     return;
   }
   if (game.state != Game.states.NOT_STARTED) {
-    logger.log("verbose", "Attempt to join game " + code + " that has already started");
+    logger.log("verbose", "Attempt to join game " + game.code + " that has already started");
     res.status(403);
     res.sendFile(`${staticDir}/game_in_progress.html`);
     return;
   }
   logger.log("debug", 'adding to game');
   if (req.body.username == undefined) {
-    logger.log("verbose", "Attempt to join game " + code + " without a username");
+    logger.log("verbose", "Attempt to join game " + game.code + " without a username");
     res.status(403);
     res.sendFile(`${staticDir}/no_username.html`);
     return;
@@ -190,14 +186,14 @@ function join(staticDir: string, req: express.Request, res: express.Response, ga
   var [privateId, publicId] = addUserToGame(game, res, req.body.username.toString());
 
   if (req.body.format == 'json') {
-    res.json({ publicId: publicId, privateId: privateId, gameId: code });
+    res.json({ publicId: publicId, privateId: privateId, gameId: game.code });
   } else {
-    res.redirect(`/game/${code}`);
+    res.redirect(`/game/${game.code}`);
   }
 };
 
-function getImage(req: express.Request, res: express.Response, games: Map<string, Game.Game>) {
-  var game = games.get(req.params.code);
+function getImage(req: express.Request, res: express.Response) {
+  let game = Game.getGame(req.params.code)
   if (game == undefined) {
     logger.log("verbose", `Accessing invalid game: ${req.params.code}`);
     res.redirect(`/static/game_doesnt_exist.html`);
@@ -225,10 +221,10 @@ function getImage(req: express.Request, res: express.Response, games: Map<string
   res.write(image);
 }
 
-function gamePage(staticDir: string, req: express.Request, res: express.Response, games: Map<string, Game.Game>) {
+function gamePage(staticDir: string, req: express.Request, res: express.Response) {
   //todo: convey errors to user (template error page?)
   logger.log("debug", `Accessing game: ${req.params.code}`);
-  var game = games.get(req.params.code);
+  var game = Game.getGame(req.params.code);
   if (game == undefined) {
     logger.log("verbose", `Accessing invalid game: ${req.params.code}`);
     res.redirect(`/static/game_doesnt_exist.html`);

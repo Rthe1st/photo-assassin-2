@@ -33,9 +33,9 @@ export function start(publicId: number, msg: socketEvents.ClientUpdateSettings,g
   socketInterface.start(socket, { gameState: Game.gameStateForClient(game) });
 };
 
-export function stop(game: Game.Game, games: Map<string, Game.Game>, io: SocketIO.Server) {
+export function stop(game: Game.Game, io: SocketIO.Server) {
   if (game.state == Game.states.IN_PLAY) {
-    finishGame(game, 'game stopped', games, io);
+    finishGame(game, 'game stopped', io);
     logger.log("verbose", "Stopping", { gameCode: game.code, gameState: game.state });
     // todo: say who stopped it
   }
@@ -45,7 +45,7 @@ export function positionUpdate(position: socketEvents.ClientPositionUpdate, game
   Game.updatePosition(game, publicId, position);
 };
 
-export function chatMsg(msg: socketEvents.ClientChatMessage, game: Game.Game, socket: SocketIO.Socket, publicId: number, games: Map<string, Game.Game>, io: SocketIO.Server) {
+export function chatMsg(msg: socketEvents.ClientChatMessage, game: Game.Game, socket: SocketIO.Socket, publicId: number, io: SocketIO.Server) {
   if (game.state != Game.states.IN_PLAY) {
     logger.log("debug", "chat message while not IN_PLAY");
     return;
@@ -88,7 +88,7 @@ export function chatMsg(msg: socketEvents.ClientChatMessage, game: Game.Game, so
       logger.log("verbose", "Snipe", { gameCode: game.code, gameState: game.state });
       if (gameOver) {
         Game.updatePosition(game, publicId, msg.position!);
-        finishGame(game, publicId.toString(), games, io);
+        finishGame(game, publicId.toString(), io);
         return;
       }
     }
@@ -131,10 +131,9 @@ export function addUser(publicId: number, game: Game.Game) {
   socketInterface.newUser(game.namespace!, { publicId: publicId, gameState: Game.gameStateForClient(game) });
 }
 
-function finishGame(game: Game.Game, winner: string, games: Map<string, Game.Game>, io: SocketIO.Server) {
+function finishGame(game: Game.Game, winner: string, io: SocketIO.Server) {
 
   let nextGame = socketInterface.setup(
-    games,
     io
   )
 
@@ -150,7 +149,7 @@ export function checkGameTiming(games: Map<string, Game.Game>, io: SocketIO.Serv
     //todo: need a record when we're in count down vs real game
     if (game.state == Game.states.IN_PLAY
       && game.startTime! + game.chosenSettings.gameLength < now) {
-      finishGame(game, 'time', games, io)
+      finishGame(game, 'time', io)
       logger.log("verbose", "TimeUp", { gameCode: gameId, gameState: game.state });
     } else if (game.state == Game.states.IN_PLAY) {
       var timeLeft = game.startTime! + game.chosenSettings.countDown + game.chosenSettings.gameLength - now;

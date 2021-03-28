@@ -9,6 +9,8 @@ import socketIo from 'socket.io'
 
 import { logger } from './logging'
 
+export let games: Map<string, Game> = new Map();
+
 const states = Object.freeze({ "FINISHED": "FINISHED", "NOT_STARTED": "NOT STARTED", "IN_PLAY": "IN PLAY" })
 
 const inPlaySubStates = Object.freeze({ COUNTDOWN: "COUNTDOWN", PLAYING: "PLAYING" })
@@ -318,7 +320,6 @@ function badSnipe(game: Game, snipeInfosIndex: number, publicId: number) {
 // or allowing very long running games
 // consider adding another word - but it starts to look unwieldy
 // maybe rate-limit clients instead
-// todo: when we're running in prod the number of game is likely to go up as well as down, we should probably use a dedicated counter that loops on overflow or something
 // todo: consider curating the list of words to use shorter words
 // to save screen width space
 function generateGameCode(uniqueId: number): string {
@@ -331,11 +332,20 @@ function generateGameCode(uniqueId: number): string {
 
   return randomWords.join("-") + `-${uniqueWord}`;
 }
-function generateGame(uniqueId: number) {
-  let code = generateGameCode(uniqueId);
+function generateGame() {
+  // todo: when we're running in prod the number of game is likely to go up as well as down, we should probably use a dedicated counter that loops on overflow or something
+  let code = generateGameCode(games.size);
   let game = newGame(code);
   logger.log("verbose", "making game", { gameCode: code });
+  games.set(game.code, game);
   return game;
+}
+
+export function getGame(code?: string){
+  if(code == undefined){
+    return undefined
+  }
+  return games.get(code.toLowerCase());
 }
 
 export { newGame, updateSettings, states, start, inPlaySubStates, snipe, gameStateForClient, addPlayer, removePlayer, finishGame, updatePosition, badSnipe, generateGame };

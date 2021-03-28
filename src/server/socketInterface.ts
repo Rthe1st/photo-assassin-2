@@ -4,11 +4,10 @@ import * as socketEvents from '../shared/socketEvents'
 import * as socketHandler from './socketHandler'
 
 export function setup(
-    games: Map<string, Game.Game>,
     io: SocketIO.Server
 ) {
 
-  var game = Game.generateGame(games.size);
+  var game = Game.generateGame();
   var namespace = io.of(`/game/${game.code}`);
     // I don't like namespace getting registered on game after game is already made
     game.namespace = namespace;
@@ -16,21 +15,18 @@ export function setup(
     // where ioConnect relies on game.namespace
     namespace.on('connection', (socket) => socketConnect(
         socket,
-        games,
+        game,
         io
     ))
-    games.set(game.code, game);
     return game;
 }
 
 function socketConnect(
     socket: SocketIO.Socket,
-    games: Map<string,Game.Game>,
+    game: Game.Game,
     io: SocketIO.Server
 ){
     var gameId = socket.nsp.name.substr('/game/'.length);
-
-    let game = games.get(gameId)!;
   
     if (game == undefined) {
       logger.log("verbose", `invalid game ${gameId}`);
@@ -66,11 +62,11 @@ function socketConnect(
   
     socket.on('start game', (msg) => socketHandler.start(publicId, msg, game, socket));
   
-    socket.on('stop game', (_) => socketHandler.stop(game, games, io));
+    socket.on('stop game', (_) => socketHandler.stop(game, io));
   
     socket.on('positionUpdate', (msg) => socketHandler.positionUpdate(msg, game, publicId));
   
-    socket.on('chat message', (msg) => socketHandler.chatMsg(msg, game, socket, publicId, games, io));
+    socket.on('chat message', (msg) => socketHandler.chatMsg(msg, game, socket, publicId, io));
     
     socket.on('bad snipe', (msg) => socketHandler.badSnipe(msg, game, socket, publicId));
   
