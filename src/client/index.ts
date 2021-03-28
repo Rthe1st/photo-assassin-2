@@ -529,7 +529,6 @@ function updateSettings(){
 // gameId needs to be decoded because it contains a '/'
 // which gets URI encoded otherwise
 const gameId = decodeURIComponent(document.cookie.replace(/(?:(?:^|.*;\s*)gameId\s*\=\s*([^;]*).*$)|^.*$/, "$1"));
-console.log(gameId);
 const privateId = document.cookie.replace(/(?:(?:^|.*;\s*)privateId\s*\=\s*([^;]*).*$)|^.*$/, "$1");
 const publicId = parseInt(document.cookie.replace(/(?:(?:^|.*;\s*)publicId\s*\=\s*([^;]*).*$)|^.*$/, "$1"));
 
@@ -597,6 +596,7 @@ window.onload = function () {
     }
 
     const gameLink = document.getElementById("game-link")!;
+    gameLink.innerText = `Game: ${gameId}\n(Click to share)`
     let notStartedNotification = new notifications.GameNotification(document.getElementById("not-started-notification")!);
 
     gameLink.onclick = function() {

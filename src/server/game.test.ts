@@ -1,6 +1,5 @@
 import * as Game from './game';
 import * as fs from 'fs'
-
 import * as logging from './logging'
 
 test('basic game', async () => {
@@ -37,3 +36,10 @@ test('basic game', async () => {
     expect(snipeRes.gameOver).toBeTruthy();
     Game.finishGame(game, "made-up-code", publicId.toString());
 })
+
+// don't think we can mock crypto till jest has
+// https://github.com/facebook/jest/issues/10025
+// test("generate game code", ()=>{
+    // expect(Game.generateGame(1)).toEqual(Game.generateGame(1));
+    // expect(Game.generateGame(1)).not.toEqual(Game.generateGame(2));
+// })

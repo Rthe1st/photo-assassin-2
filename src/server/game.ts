@@ -3,6 +3,7 @@ import { shuffle } from '../shared/shuffle'
 import * as SharedGame from '../shared/game'
 import * as SocketEvents from '../shared/socketEvents'
 import sharp from 'sharp'
+import {commonWords} from './commonWords'
 
 import socketIo from 'socket.io'
 
@@ -303,14 +304,36 @@ function badSnipe(game: Game, snipeInfosIndex: number, publicId: number) {
 
 }
 
-function generateGame(numberOfGames: number) {
-  var first_part = crypto.randomBytes(2).toString('hex');
-  var second_part = crypto.randomBytes(2).toString('hex');
-  // used number of games as a guarantee prevent collisions
-  // (even though collisions must be unlikely anyway for the code to provide security)
-  var third_part = (numberOfGames + 1).toString(16);
-  const code = `${first_part}-${second_part}-${third_part}`;
-  let game = newGame(code)
+// uniqueId should be a value that is never the same between any two games
+// it's used so force the attackers to guess a specific game's code individual
+// (like a username does in a normal login system)
+// Otherwise, if we have X games, with a game code space of Y
+// as X becomes a larger fraction of Y, guessing gets easier
+// (I think that's the birthday attack)
+// 3 words, from 1000 choices, 1 billion combinations
+// with a 1000 parallel requests at 0.1 second per request that's
+// = search space / (parallelism * requests per second * seconds in minute * minutes in hour * hours in day)
+// = 1000**3/(1000*10*60*60) = 27 hours of guessing
+// todo: If we ever consider perma-hosting games after they finish
+// or allowing very long running games
+// consider adding another word - but it starts to look unwieldy
+// maybe rate-limit clients instead
+// todo: when we're running in prod the number of game is likely to go up as well as down, we should probably use a dedicated counter that loops on overflow or something
+// todo: consider curating the list of words to use shorter words
+// to save screen width space
+function generateGameCode(uniqueId: number): string {
+  let randomWords = []
+  for(let wordIndex=0; wordIndex<3; wordIndex++){
+    randomWords.push(commonWords[crypto.randomInt(commonWords.length)]);
+  }
+
+  let uniqueWord = commonWords[(uniqueId + 1)];
+
+  return randomWords.join("-") + `-${uniqueWord}`;
+}
+function generateGame(uniqueId: number) {
+  let code = generateGameCode(uniqueId);
+  let game = newGame(code);
   logger.log("verbose", "making game", { gameCode: code });
   return game;
 }
