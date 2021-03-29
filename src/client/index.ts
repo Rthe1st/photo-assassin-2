@@ -537,6 +537,8 @@ let proposedTargetList: number[];
 
 window.onload = function () {
 
+    let notification = new notifications.GameNotification("notification");
+
     // do in onload, so that we can't accidentally receive a socket event
     // before dom loaded
     socket = socketClient.setup(
@@ -552,6 +554,11 @@ window.onload = function () {
         timeLeft,
         chatMessage,
         resizeDone,
+        '',
+        (reason: any) => {notification.notify("disconnected");console.log(reason)},
+        (reason: any) => {notification.notify("error");console.log(reason)},
+        (reason: any) => {notification.notify("disconnecting");console.log(reason)},
+        (reason: any) => {notification.notify("connect error");console.log(reason)},
     );
 
     document.getElementById("exit-sniped-screen")!.addEventListener('click', hideSnipedScreen);
@@ -597,12 +604,11 @@ window.onload = function () {
 
     const gameLink = document.getElementById("game-link")!;
     gameLink.innerText = `Game: ${gameId}\n(Click to share)`
-    let notStartedNotification = new notifications.GameNotification(document.getElementById("not-started-notification")!);
 
     gameLink.onclick = function() {
         navigator.clipboard.writeText(window.location.href)
         .then(()=>{
-            notStartedNotification.notify("Link copied");
+            notification.notify("Link copied");
         });
     }
 };

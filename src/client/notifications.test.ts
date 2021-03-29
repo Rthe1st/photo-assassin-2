@@ -2,10 +2,12 @@ import { jest } from '@jest/globals'
 import * as notifications from './notifications'
 jest.useFakeTimers();
 
+let notificationHtml = '<div id="notification" class="notification"></div>'
+
 test("basic notification", ()=>{
-    document.body.innerHTML = '<div id="notification"></div>';
+    document.body.innerHTML = notificationHtml;
     let notificationElement = document.getElementById("notification")!;
-    let notification = new notifications.GameNotification(notificationElement);
+    let notification = new notifications.GameNotification("notification");
 
     let notificationText = "new text";
 
@@ -20,9 +22,9 @@ test("basic notification", ()=>{
 })
 
 test("custom display time", ()=>{
-    document.body.innerHTML = '<div id="notification"></div>';
+    document.body.innerHTML = notificationHtml;
     let notificationElement = document.getElementById("notification")!;
-    let notification = new notifications.GameNotification(notificationElement);
+    let notification = new notifications.GameNotification("notification");
 
     let notificationText = "new text";
 
@@ -38,9 +40,9 @@ test("custom display time", ()=>{
 })
 
 test("overlapping notification times", ()=>{
-    document.body.innerHTML = '<div id="notification"></div>';
+    document.body.innerHTML = notificationHtml;
     let notificationElement = document.getElementById("notification")!;
-    let notification = new notifications.GameNotification(notificationElement);
+    let notification = new notifications.GameNotification("notification");
 
     let firstDisplayTime = 1;
 

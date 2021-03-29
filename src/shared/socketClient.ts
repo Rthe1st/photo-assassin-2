@@ -20,6 +20,9 @@ export function setup(
     // otherwise window.location is used
     hostname = '',
     disconnect= (reason: any) => console.log(reason),
+    error= (reason: any) => console.log(reason),
+    disconnecting= (reason: any) => console.log(reason),
+    connectError= (reason: any) => console.log(reason),
 ): SocketIOClient.Socket {
     let socket = io(
         // leading slash is needed so IO nows we're giving it a path
@@ -43,15 +46,14 @@ export function setup(
     socket.on('Remove user', removeUser);
     socket.on('update settings', updateSettings);
     socket.on('start', start);
-    // in game events
     socket.on('chat message', chatMessage);
     socket.on('bad snipe', badSnipe);
     socket.on('timeLeft', timeLeft);
     socket.on('game finished', finished);
-    socket.on('error', (err: any) => console.log(err));
-    socket.on('connect_error', (err: any) => console.log(err));
+    socket.on('error', error);
+    socket.on('connect_error', connectError);
     socket.on('disconnect', disconnect);
-    socket.on('disconnecting', (reason: any) => console.log(reason));
+    socket.on('disconnecting', disconnecting);
     socket.on('resize done', resizeDone);
     return socket;
 }
