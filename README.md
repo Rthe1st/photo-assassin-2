@@ -150,3 +150,9 @@ Client unit tests should test JS logic but not HTTP/socket handling code
 Client unit tests should test effects on webpage HTML.
 
 Server unit tests should test JS logic but not HTTP/socket handling code
+
+## Memory leak debugging
+
+Run node with `--inspect` and go to chrome://inspect in chromium
+You can then use chrome's debugger to examine the heap
+Last leak was caused by logging entire Game instances on GPS update

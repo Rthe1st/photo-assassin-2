@@ -42,13 +42,6 @@ function socketConnect(
     }
   
     logger.log("debug", "Socket connected", { publicId: publicId, gameCode: gameId });
-  
-    // todo: clean up wtf chathistory is
-    for(let ch of game.chatHistory){
-      if(ch.imageId != undefined){
-        ch.resizeIsAvailable = game.lowResImages[ch.imageId] != undefined
-      }
-    }
 
     let initializationMsg: socketEvents.ServerInitializationMsg = { gameState: Game.gameStateForClient(game), chatHistory: game.chatHistory }
     socket.emit('initialization', initializationMsg);
@@ -77,7 +70,11 @@ function socketConnect(
 }
 
 export function resizeDone(socket: SocketIO.Socket, msg: socketEvents.ServerResizeDone){
-  socket.nsp.emit('resize done', msg);  
+  socket.nsp.emit('resize done', msg);
+}
+
+export function imageUploadDone(socket: SocketIO.Socket, msg: socketEvents.ServerImageUploadDone){
+  socket.nsp.emit('image upload done', msg);
 }
 
 export function updateSettings(socket: SocketIO.Socket, msg: socketEvents.ServerUpdateSettingsMsg){

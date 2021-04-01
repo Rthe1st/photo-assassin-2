@@ -192,7 +192,7 @@ window.onload = function () {
     document.getElementById('photo-back')!.onclick = function () {
         document.getElementById('photo-div')!.hidden = true;
         document.getElementById('main')!.hidden = false;
-        (<HTMLImageElement>document.getElementById('photo')).src = window.location.href + "/shitty_loader.jpg";
+        (<HTMLImageElement>document.getElementById('photo')).src = "/shitty_loader.jpg";
     }
 
     document.getElementById('time-lapse')!.oninput = function(){

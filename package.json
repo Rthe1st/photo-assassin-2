@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "description": "",
   "dependencies": {
+    "@google-cloud/storage": "^5.8.3",
     "@sentry/browser": "^5.20.1",
     "@sentry/node": "^5.20.1",
     "cookie-parser": "^1.4.5",

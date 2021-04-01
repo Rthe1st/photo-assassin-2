@@ -5,11 +5,16 @@ import * as SocketEvents from '../shared/socketEvents'
 import sharp from 'sharp'
 import {commonWords} from './commonWords'
 
+import {ImageStore} from './imageStore'
+
 import socketIo from 'socket.io'
 
 import { logger } from './logging'
 
+// todo: we should wrap this in a class
+// it'd make it easier to test
 export let games: Map<string, Game> = new Map();
+let imageStore = new ImageStore();
 
 const states = Object.freeze({ "FINISHED": "FINISHED", "NOT_STARTED": "NOT STARTED", "IN_PLAY": "IN PLAY" })
 
@@ -46,11 +51,11 @@ export interface Game {
   // to those in the images key
   // (and even that should just be a ref to images stored not in memory)
   chatHistory: SocketEvents.ServerChatMessage[],
-  //todo: store these in a database
-  actualImages: Buffer[],
+  nextImageId: number
+  imageUploadsDone: (string|undefined)[],
   // used to give thumbnail to user
   // (we only expand to full image when they click)
-  lowResImages: (Buffer|undefined)[],
+  lowResUploadsDone: (string|undefined)[],
   // this is set after the game is created, because we need to know the
   // game code in order to define the namespace
   // used to communicate with the sockets where we don't have easy access to the namespace
@@ -80,34 +85,40 @@ function newGame(code: string): Game {
     latestSnipeIndexes: [],
     snipeInfos: [],
     chatHistory: [],
-    actualImages: [],
-    lowResImages: [],
+    nextImageId: 0,
+    imageUploadsDone: [],
+    lowResUploadsDone: [],
     winner: undefined,
     namespace: undefined
   };
 
 }
 
-export function getActualImage(game: Game, id: number, lowRes = false){
-  if(lowRes){
-    return game.lowResImages[id]    
-  }
-  return game.actualImages[id]
-}
+export function saveImage(game: Game, image: Buffer): {imageId: number, resizePromise: Promise<string>, imagePromise: Promise<string>} {
 
-export function saveImage(game: Game, image: Buffer): {imageId: number, resizePromise: Promise<Buffer>} {
+  let imageId = game.nextImageId;
+  game.imageUploadsDone.push(undefined);
+  game.lowResUploadsDone.push(undefined);
+  game.nextImageId += 1;
 
-  let imageId = game.actualImages.length
+  let imagePromise = imageStore.uploadImage(image, game.code, imageId)
+    .then((url)=>{
+      game.imageUploadsDone[imageId] = url;
+      return url;
+    });
 
-  game.actualImages.push(image);
-
-  // because the resizing is async, reserve our place in the lowRes array
-  game.lowResImages.push(undefined)
   let resizePromise = sharp(image)
     .resize(100,100) //todo: choose a better size
     .toBuffer()
+    .then((lowResBuffer) => {
+      return imageStore.uploadLowResImage(lowResBuffer, game.code, imageId)
+    })
+    .then((url)=>{
+      game.lowResUploadsDone[imageId] = url;
+      return url;
+    });
 
-  return {imageId: imageId, resizePromise: resizePromise};
+  return {imageId: imageId, resizePromise: resizePromise, imagePromise: imagePromise};
 
 }
 
@@ -214,7 +225,9 @@ function gameStateForClient(game: Game) {
     winner: game.winner,
     nextCode: game.nextCode,
     snipeInfos: game.snipeInfos,
-    latestSnipeIndexes: game.latestSnipeIndexes
+    latestSnipeIndexes: game.latestSnipeIndexes,
+    imageUploadsDone: game.imageUploadsDone,
+    lowResUploadsDone: game.lowResUploadsDone,
   }
 
   if (game.state == states.FINISHED) {
@@ -272,11 +285,10 @@ function updatePosition(game: Game, publicId: number, position: SharedGame.Posit
     && position.latitude != null
     && game.state == states.IN_PLAY
   ) {
-    logger.log("verbose", "good pos update", { game: game, publicId: publicId, position: position });
-    // so there was no positions entry for one of our players?
+    logger.log("verbose", "good pos update", { gameCode: game.code, publicId: publicId, position: position });
     game.positions.get(publicId)!.push(position);
   }else{
-    logger.log("verbose", "bad position update", { game: game, publicId: publicId, position: position });
+    logger.log("verbose", "bad position update", { gameCode: game.code, publicId: publicId, position: position });
   }
 }
 

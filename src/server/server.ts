@@ -52,7 +52,10 @@ export function createServer(port = process.env.PORT || 3000, staticDir = "dist/
     // real answer is to not block
     // loads more info at https://github.com/socketio/socket.io/issues/3025
     pingTimeout: 50000,
-    pingInterval: 250000
+    pingInterval: 250000,
+    // bumping to socket io v3 or v4 makes this the default anyway
+    // https://github.com/socketio/socket.io/issues/3477#issuecomment-610265035
+    perMessageDeflate: false
   });
 
   if (useSentry) {
@@ -79,8 +82,6 @@ export function createServer(port = process.env.PORT || 3000, staticDir = "dist/
 
   app.get('/game/:code', (req, res) => gamePage(staticDir, req, res));
   app.get('/game/:code/download', (req, res) => gameDownloadPage(staticDir, req, res));
-  app.get('/game/:code/images/:id', (req, res) => getImage(req, res));
-  app.get('/game/:code/low-res-images/:id', (req, res) => getImage(req, res));
   // todo: should these be .use()
   // so we can redirect if someone navigate there by mistake
   app.post('/make', (req, res) => make(staticDir, req, res, io));
@@ -191,35 +192,6 @@ function join(staticDir: string, req: express.Request, res: express.Response) {
     res.redirect(`/game/${game.code}`);
   }
 };
-
-function getImage(req: express.Request, res: express.Response) {
-  let game = Game.getGame(req.params.code)
-  if (game == undefined) {
-    logger.log("verbose", `Accessing invalid game: ${req.params.code}`);
-    res.redirect(`/static/game_doesnt_exist.html`);
-    return;
-  }
-
-  if (req.params.id == undefined || game.actualImages.length <= parseInt(req.params.id)) {
-    logger.log("verbose", `Accessing invalid image: ${req.params.code}, ${req.params.id}`);
-    res.sendStatus(404)
-    return;
-  }
-
-  let image;
-  if (req.path.indexOf('low-res-images') != -1) {
-    // if(req.query.lowRes != undefined){
-    image = Game.getActualImage(game, parseInt(req.params.id), true)
-    if (image == undefined) {
-      // this happens when sharp hasn't finished resizing the image
-      res.sendStatus(404)
-    }
-  } else {
-    image = Game.getActualImage(game, parseInt(req.params.id), false)
-  }
-
-  res.write(image);
-}
 
 function gamePage(staticDir: string, req: express.Request, res: express.Response) {
   //todo: convey errors to user (template error page?)

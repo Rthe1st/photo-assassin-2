@@ -70,17 +70,31 @@ export function chatMsg(msg: socketEvents.ClientChatMessage, game: Game.Game, so
   if (image) {
     let res = Game.saveImage(game, image);
     imageId = res.imageId
+    // because of this
+    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/EventLoop#run-to-completion
+    // the image promises will always resolve AFTER the current message has been sent out
+    // and as long as we are using WebSockets for sending the messages
+    // they should arrive at the client in order
+    // https://stackoverflow.com/a/41641451/5832565
     res.resizePromise
-      .then(lowRes => {
-        game.lowResImages[imageId!] = lowRes
-        socketInterface.resizeDone(socket, {imageId: imageId!});
+      .then(imageUrl => {
+        socketInterface.resizeDone(socket, {imageId: imageId!, url: imageUrl});
       })
       .catch(err => {
         console.log(err);
-        // this happens if file is bad type, etc
         // todo: handle better
         // for now, just leave it undefined so client sees loader image
       });
+
+    res.imagePromise
+    .then(imageUrl => {
+      socketInterface.imageUploadDone(socket, {imageId: imageId!, url: imageUrl});
+    })
+    .catch(err => {
+      console.log(err);
+      // todo: handle better
+      // for now, just leave it undefined so client sees loader image
+    });
 
     if (wasSnipe) {
       var {botMessage: botMessage, snipeInfo: snipeInfo, gameOver: gameOver} = Game.snipe(game, publicId, imageId, msg.position);
@@ -109,7 +123,6 @@ export function chatMsg(msg: socketEvents.ClientChatMessage, game: Game.Game, so
     gameState: clientState,
     snipeInfo: snipeInfo,
     botMessage: botMessage,
-    resizeIsAvailable: game.lowResImages[imageId!] != undefined,
     nonce: msg.nonce
   }
 

@@ -23,7 +23,9 @@ export interface ServerTimeLeftMsg { gameState: SharedGame.ClientGame }
 
 export interface ServerStartMsg { gameState: SharedGame.ClientGame }
 
-export interface ServerResizeDone {imageId: number}
+export interface ServerResizeDone {imageId: number, url: string}
+
+export interface ServerImageUploadDone {imageId: number, url: string}
 
 export type SnipeInfo = SharedGame.SnipeInfo
 
@@ -35,7 +37,6 @@ export interface ServerChatMessage {
     botMessage?: string,
     //todo: remove this - it massivly explodes size of chathistory
     gameState: SharedGame.ClientGame,
-    resizeIsAvailable: boolean,
     // a random number to match messages from the server with those sent from the client
     // so we can confirm message X was received
     nonce: number

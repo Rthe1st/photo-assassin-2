@@ -106,6 +106,23 @@ export function getSnipeImageId(snipeInfoIndex: number ){
     return game.snipeInfos[snipeInfoIndex].imageId
 }
 
+export function getImageUrl(imageId: number, lowRes:boolean): string|undefined{
+    
+    let imageIdArray: (string|undefined)[];
+
+    if(lowRes){
+        imageIdArray = game.lowResUploadsDone;
+    }else{
+        imageIdArray = game.imageUploadsDone;
+    }
+
+    if(imageIdArray.length > imageId && imageIdArray[imageId] != undefined){
+        return imageIdArray[imageId]
+    }
+    return undefined
+}
+
+
 export interface UnconfirmedMessage {
     placeHolderMessage: HTMLLIElement
 }

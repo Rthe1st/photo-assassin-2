@@ -7,3 +7,4 @@ public/*.js.map
 dist/*
 secret/*
 public/*
+gcp_config/image-upload-account.json

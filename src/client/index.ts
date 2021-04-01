@@ -13,7 +13,7 @@ if (process.env.SENTRY_TESTS == "true") {
     Sentry.captureException(new Error("sentry test in index.js"));
 }
 
-function createChatElement(sender: string, message: string, imageId?: number, snipeInfo?: SharedGame.SnipeInfo, resizeIsAvailable?: boolean) {
+function createChatElement(sender: string, message: string, imageId?: number, snipeInfo?: SharedGame.SnipeInfo, lowResUrl?: string|undefined) {
     var li = document.createElement('li');
     let messages = document.getElementById('messages')!
     messages.appendChild(li);
@@ -43,9 +43,8 @@ function createChatElement(sender: string, message: string, imageId?: number, sn
         var img = new Image;
         img.classList.add('message-image');
         img.setAttribute('id', `image-${imageId}`)
-        console.log(resizeIsAvailable)
-        if(resizeIsAvailable){
-            img.src = window.location.href + `/low-res-images/${imageId}`;
+        if(lowResUrl != undefined){
+            img.src = lowResUrl;
         }else{
             img.src = '/static/shitty_loader.jpg';
         }
@@ -57,6 +56,8 @@ function createChatElement(sender: string, message: string, imageId?: number, sn
             snipeScreenText += `, '${message}'`
         }
         //todo: should we only add this once image is availble?
+        // maybe no, because we should just show the low res image when clicked
+        // if the full one isn't ready
         img.onclick = () => showSnipedScreen(snipeScreenText, imageId);
         li.appendChild(img);
         if (snipeInfo != undefined) {
@@ -84,7 +85,7 @@ function createChatElement(sender: string, message: string, imageId?: number, sn
     return li
 }
 
-function processMsg(msg: socketClient.ServerChatMessage, isReplay: boolean) {
+function processMsg(msg: socketClient.ServerChatMessage, isReplay: boolean, lowResUrl?: string) {
     if (msg.botMessage) {
         createChatElement('Gamebot3000', msg.botMessage);
     }
@@ -95,7 +96,7 @@ function processMsg(msg: socketClient.ServerChatMessage, isReplay: boolean) {
         }
     }
 
-    createChatElement(game.getUsername(msg.publicId), msg.text, msg.imageId, msg.snipeInfo, msg.resizeIsAvailable);
+    createChatElement(game.getUsername(msg.publicId), msg.text, msg.imageId, msg.snipeInfo, lowResUrl);
     
     if (isReplay) {
         return;
@@ -322,7 +323,15 @@ function initialization(msg: socketClient.ServerInitializationMsg) {
     console.log('initialized');
     game.update(msg.gameState);
     for (let message of msg.chatHistory) {
-        processMsg(message, true);
+        if(message.imageId != undefined){
+            let lowResUrl = game.getImageUrl(message.imageId, true);
+            // lowResUrl could still come back undefined
+            // if the image has been processed by the server
+            // but the call to upload it to gcloud hasn't finished yet
+            processMsg(message, true, lowResUrl);
+        }else{
+            processMsg(message, true);
+        }
     }
     let userNameElements = document.getElementsByClassName('current-username');
     for (let index = 0; index < userNameElements.length; index++) {
@@ -439,26 +448,35 @@ function timeLeft(msg: socketClient.ServerTimeLeftMsg) {
 };
 
 function resizeDone(msg: socketClient.ServerResizeDone){
-    let a = (<HTMLImageElement>document.getElementById(`image-${msg.imageId}`))
-    // it could be null if the resize was done very fast
-    // and this gets sent before the actual message with the image
-    console.log('resize done')
-    console.log(a.src)
-    console.log(msg)
-    if(a != null){
+    game.game.lowResUploadsDone[msg.imageId] = msg.url;
+    let placeHolderImage = (<HTMLImageElement>document.getElementById(`image-${msg.imageId}`))
+    if(placeHolderImage != null){
         var img = new Image;
         img.classList.add('message-image');
         img.setAttribute('id', `image-${msg.imageId}`)
-        img.src = window.location.href + `/low-res-images/${msg.imageId}`;
-        img.onclick = () => a.onclick
-        // remake it to force a reload of the image
-        // changing source doesnt seem to work on firefox
-        a.replaceWith(img)
+        img.src = msg.url;
+        img.onclick = placeHolderImage.onclick
+        placeHolderImage.replaceWith(img)
+    }
+}
+
+function imageUploadDone(msg: socketClient.ServerImageUploadDone){
+    game.game.imageUploadsDone[msg.imageId] = msg.url;
+    if(document.getElementById('sniped-screen')!.hidden == false){
+        let previousSnipedScreen = document.getElementById('snipe-image')!;
+        var img = new Image;
+        img.setAttribute('id', 'snipe-image')
+        img.src = msg.url;
+        previousSnipedScreen.replaceWith(img)
+        // (<HTMLImageElement>document.getElementById('snipe-image')).src = msg.url;
     }
 }
 
 function chatMessage(msg: socketClient.ServerChatMessage) {
     game.update(msg.gameState);
+    // because this is a fresh message
+    // we know that the lowResUrl will not be available for the image yet
+    // and we expect to receive it in a follow up event
     processMsg(msg, false);
 
     setCurrentTarget();
@@ -485,11 +503,14 @@ function showSnipedScreen(msg: string, imageId: number, shouldVibrate = false) {
     document.getElementById('main-in-play')!.hidden = true;
     document.getElementById('sniped-screen')!.hidden = false;
     document.getElementById('sniped-alert-text')!.innerText = msg;
-    // todo: image id seems to get stuck at 0?
-    // also loading gif doesnt seem to be reloading after source change
-    console.log('show sniped screen')
-    console.log(imageId);
-    (<HTMLImageElement>document.getElementById('snipe-image')).src = window.location.href + `/images/${imageId}`;
+    let imageUrl = game.getImageUrl(imageId, false);
+
+    if(imageUrl){
+        (<HTMLImageElement>document.getElementById('snipe-image')).src = imageUrl;
+    }else{
+        (<HTMLImageElement>document.getElementById('snipe-image')).src = '/static/shitty_loader.jpg';
+    }
+
     // todo: this broken on firefox mobile
     if(shouldVibrate){
         window.navigator.vibrate([100, 50, 100]);
@@ -554,6 +575,7 @@ window.onload = function () {
         timeLeft,
         chatMessage,
         resizeDone,
+        imageUploadDone,
         '',
         (reason: any) => {notification.notify("disconnected");console.log(reason)},
         (reason: any) => {notification.notify("error");console.log(reason)},

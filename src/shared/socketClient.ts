@@ -16,6 +16,7 @@ export function setup(
     timeLeft: (msg: SocketEvents.ServerTimeLeftMsg) => void,
     chatMessage: (msg: SocketEvents.ServerChatMessage) => void,
     resizeDone: (msg: SocketEvents.ServerResizeDone) => void,
+    imageUploadDone: (msg: SocketEvents.ServerImageUploadDone) => void,
     // this only needs to be supplied when not in a browser
     // otherwise window.location is used
     hostname = '',
@@ -35,6 +36,9 @@ export function setup(
             // todo: review - done to avoid the default size limit
             // of payloads when polling because large files will exceed this
             // see maxHttpBufferSize at https://socket.io/docs/server-api/#new-Server-httpServer-options
+            // we also don't want to allow polling, as it can allow messages
+            // to arrive out of order
+            // https://stackoverflow.com/a/41641451/5832565
             transports: ['websocket'],
             // needed for local dev with self-signed cert
             rejectUnauthorized: false
@@ -55,6 +59,7 @@ export function setup(
     socket.on('disconnect', disconnect);
     socket.on('disconnecting', disconnecting);
     socket.on('resize done', resizeDone);
+    socket.on('image upload done', imageUploadDone);
     return socket;
 }
 

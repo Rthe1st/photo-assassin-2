@@ -143,6 +143,7 @@ function activePlayer(gameId: string, privateId: string, player: Player) {
             socketClient.chatMessage(socket, message);
         },
         () => {},
+        () => { },
         domain
     );
     return socket;
@@ -175,6 +176,7 @@ function passivePlayer(gameId: string, privateId: string, player: Player) {
             });
         },
         () => {},
+        () => { },
         domain
     );
     return socket;
@@ -337,6 +339,7 @@ function listeningPlayer(gameId: string, privateId: string, player: Player, publ
         () => { },
         processCommand,
         () => {},
+        () => { },
         domain
     );
     return socket;
@@ -549,6 +552,7 @@ function gpsPlayer(gameId: string, privateId: string, _: Player) {
         () => { },
         () => { },
         () => {},
+        () => { },
         domain
     );
     return socket;

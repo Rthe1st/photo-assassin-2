@@ -24,7 +24,11 @@ test('basic game', async () => {
     }
     Game.updatePosition(game, publicId2, position);
     var photo = fs.readFileSync('./src/server/sample_snipe_image.jpeg');
-    let {imageId: imageId1} = Game.saveImage(game, photo);
+    let {imageId: imageId1, imagePromise: ip, resizePromise: resizePromise} = Game.saveImage(game, photo);
+
+    await ip;
+    await resizePromise;
+
     let {snipeInfo: snipeInfo} = Game.snipe(game, publicId2, imageId1);
     // publicId2 is undoing their own snipe
     let undoneSnipes = Game.badSnipe(game, snipeInfo.index, publicId2);
@@ -37,9 +41,9 @@ test('basic game', async () => {
     Game.finishGame(game, "made-up-code", publicId.toString());
 })
 
-// don't think we can mock crypto till jest has
-// https://github.com/facebook/jest/issues/10025
-// test("generate game code", ()=>{
-    // expect(Game.generateGame(1)).toEqual(Game.generateGame(1));
-    // expect(Game.generateGame(1)).not.toEqual(Game.generateGame(2));
+// todo: should test that no 2 games can generate the same code
+// test("test game ID", ()=>{
+//     expect(Game.generateGame(1)).toEqual(Game.generateGame(1));
+//     expect(Game.generateGame(1)).not.toEqual(Game.generateGame(2));
 // })
+

@@ -20,7 +20,9 @@ export interface ClientGame {
   nextCode: string | undefined,
   winner: string | undefined,
   snipeInfos: SnipeInfo[],
-  latestSnipeIndexes: {[key: number]: number | undefined}
+  latestSnipeIndexes: {[key: number]: number | undefined},
+  imageUploadsDone: (string|undefined)[],
+  lowResUploadsDone: (string|undefined)[],
 }
 
 export interface UserList {
