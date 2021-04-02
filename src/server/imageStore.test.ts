@@ -9,7 +9,7 @@ test('upload file and access it', async () => {
     let file = fs.readFileSync('./src/server/sample_snipe_image.jpeg');
     let imageStore = new ImageStore();
     let fileUrl = await imageStore.upload(file, 'test/file/path');
-    expect(fileUrl).toBe("https://storage.googleapis.com/images.photo-assassin.prangten.com/test/file/path");
+    expect(fileUrl).toBe("https://storage-photo-assassin.prangten.com/test/file/path");
 
     let fileFromCloud = await fetch(fileUrl)
         .then((response)=>{return response.blob()})
@@ -23,4 +23,6 @@ test('upload file and access it', async () => {
         });
 
     expect(fileFromCloud).toStrictEqual(file);
+    // todo: delete the file from googe cloud
+    // so the next run doesn't accidently pass
 });

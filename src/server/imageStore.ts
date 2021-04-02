@@ -10,9 +10,9 @@ export class ImageStore{
     bucket: gcStorage.Bucket;
 
     constructor(){
-        const storage = new gcStorage.Storage({keyFilename: 'gcp_config/image-upload-account.json'});
+        const storage = new gcStorage.Storage({keyFilename: 'gcp_config/storage-upload-account.json'});
 
-        const bucketName = 'images.photo-assassin.prangten.com';
+        const bucketName = 'storage-photo-assassin.prangten.com';
 
         this.bucket = storage.bucket(bucketName);
     }
@@ -30,6 +30,8 @@ export class ImageStore{
         // but gsutil fakes it when a path contains forward slashes
         // https://cloud.google.com/storage/docs/gsutil/addlhelp/HowSubdirectoriesWork
     
+        // todo: we should set the content type as well
+        // https://stackoverflow.com/a/38789848/5832565
         const file = this.bucket.file(path);
     
         var bufferStream = new stream.PassThrough();
@@ -43,7 +45,7 @@ export class ImageStore{
                 reject(err);
             })
             .on('finish', function() {
-                resolve(file.publicUrl());
+                resolve(`https://storage-photo-assassin.prangten.com/${path}`);
             });
         });
     }
