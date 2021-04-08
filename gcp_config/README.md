@@ -90,6 +90,8 @@ gsutil mb -b on -l europe-west2 gs://$BUCKET_NAME
 gsutil ls
 # Make readable from the internet without auth:
 gsutil iam ch allUsers:objectViewer gs://$BUCKET_NAME
+# setup CORS so we can fetch JSON (for game data)
+gsutil cors set ./gcp_config/cors.json gs://$BUCKET_NAME
 ```
 
 ### Node service account for uploads

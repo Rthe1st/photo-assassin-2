@@ -4,6 +4,8 @@
 import * as stream from 'stream'
 
 import * as gcStorage from '@google-cloud/storage';
+import {ClientGame} from '../shared/game'
+import * as api from '../shared/clientApi';
 
 export class ImageStore{
 
@@ -25,6 +27,8 @@ export class ImageStore{
         return this.upload(image, `${gameCode}/low-res/image/${id}`)
     }
 
+    // todo: verify the image type being uploaded
+    // and the size
     async upload(image: Buffer, path: string): Promise<string>{
         // cloud storage doesn't actually have a concept of folders
         // but gsutil fakes it when a path contains forward slashes
@@ -48,5 +52,31 @@ export class ImageStore{
                 resolve(`https://storage-photo-assassin.prangten.com/${path}`);
             });
         });
+    }
+
+    // we only need to upload the client game
+    // as we only upload once the game is finished
+    // todo: if we would like to back up long running games
+    // we will have to separately upload the Server Game state
+    // to a non-public bucket
+    // but this would only be for the use case where a server crashes
+    // and needs to resume games
+    async uploadGameState(gameState: ClientGame, code: string): Promise<string>{
+        let asJson = JSON.stringify(gameState);
+        let path = api.gameStatePath(code);
+        const file = this.bucket.file(path);
+    
+        const readable = stream.Readable.from([asJson])
+
+        return new Promise((resolve, reject)=>{
+            readable.pipe(file.createWriteStream())
+            .on('error', function(err) {
+                reject(err);
+            })
+            .on('finish', function() {
+                resolve(api.gameStateUrl(code));
+            });
+        });
+
     }
 }

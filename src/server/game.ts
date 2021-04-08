@@ -270,11 +270,12 @@ function removePlayer(game: Game, publicId: number) {
 /*
 winner can be the winning players publicId, 'time' if the clock ran out, or undefined if game was stopped manually
   */
-function finishGame(game: Game, nextCode: string, winner: string) {
+async function finishGame(game: Game, nextCode: string, winner: string): Promise<string> {
   game.state = states.FINISHED;
   game.subState = undefined;
   game.winner = winner;
   game.nextCode = nextCode;
+  return imageStore.uploadGameState(gameStateForClient(game), game.code);
 }
 
 function updatePosition(game: Game, publicId: number, position: SharedGame.Position) {

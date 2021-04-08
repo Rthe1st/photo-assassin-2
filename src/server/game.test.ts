@@ -4,7 +4,7 @@ import * as logging from './logging'
 
 test('basic game', async () => {
     logging.setupJestLogging();
-    var game = Game.newGame("fakegamecode");
+    var game = Game.newGame("fake-game-code");
     const { publicId: publicId } = Game.addPlayer(game, "player1");
     Game.removePlayer(game, publicId);
     const { publicId: publicId2 } = Game.addPlayer(game, "player2");

@@ -150,9 +150,16 @@ function finishGame(game: Game.Game, winner: string, io: SocketIO.Server) {
     io
   )
 
-  Game.finishGame(game, nextGame.code, winner);
-
-  socketInterface.finished(game.namespace!, { nextCode: nextGame.code, winner: winner })
+  // we wait for the gamestate to get uploaded
+  // and only then tell clients the game is over
+  // so that the state URL is ready for them
+  // todo: alternative, tell them game is over ASAP
+  // and implement retry logic client side to check
+  // when the uploaded state is ready
+  Game.finishGame(game, nextGame.code, winner)
+  .then(url => {
+    socketInterface.finished(game.namespace!, { nextCode: nextGame.code, winner: winner, stateUrl: url });
+  })
 }
 
 export function checkGameTiming(games: Map<string, Game.Game>, io: SocketIO.Server) {

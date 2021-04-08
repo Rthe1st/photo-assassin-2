@@ -203,10 +203,11 @@ function gamePage(staticDir: string, req: express.Request, res: express.Response
     return;
   }
 
-  if (req.query.format == "json") {
-    res.json(Game.gameStateForClient(game));
-    return;
-  } else if (game.state == Game.states.FINISHED) {
+  // if (req.query.format == "json") {
+  //   res.json(Game.gameStateForClient(game));
+  //   return;
+  // }
+  if (game.state == Game.states.FINISHED) {
     res.sendFile(staticDir + 'archived.html');
     return;
   } else if (!(game.idMapping.has(req.cookies["privateId"]))) {

@@ -13,7 +13,10 @@ test('clientApi.gameJson', async () => {
 
     let gameDetails = await (await httpHelpers.post(`${domain}/make`, "username=player1&format=json")).json();
 
-    const gameJson = await clientApi.gameJson(gameDetails.gameId, domain);
+    // todo: fix, we need to finish the game in order
+    // to trigger an upload of the json
+
+    const gameJson = await clientApi.gameJson(gameDetails.gameId);
     // we don't really care what's in here
     // other functions can test the game logic values are populated right
     expect(gameJson).toMatchObject({

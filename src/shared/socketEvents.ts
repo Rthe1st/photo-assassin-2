@@ -17,7 +17,7 @@ export interface ServerUpdateSettingsMsg { gameState: SharedGame.ClientGame }
 
 export interface ServerBadSnipeMsg { gameState: SharedGame.ClientGame, undoneSnipeIndexes: number[] }
 
-export interface ServerFinishedMsg { nextCode: string, winner: string }
+export interface ServerFinishedMsg { nextCode: string, winner: string, stateUrl: string }
 
 export interface ServerTimeLeftMsg { gameState: SharedGame.ClientGame }
 

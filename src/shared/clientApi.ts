@@ -19,10 +19,21 @@ if (process.env.NODE_ENV == "test") {
     requestOptions = {};
 }
 
+export function gameStateUrl(code: string){
+    return "https://storage-photo-assassin.prangten.com/" + gameStatePath(code)
+}
+
+export function gameStatePath(code: string){
+    return `${code}/state.json`
+}
+
 // todo: server should use same type when sending it
 // like we do for sockets
-export async function gameJson(gameId: string, domain=""): Promise<SharedGame.ClientGame>{
-    let url = `${domain}/game/${gameId}?format=json`;
+export async function gameJson(code: string): Promise<SharedGame.ClientGame>{
+    let url = gameStateUrl(code);
+    requestOptions["Content-Type"] = "application/json"
+    requestOptions["Access-Control-Request-Method"] = "GET"
+    requestOptions["Access-Control-Request-Headers"] = "Content-Type"
     const response = await fetch(url, requestOptions);
     return response.json();
 }

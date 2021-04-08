@@ -240,5 +240,7 @@ function showPhoto(text: string, imageIndex: number) {
     document.getElementById('photo-div')!.hidden = false;
     document.getElementById('main')!.hidden = true;
     document.getElementById('photo-text')!.innerText = text;
+    // todo: change to google cloud address
+    // which should be defined in clientApi
     (<HTMLImageElement>document.getElementById('photo')).src = window.location.href + `/images/${imageIndex}`;
 }
