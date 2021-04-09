@@ -159,6 +159,9 @@ function finishGame(game: Game.Game, winner: string, io: SocketIO.Server) {
   Game.finishGame(game, nextGame.code, winner)
   .then(url => {
     socketInterface.finished(game.namespace!, { nextCode: nextGame.code, winner: winner, stateUrl: url });
+    // once the state has been uploaded to the cloud
+    // there's no need for us to keep it
+    Game.games.delete(game.code);
   })
 }
 

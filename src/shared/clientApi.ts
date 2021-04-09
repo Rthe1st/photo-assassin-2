@@ -34,6 +34,11 @@ export async function gameJson(code: string): Promise<SharedGame.ClientGame>{
     requestOptions["Content-Type"] = "application/json"
     requestOptions["Access-Control-Request-Method"] = "GET"
     requestOptions["Access-Control-Request-Headers"] = "Content-Type"
-    const response = await fetch(url, requestOptions);
-    return response.json();
+    return fetch(url, requestOptions)
+    .then(response=>{
+        if(!response.ok){
+            return Promise.reject(response);
+        }
+        return response.json()
+    })
 }

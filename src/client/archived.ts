@@ -183,6 +183,9 @@ window.onload = function () {
         }else{
             mapData.center();
         }
+    }, _=>{
+        // this looks terribad - change to a local hide/show thing
+        window.location.replace("/static/game_doesnt_exist.html")
     })
 
     document.getElementById('show-map')!.onclick = function () {

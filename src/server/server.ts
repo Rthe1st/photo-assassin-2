@@ -194,24 +194,20 @@ function join(staticDir: string, req: express.Request, res: express.Response) {
 };
 
 function gamePage(staticDir: string, req: express.Request, res: express.Response) {
-  //todo: convey errors to user (template error page?)
   logger.log("debug", `Accessing game: ${req.params.code}`);
   var game = Game.getGame(req.params.code);
   if (game == undefined) {
-    logger.log("verbose", `Accessing invalid game: ${req.params.code}`);
-    res.redirect(`/static/game_doesnt_exist.html`);
-    return;
-  }
-
-  // if (req.query.format == "json") {
-  //   res.json(Game.gameStateForClient(game));
-  //   return;
-  // }
-  if (game.state == Game.states.FINISHED) {
+    // then we assume its a finished game
+    // that we no longer keep in memory and have push to google cloud
+    // client side code will handle detecting an error
+    // if there is not matching game in the cloud
+    // todo: make sure cloudflare doesn't cache the game page until the game is over
+    // but then caches it aggressively
+    // one answer: combine archived and index pages into one
+    // and cache it always
     res.sendFile(staticDir + 'archived.html');
     return;
   } else if (!(game.idMapping.has(req.cookies["privateId"]))) {
-
     res.redirect(`/?code=${req.params.code}`);
     return;
   }
