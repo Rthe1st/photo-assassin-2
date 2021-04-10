@@ -189,10 +189,10 @@ export function checkGameTiming(games: Map<string, Game.Game>, io: SocketIO.Serv
       );
 
       game.timeLeft = timeLeft;
-      var forClient: socketEvents.ServerTimeLeftMsg = { gameState: Game.gameStateForClient(game) };
       if (game.subState == Game.inPlaySubStates.COUNTDOWN && timeLeft < game.chosenSettings.gameLength) {
         game.subState = Game.inPlaySubStates.PLAYING;
       }
+      var forClient: socketEvents.ServerTimeLeftMsg = { gameState: Game.gameStateForClient(game) };
       socketInterface.timeLeft(namespace!, forClient)
     }
   };

@@ -209,7 +209,12 @@ function updateTimeLeft(sync: boolean = true) {
     let timeLeft = undefined
     if(sync){
         (<HTMLParagraphElement>document.getElementById('sub-state')!).innerText = game.game.subState!;
-        timeLeft = game.game.timeLeft;
+        if(game.game.subState == "COUNTDOWN"){
+            timeLeft = game.game.timeLeft! - game.game.chosenSettings.gameLength;
+        }else{
+            timeLeft = game.game.timeLeft;
+        }
+
         localTimeLeft = timeLeft!
     }else{
         // todo: we should probably update it on the local gamestate
