@@ -37,7 +37,7 @@ export function startTime(): number{
 }
 
 export function endTime(): number{
-    return startTime() + game.chosenSettings.countDown + game.chosenSettings.gameLength;
+       return startTime() + game.chosenSettings.countDown + game.chosenSettings.gameLength - game.timeLeft!;
 }
 
 export function getUsername(publicId: number){

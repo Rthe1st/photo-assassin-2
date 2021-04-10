@@ -172,6 +172,7 @@ export function checkGameTiming(games: Map<string, Game.Game>, io: SocketIO.Serv
     //todo: need a record when we're in count down vs real game
     if (game.state == Game.states.IN_PLAY
       && game.startTime! + game.chosenSettings.gameLength < now) {
+      game.timeLeft = 0;
       finishGame(game, 'time', io)
       logger.log("verbose", "TimeUp", { gameCode: gameId, gameState: game.state });
     } else if (game.state == Game.states.IN_PLAY) {

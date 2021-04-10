@@ -286,6 +286,15 @@ function updatePosition(game: Game, publicId: number, position: SharedGame.Posit
     && position.latitude != null
     && game.state == states.IN_PLAY
   ) {
+    // we trust client timestamps if they are given
+    // on the assumption they are more accurate (no lag)
+    // malicious timestamps aren't a concern
+    // todo: add some validation to prevent accidentally wrong client timestamps
+    // from back client clock etc
+    // check timestamp < now and > previous timestamp from client
+    if(position.timestamp == undefined){
+      position.timestamp = Date.now()
+    }
     logger.log("verbose", "good pos update", { gameCode: game.code, publicId: publicId, position: position });
     game.positions.get(publicId)!.push(position);
   }else{

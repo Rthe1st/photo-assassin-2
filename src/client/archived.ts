@@ -18,16 +18,14 @@ function urlGameId(): string{
 function getPublicId(): number|undefined{
     const cookieGameId = decodeURIComponent(document.cookie.replace(/(?:(?:^|.*;\s*)gameId\s*\=\s*([^;]*).*$)|^.*$/, "$1"));
 
-
-    let publicId: number;
-    //todo: use to let people download results
-    // let privateId: string;
-    // we only let users have cookies for one game at a time at the moment
-    // so check they're for the current and treat the as observer if not
     if (cookieGameId == urlGameId()) {
-        publicId = parseInt(document.cookie.replace(/(?:(?:^|.*;\s*)publicId\s*\=\s*([^;]*).*$)|^.*$/, "$1"));
-        return publicId
+        let publicId = parseInt(document.cookie.replace(/(?:(?:^|.*;\s*)publicId\s*\=\s*([^;]*).*$)|^.*$/, "$1"));
+        if(isNaN(publicId)){
+            return undefined;
+        }
+        return publicId;
     }
+    return undefined;
 }
 
 function getPlayerColor(playerPublicId: number) {
@@ -91,7 +89,7 @@ function buildPlayerTickBox(publicId: number, username: string){
 }
 
 function setUpPage(gameState: SharedGame.ClientGame, publicId?: number) {
-    if (publicId) {
+    if (publicId != undefined) {
         const username = gameState.userList[publicId].username;
         document.getElementById("username")!.innerText = username;
     } else {
@@ -99,7 +97,7 @@ function setUpPage(gameState: SharedGame.ClientGame, publicId?: number) {
     }
     
     let winner;
-    if (gameState.winner && parseInt(gameState.winner)) {
+    if (gameState.winner && !isNaN(parseInt(gameState.winner))) {
         winner = gameState.userList[parseInt(gameState.winner!)].username;
     } else {
         winner = gameState.winner;
@@ -112,7 +110,7 @@ function setUpPage(gameState: SharedGame.ClientGame, publicId?: number) {
         targetsState.appendChild(outerLi);
     }
 
-    if (publicId) {
+    if (publicId != undefined) {
         const username = Game.getUsername(publicId)
         document.getElementById('next-game-link')!.setAttribute('href', `/?code=${gameState.nextCode}&username=${username}`);
     } else {
@@ -178,7 +176,7 @@ window.onload = function () {
 
         mapData = new MapData(gameState, map, showPhoto, playerColours);
         // observers won't have a public ID
-        if(publicId){
+        if(publicId != undefined){
             mapData.center(publicId);
         }else{
             mapData.center();
@@ -245,5 +243,5 @@ function showPhoto(text: string, imageIndex: number) {
     document.getElementById('photo-text')!.innerText = text;
     // todo: change to google cloud address
     // which should be defined in clientApi
-    (<HTMLImageElement>document.getElementById('photo')).src = window.location.href + `/images/${imageIndex}`;
+    (<HTMLImageElement>document.getElementById('photo')).src = `storage-photo-assassin.prangten.com/${urlGameId()}/images/${imageIndex}`;
 }
