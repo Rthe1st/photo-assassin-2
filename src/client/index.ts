@@ -2,6 +2,7 @@ import * as gps from './gps'
 import * as game from './game'
 import * as SharedGame from '../shared/game'
 import * as socketClient from '../shared/socketClient'
+import * as imageManipulation from './imageManipulation'
 
 import * as notifications from './notifications';
 
@@ -128,6 +129,7 @@ function photoInput(event: Event) {
     document.getElementById('main-in-play')!.hidden = true;
     (<HTMLInputElement>document.getElementById('photo-message')).value = (<HTMLInputElement>document.getElementById('message')).value;
     let img = (<HTMLImageElement>document.getElementById('preview'));
+
     //todo: can a change event leave files undefined?
     img.src = URL.createObjectURL((<HTMLInputElement>event.target).files![0]);
     let target = game.getTarget(publicId);
@@ -173,20 +175,28 @@ function sendTextMessage(ev: MouseEvent) {
 }
 
 function sendPhotoMessage(ev: MouseEvent) {
-    var file: File = (<HTMLInputElement>document.getElementById('photo-input')).files![0];
 
     let text = (<HTMLInputElement>document.getElementById('photo-message')).value
 
     let nonce = messagePlaceholder(text)
 
-    let message = {
-        "text": text,
-        "image": file,
-        "position": gps.position,
-        "isSnipe": (<HTMLInputElement>document.getElementById('is-snipe')).checked,
-        nonce: nonce
-    }
-    socketClient.chatMessage(socket, message);
+    var file: File = (<HTMLInputElement>document.getElementById('photo-input')).files![0];
+
+    imageManipulation.process(new Blob([file]))
+    .then(reducedBlob => {
+        return new Response(reducedBlob).arrayBuffer();
+    })
+    .then(reducedArraryBuffer => {
+        let message = {
+            "text": text,
+            "image": reducedArraryBuffer,
+            "position": gps.position,
+            "isSnipe": (<HTMLInputElement>document.getElementById('is-snipe')).checked,
+            nonce: nonce
+        };
+        socketClient.chatMessage(socket, message);
+    });
+
     (<HTMLInputElement>document.getElementById('message')).value = '';
     (<HTMLInputElement>document.getElementById('photo-message')).value = '';
     (<HTMLInputElement>document.getElementById('photo-input')).value = '';
@@ -630,7 +640,7 @@ window.onload = function () {
     }
 
     const gameLink = document.getElementById("game-link")!;
-    gameLink.innerText = `Game: ${gameId}\n(Click to share)`
+    gameLink.innerText = `/game/${gameId}\n(Click to share)`
 
     gameLink.onclick = function() {
         navigator.clipboard.writeText(window.location.href)

@@ -97,8 +97,13 @@ function newGame(code: string): Game {
 export function saveImage(game: Game, image: Buffer): {imageId: number, resizePromise: Promise<string>, imagePromise: Promise<string>} {
 
   let imageId = game.nextImageId;
-  game.imageUploadsDone.push(undefined);
-  game.lowResUploadsDone.push(undefined);
+  // we put the urls in the game state even before the upload is done
+  // so that if the game is marked as finished
+  // the game state uploaded to goog already has the right URL links
+  // this means we don't have to wait for the final snipe image to upload
+  // before telling players the game is over
+  game.imageUploadsDone.push(imageStore.getUploadImageUrl(game.code, imageId));
+  game.lowResUploadsDone.push(imageStore.getUploadImageLowResUrl(game.code, imageId));
   game.nextImageId += 1;
 
   let imagePromise = imageStore.uploadImage(image, game.code, imageId)

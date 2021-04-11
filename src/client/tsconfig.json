@@ -4,5 +4,5 @@
         "target": "ES2019",
         "types": ["googlemaps", "node"]
     },
-    "exclude": ["notifications.test.ts"]
+    "exclude": ["notifications.test.ts", "imageManipulation.test.ts"]
 }

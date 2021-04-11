@@ -19,12 +19,20 @@ export class ImageStore{
         this.bucket = storage.bucket(bucketName);
     }
 
+    getUploadImageUrl(gameCode: string, id: number): string{
+        return `${gameCode}/image/${id}`
+    }
+
     async uploadImage(image: Buffer, gameCode: string, id: number): Promise<string>{
-        return this.upload(image, `${gameCode}/image/${id}`)
+        return this.upload(image, this.getUploadImageUrl(gameCode, id))
+    }
+
+    getUploadImageLowResUrl(gameCode: string, id: number): string{
+        return `${gameCode}/low-res/${id}`
     }
 
     async uploadLowResImage(image: Buffer, gameCode: string, id: number): Promise<string>{
-        return this.upload(image, `${gameCode}/low-res/image/${id}`)
+        return this.upload(image, this.getUploadImageLowResUrl(gameCode, id))
     }
 
     // todo: verify the image type being uploaded
