@@ -102,24 +102,26 @@ export function saveImage(game: Game, image: Buffer): {imageId: number, resizePr
   // the game state uploaded to goog already has the right URL links
   // this means we don't have to wait for the final snipe image to upload
   // before telling players the game is over
-  game.imageUploadsDone.push(imageStore.getUploadImageUrl(game.code, imageId));
-  game.lowResUploadsDone.push(imageStore.getUploadImageLowResUrl(game.code, imageId));
+  game.imageUploadsDone.push("https://storage-photo-assassin.prangten.com/" + imageStore.getUploadImageUrl(game.code, imageId));
+  game.lowResUploadsDone.push("https://storage-photo-assassin.prangten.com/" + imageStore.getUploadImageLowResUrl(game.code, imageId));
   game.nextImageId += 1;
 
-  let imagePromise = imageStore.uploadImage(image, game.code, imageId)
-    .then((url)=>{
-      game.imageUploadsDone[imageId] = url;
-      return url;
-    });
+  let asWebp = sharp(image).webp()
 
-  let resizePromise = sharp(image)
-    .resize(100,100) //todo: choose a better size
+  let imagePromise = asWebp.toBuffer()
+  .then(buffer=>{
+    return imageStore.uploadImage(buffer, game.code, imageId)
+  })
+  .then((url)=>{
+    return url;
+  });
+
+  let resizePromise = asWebp.resize(100,100) //todo: choose a better size
     .toBuffer()
     .then((lowResBuffer) => {
       return imageStore.uploadLowResImage(lowResBuffer, game.code, imageId)
     })
     .then((url)=>{
-      game.lowResUploadsDone[imageId] = url;
       return url;
     });
 

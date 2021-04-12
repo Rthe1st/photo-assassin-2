@@ -20,7 +20,7 @@ export class ImageStore{
     }
 
     getUploadImageUrl(gameCode: string, id: number): string{
-        return `${gameCode}/image/${id}`
+        return `${gameCode}/image/${id}.webp`
     }
 
     async uploadImage(image: Buffer, gameCode: string, id: number): Promise<string>{
@@ -28,7 +28,7 @@ export class ImageStore{
     }
 
     getUploadImageLowResUrl(gameCode: string, id: number): string{
-        return `${gameCode}/low-res/${id}`
+        return `${gameCode}/low-res/${id}.webp`
     }
 
     async uploadLowResImage(image: Buffer, gameCode: string, id: number): Promise<string>{
@@ -52,7 +52,7 @@ export class ImageStore{
     
         return new Promise((resolve, reject)=>{
             bufferStream
-            .pipe(file.createWriteStream())
+            .pipe(file.createWriteStream({contentType: "image/webp"}))
             .on('error', function(err) {
                 reject(err);
             })
@@ -77,7 +77,7 @@ export class ImageStore{
         const readable = stream.Readable.from([asJson])
 
         return new Promise((resolve, reject)=>{
-            readable.pipe(file.createWriteStream())
+            readable.pipe(file.createWriteStream({contentType: "application/json"}))
             .on('error', function(err) {
                 reject(err);
             })

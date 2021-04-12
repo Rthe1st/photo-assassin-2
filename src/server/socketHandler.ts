@@ -55,6 +55,16 @@ export function chatMsg(msg: socketEvents.ClientChatMessage, game: Game.Game, so
   // we know socket IO turns the File type (clientside) into a buffer
   let image = msg.image as Buffer;
 
+  // 1000*1000 pixel image, 10 bytes per pixel
+  // https://stackoverflow.com/questions/9806091/maximum-file-size-of-jpeg-image-with-known-dimensions
+  // todo: move magic number to a ts file shared with resize client code
+  // so they are in sync
+  if(image.length > 1000*1000*10){
+    logger.log("error", "client sent image bigger then 10mb");
+    // todo: push message to client to explain the error
+    return;
+  }
+
   logger.log("verbose", "Chat message", { gameCode: game.code, publicId: publicId, chatMessage: msg.text });
 
   // snipes must contain an image
