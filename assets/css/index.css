@@ -34,6 +34,12 @@ body{
     flex-direction: column;
 }
 
+.pre-game-top {
+    display: grid;
+    text-align: center;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .top {
     display: grid;
     text-align: center;
