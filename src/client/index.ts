@@ -14,6 +14,59 @@ if (process.env.SENTRY_TESTS == "true") {
     Sentry.captureException(new Error("sentry test in index.js"));
 }
 
+//todo: deduplicate this code from createChatElement
+function updatePlaceholderChatElement(li: HTMLElement, sender: string, message: string, imageId?: number, snipeInfo?: SharedGame.SnipeInfo, lowResUrl?: string|undefined){
+    let messages = document.getElementById('messages')!
+    messages.removeChild(li);
+    messages.appendChild(li);
+    li.setAttribute('class', 'own-message');
+    if (imageId != undefined) {
+        var img = new Image;
+        img.classList.add('message-image');
+        img.setAttribute('id', `image-${imageId}`)
+        if(lowResUrl != undefined){
+            img.src = lowResUrl;
+        }else{
+            img.src = '/static/shitty_loader_preview.jpg';
+        }
+        let snipeScreenText = `From: ${sender}`
+        if(snipeInfo != undefined){
+            snipeScreenText += `target: ${game.getUsername(snipeInfo.target)}`
+        }
+        if(message != ""){
+            snipeScreenText += `, '${message}'`
+        }
+        //todo: should we only add this once image is availble?
+        // maybe no, because we should just show the low res image when clicked
+        // if the full one isn't ready
+        img.onclick = () => showSnipedScreen(snipeScreenText, imageId);
+        let placeHolderImg = <HTMLImageElement>document.getElementById(`image--1`)!;
+        placeHolderImg.replaceWith(img);
+        if (snipeInfo != undefined) {
+            // img.setAttribute('id', `snipe-${snipeInfo.index}`)
+            var voteButton = document.createElement('button');
+            voteButton.setAttribute('class', 'vote-button')
+            let targetUser = game.getUsername(snipeInfo.target);
+            voteButton.innerText = `Was ${targetUser} not in the picture?`;
+            voteButton.onclick = function () {
+                if (confirm(`Was ${targetUser} not in the picture?`)) {
+                    let msg: socketClient.ClientBadSnipe = {
+                        snipeInfosIndex: snipeInfo.index
+                    }
+                    socketClient.badSnipe(socket, msg);
+                    voteButton.onclick = null;
+                    voteButton.disabled = true;
+                }
+            };
+            li.appendChild(voteButton);
+            if(snipeInfo.undone){
+                markSnipeAsBad(snipeInfo.index);
+            }
+        }
+    }
+    return li
+}
+
 function createChatElement(sender: string, message: string, imageId?: number, snipeInfo?: SharedGame.SnipeInfo, lowResUrl?: string|undefined) {
     var li = document.createElement('li');
     let messages = document.getElementById('messages')!
@@ -40,14 +93,13 @@ function createChatElement(sender: string, message: string, imageId?: number, sn
         li.appendChild(paragraph);
     }
     if (imageId != undefined) {
-        console.log('chat message, image id ' + imageId)
         var img = new Image;
         img.classList.add('message-image');
         img.setAttribute('id', `image-${imageId}`)
         if(lowResUrl != undefined){
             img.src = lowResUrl;
         }else{
-            img.src = '/static/shitty_loader.jpg';
+            img.src = '/static/shitty_loader_preview.jpg';
         }
         let snipeScreenText = `From: ${sender}`
         if(snipeInfo != undefined){
@@ -91,19 +143,17 @@ function processMsg(msg: socketClient.ServerChatMessage, isReplay: boolean, lowR
         createChatElement('Gamebot3000', msg.botMessage);
     }
 
-    if(msg.publicId == publicId){
-        if(game.clientOnly.unconfirmedMessages[msg.nonce]){
-            game.clientOnly.unconfirmedMessages[msg.nonce].placeHolderMessage.remove()
+    if(msg.publicId == publicId && game.clientOnly.unconfirmedMessages[msg.nonce]){
+            let li = game.clientOnly.unconfirmedMessages[msg.nonce].placeHolderMessage;
+            updatePlaceholderChatElement(li, game.getUsername(msg.publicId), msg.text,  msg.imageId, msg.snipeInfo, lowResUrl)
+    }else{
+        createChatElement(game.getUsername(msg.publicId), msg.text, msg.imageId, msg.snipeInfo, lowResUrl);
+        if (isReplay) {
+            return;
         }
-    }
-
-    createChatElement(game.getUsername(msg.publicId), msg.text, msg.imageId, msg.snipeInfo, lowResUrl);
-    
-    if (isReplay) {
-        return;
-    }
-    if (publicId == game.getLastSnipedPlayerId(msg.publicId) && msg.imageId != undefined) {
-        showSnipedScreen(game.getUsername(msg.publicId) + " sniped you!", msg.imageId, true);
+        if (publicId == game.getLastSnipedPlayerId(msg.publicId) && msg.imageId != undefined) {
+            showSnipedScreen(game.getUsername(msg.publicId) + " sniped you!", msg.imageId, true);
+        }
     }
 }
 
@@ -136,13 +186,20 @@ function photoInput(event: Event) {
     document.getElementById("mark-snipe-question")!.innerText = `Is ${target} in the picture?`
 }
 
-function messagePlaceholder(text:string){
+function messagePlaceholder(text:string, has_photo=false){
     // before sending a message to the server, call this
     // which will create a placeholder chat element
     // for the message and which will be deleted when server broadcasts the message (confirming it recieved it)
     // todo: fix left over placeholder messages if connection dies before confirmation
     // could do that by just reloading message history from server whenever connection dies
-    let element = createChatElement(game.getUsername(publicId), text)
+    // use -1 as image id because image IDs start from 0
+    let element;
+    if(has_photo){
+        element = createChatElement(game.getUsername(publicId), text, -1)
+    }else{
+        element = createChatElement(game.getUsername(publicId), text)
+    }
+
     var array = new Uint32Array(1);
     window.crypto.getRandomValues(array);
     let nonce = array[0]
@@ -178,7 +235,7 @@ function sendPhotoMessage(ev: MouseEvent) {
 
     let text = (<HTMLInputElement>document.getElementById('photo-message')).value
 
-    let nonce = messagePlaceholder(text)
+    let nonce = messagePlaceholder(text, true)
 
     var file: File = (<HTMLInputElement>document.getElementById('photo-input')).files![0];
 
@@ -509,12 +566,26 @@ function shuffleTargets() {
     updateSettings();
 }
 
-function hideSnipedScreen() {
+window.onpopstate = function() {
+    if(history.state !== null && history.state["type"] == "photo"){
+        showSnipedScreen(history.state["msg"], history.state["imageId"], false, false)
+    }else if(!document.getElementById('sniped-screen')!.hidden){
+        hideSnipedScreen(true)
+    }
+}
+
+function hideSnipedScreen(triggeredByBackButton=false) {
+    if(!triggeredByBackButton){
+        history.back()
+    }
     document.getElementById('main-in-play')!.hidden = false;
     document.getElementById('sniped-screen')!.hidden = true;
 }
 
-function showSnipedScreen(msg: string, imageId: number, shouldVibrate = false) {
+function showSnipedScreen(msg: string, imageId: number, shouldVibrate = false, newHistory=true) {
+    if(newHistory){
+        history.pushState({"type": "photo", msg: msg, imageId: imageId}, "", window.location.pathname);
+    }
     document.getElementById('main-in-play')!.hidden = true;
     document.getElementById('sniped-screen')!.hidden = false;
     document.getElementById('sniped-alert-text')!.innerText = msg;
@@ -598,7 +669,7 @@ window.onload = function () {
         (reason: any) => {notification.notify("connect error");console.log(reason)},
     );
 
-    document.getElementById("exit-sniped-screen")!.addEventListener('click', hideSnipedScreen);
+    document.getElementById("exit-sniped-screen")!.addEventListener('click', ()=>hideSnipedScreen());
 
     document.getElementById("show-game-info")!.addEventListener('click', showGameInfo);
 
