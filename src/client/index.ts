@@ -554,7 +554,7 @@ function chatMessage(msg: socketClient.ServerChatMessage) {
     setCurrentTarget();
 
     //if we're scrolled to the bottom of messages, stick to the bottom
-    let messages = document.getElementById('messages')!;
+    let messages = document.getElementById('messages-container')!;
     // if(messages.scrollTop == (messages.scrollHeight - messages.offsetHeight)){
     messages.scrollTo(0, messages.scrollHeight)
     // }
