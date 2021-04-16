@@ -97,7 +97,13 @@ export function createServer(port = process.env.PORT || 3000, staticDir = "dist/
 
   httpServer.listen(port);
 
-  setInterval(() => { socketHandler.checkGameTiming(Game.games, io) }, 10000);
+  // todo: work out an optimime value for this
+  // too frequent and I'm worried it's events will deplay processing
+  // of messages from the client
+  // but needs to be low enough for:
+  // * telling client the countdown time is over
+  // * telling client the game is over
+  setInterval(() => { socketHandler.checkGameTiming(Game.games, io) }, 1000);
 
   return httpServer;
 }
