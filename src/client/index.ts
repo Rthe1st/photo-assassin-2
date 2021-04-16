@@ -586,16 +586,24 @@ function showSnipedScreen(msg: string, imageId: number, shouldVibrate = false, n
     if(newHistory){
         history.pushState({"type": "photo", msg: msg, imageId: imageId}, "", window.location.pathname);
     }
-    document.getElementById('main-in-play')!.hidden = true;
-    document.getElementById('sniped-screen')!.hidden = false;
     document.getElementById('sniped-alert-text')!.innerText = msg;
     let imageUrl = game.getImageUrl(imageId, false);
 
+    // we always set the image to the loading image first
+    // because if the real image is not in the browser cache it takes time to load
+    // and during the time whatever image was previously on the snipe page will still show
+    // because we show the loading image before every snipe page
+    // it's already going to be in the browser cache
+    // when viewing the snipe screen for a 2nd time
+    (<HTMLImageElement>document.getElementById('snipe-image')).src = '/static/shitty_loader.jpg';
     if(imageUrl){
         (<HTMLImageElement>document.getElementById('snipe-image')).src = imageUrl;
-    }else{
-        (<HTMLImageElement>document.getElementById('snipe-image')).src = '/static/shitty_loader.jpg';
     }
+    // do this after updating the image
+    // so the user doesn't see the previous snipe screen
+    // while we setup the new one
+    document.getElementById('main-in-play')!.hidden = true;
+    document.getElementById('sniped-screen')!.hidden = false;
 
     // todo: this broken on firefox mobile
     if(shouldVibrate){
