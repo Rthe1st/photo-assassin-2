@@ -87,11 +87,6 @@ function createChatElement(sender: string, message: string, imageId?: number, sn
         span.classList.add("username");
         li.appendChild(span);
     }
-    if (message != '') {
-        let paragraph = document.createElement('p');
-        paragraph.innerText = message;
-        li.appendChild(paragraph);
-    }
     if (imageId != undefined) {
         var img = new Image;
         img.classList.add('message-image');
@@ -134,6 +129,11 @@ function createChatElement(sender: string, message: string, imageId?: number, sn
                 markSnipeAsBad(snipeInfo.index);
             }
         }
+    }
+    if (message != '') {
+        let paragraph = document.createElement('p');
+        paragraph.innerText = message;
+        li.appendChild(paragraph);
     }
     return li
 }
