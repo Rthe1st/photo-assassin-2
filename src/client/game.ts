@@ -1,4 +1,5 @@
 import * as SharedGame from '../shared/game'
+import * as SharedSocketEvents from '../shared/socketEvents';
 
 export const states = Object.freeze({ "NOT_STARTED": "NOT STARTED", "IN_PLAY": "IN PLAY"})
 
@@ -120,6 +121,21 @@ export function getImageUrl(imageId: number, lowRes:boolean): string|undefined{
         return imageIdArray[imageId]
     }
     return undefined
+}
+
+// todo: once game state is updated from server with deltas
+// we should move this into game
+let chatMessages: SharedSocketEvents.ServerChatMessage[] = [];
+
+export function addChatMessage(chatMessage: SharedSocketEvents.ServerChatMessage){
+    chatMessages.push(chatMessage);
+}
+
+export function getLastMessage(): SharedSocketEvents.ServerChatMessage|undefined{
+    if(chatMessages.length > 0){
+        return chatMessages[chatMessages.length-1];
+    }
+    return undefined;
 }
 
 

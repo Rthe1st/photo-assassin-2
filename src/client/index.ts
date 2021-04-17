@@ -71,21 +71,21 @@ function createChatElement(sender: string, message: string, imageId?: number, sn
     var li = document.createElement('li');
     let messages = document.getElementById('messages')!
     messages.appendChild(li);
-    let previousMessage = messages.lastElementChild!;
+    let previousMessage = game.getLastMessage();
     let previousSender;
-    if (previousMessage.getElementsByTagName('span').length > 0) {
-        // todo: get this from gamestate instead
-        previousSender = previousMessage.getElementsByTagName('span')[0].innerText;
+    if(previousMessage){
+        previousSender = game.getUsername(previousMessage.publicId);
     }
     if (game.getUsername(publicId) == sender) {
         li.setAttribute('class', 'own-message');
-    } else if (previousSender != sender) {
-        //only show username if previous message was from someone else
+    } else{
         li.setAttribute('class', 'message-li');
-        var span = document.createElement('span');
-        span.innerText = sender;
-        span.classList.add("username");
-        li.appendChild(span);
+        if (previousSender !== sender) {
+            var span = document.createElement('span');
+            span.innerText = sender;
+            span.classList.add("username");
+            li.appendChild(span);
+        }
     }
     if (imageId != undefined) {
         var img = new Image;
@@ -155,6 +155,7 @@ function processMsg(msg: socketClient.ServerChatMessage, isReplay: boolean, lowR
             showSnipedScreen(game.getUsername(msg.publicId) + " sniped you!", msg.imageId, true);
         }
     }
+    game.addChatMessage(msg);
 }
 
 function deletePreview() {
@@ -275,7 +276,8 @@ function updateTimeLeft(sync: boolean = true) {
     let timeLeftElement = (<HTMLParagraphElement>document.getElementById('time-left')!)
     let timeLeft = undefined
     if(sync){
-        (<HTMLParagraphElement>document.getElementById('sub-state')!).innerText = game.game.subState!;
+        let formatedSubState = game.game.subState![0].toUpperCase() + game.game.subState!.substr(1).toLowerCase();
+        (<HTMLParagraphElement>document.getElementById('sub-state')!).innerText = formatedSubState;
         if(game.game.subState == "COUNTDOWN"){
             timeLeft = game.game.timeLeft! - game.game.chosenSettings.gameLength;
         }else{

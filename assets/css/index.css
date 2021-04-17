@@ -199,13 +199,18 @@ body{
     border: 0.1em solid black;
     background-color: rgba(255, 255, 255);
     max-width: 50%;
+    border-radius: 0.5em;
 }
 
-.message-li > p {
+.message-li > p, .message-li > span {
     width: max-content;
     padding-right: 1em;
-    margin-top: 0.5em;
-}
+    margin-top: 0.2em;
+    margin-bottom: 0.2em;
+    float: left;
+    clear: left;
+    display: block flow;
+ }
 
 .own-message {
     position: relative;
@@ -220,12 +225,15 @@ body{
     border: 0.1em solid black;
     background-color: rgba(0, 221, 0);
     max-width: 50%;
+    border-radius: 0.5em;
 }
 
 .own-message > p, .own-message > button {
     width: max-content;
     float: right;
     clear: right;
+    margin-top: 0.2em;
+    margin-bottom: 0.2em;
 }
 
 .undotext {
@@ -238,10 +246,18 @@ body{
     font-weight: 20;
  }
 
- .own-message > .message-image {
+.own-message > .message-image {
     float: right;
     clear: right;
- }
+}
+
+.message-li > .message-image {
+    /* could we make this display: block instead?
+        would that be better?
+    */
+    float: left;
+    clear: left;
+}
 
 .message-image {
     /*todo: force this to be square
@@ -249,6 +265,7 @@ body{
     max-width: 100%;
     max-height: 50vh;
     object-fit: cover;
+    border-radius: 0.2em;
 }
 
 input[type=checkbox] {
