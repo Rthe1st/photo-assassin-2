@@ -7,7 +7,7 @@ import imageBlobReduce from 'image-blob-reduce'
 // can't write jest tests for this as it needs canvas access
 export async function process(imageBlob: Blob): Promise<Blob> {
     let b:any = imageBlobReduce;
-    let a = b()
+    let a = b();
     // max size of 1000 was chosen arbitrarily
     // limits size to 10mb (1000*1000*9)
     // at a max our 9 bytes per pixel (excluding metadata)

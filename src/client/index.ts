@@ -240,6 +240,7 @@ function sendPhotoMessage(ev: MouseEvent) {
 
     var file: File = (<HTMLInputElement>document.getElementById('photo-input')).files![0];
 
+    let isSnipe = (<HTMLInputElement>document.getElementById('is-snipe')).checked;
     imageManipulation.process(new Blob([file]))
     .then(reducedBlob => {
         return new Response(reducedBlob).arrayBuffer();
@@ -249,12 +250,15 @@ function sendPhotoMessage(ev: MouseEvent) {
             "text": text,
             "image": reducedArraryBuffer,
             "position": gps.position,
-            "isSnipe": (<HTMLInputElement>document.getElementById('is-snipe')).checked,
+            "isSnipe": isSnipe,
             nonce: nonce
         };
         socketClient.chatMessage(socket, message);
+    })
+    .catch(e => {
+        console.log("error trying to send picture message");
+        console.log(e);
     });
-
     (<HTMLInputElement>document.getElementById('message')).value = '';
     (<HTMLInputElement>document.getElementById('photo-message')).value = '';
     (<HTMLInputElement>document.getElementById('photo-input')).value = '';
@@ -461,7 +465,7 @@ function createUserElement(username: string, publicId: number) {
         var remove = document.createElement('button');
         remove.setAttribute('class', 'delete-user-button')
         remove.disabled = true;
-        remove.innerText = 'Creator';
+        remove.innerText = 'Admin';
         li.appendChild(remove);
     }else{
         var remove = document.createElement('button');
