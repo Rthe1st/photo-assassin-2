@@ -237,6 +237,7 @@ function gameStateForClient(game: Game) {
     lowResUploadsDone: game.lowResUploadsDone,
   }
 
+  // todo: we should have a whole different type interface for finished games
   if (game.state == states.FINISHED) {
     state["positions"] = Object.fromEntries(game.positions.entries());
   }
