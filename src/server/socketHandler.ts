@@ -79,7 +79,6 @@ export function chatMsg(msg: socketEvents.ClientChatMessage, game: Game.Game, so
       // todo: push message to client to explain the error
       return;
     }
-
     let res = Game.saveImage(game, image);
     imageId = res.imageId
     // because of this
@@ -90,9 +89,10 @@ export function chatMsg(msg: socketEvents.ClientChatMessage, game: Game.Game, so
     // https://stackoverflow.com/a/41641451/5832565
     res.resizePromise
       .then(imageUrl => {
-        socketInterface.resizeDone(socket, {imageId: imageId!, url: imageUrl});
+        return socketInterface.resizeDone(socket, {imageId: imageId!, url: imageUrl});
       })
       .catch(err => {
+        console.log("resize fail");
         console.log(err);
         // todo: handle better
         // for now, just leave it undefined so client sees loader image
@@ -100,9 +100,10 @@ export function chatMsg(msg: socketEvents.ClientChatMessage, game: Game.Game, so
 
     res.imagePromise
     .then(imageUrl => {
-      socketInterface.imageUploadDone(socket, {imageId: imageId!, url: imageUrl});
+      return socketInterface.imageUploadDone(socket, {imageId: imageId!, url: imageUrl});
     })
     .catch(err => {
+      console.log("upload fail");
       console.log(err);
       // todo: handle better
       // for now, just leave it undefined so client sees loader image

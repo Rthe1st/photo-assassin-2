@@ -243,9 +243,6 @@ function sendPhotoMessage(ev: MouseEvent) {
     let isSnipe = (<HTMLInputElement>document.getElementById('is-snipe')).checked;
     file.arrayBuffer()
     .then(imageManipulation.process)
-    // .then(reducedBlob => {
-    //     return new Response(reducedBlob).arrayBuffer();
-    // })
     .then(reducedArraryBuffer => {
         let message = {
             "text": text,

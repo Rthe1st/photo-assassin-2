@@ -105,10 +105,12 @@ export function saveImage(game: Game, image: Buffer): {imageId: number, resizePr
   game.imageUploadsDone.push("https://storage-photo-assassin.prangten.com/" + imageStore.getUploadImageUrl(game.code, imageId));
   game.lowResUploadsDone.push("https://storage-photo-assassin.prangten.com/" + imageStore.getUploadImageLowResUrl(game.code, imageId));
   game.nextImageId += 1;
-
-  let asWebp = sharp(image).webp()
-
+  let asWebp = sharp(image).webp();
   let imagePromise = asWebp.toBuffer()
+  .catch(e=>{
+    console.log(e);
+    return e;
+  })
   .then(buffer=>{
     return imageStore.uploadImage(buffer, game.code, imageId)
   })

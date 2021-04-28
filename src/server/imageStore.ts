@@ -46,14 +46,14 @@ export class ImageStore{
         // https://stackoverflow.com/a/38789848/5832565
         const file = this.bucket.file(path);
     
-        var bufferStream = new stream.PassThrough();
-        
-        bufferStream.end(Buffer.from(image));
+        var bufferStream = new stream.PassThrough();    
+        bufferStream.end(image);
     
         return new Promise((resolve, reject)=>{
             bufferStream
             .pipe(file.createWriteStream({contentType: "image/webp"}))
             .on('error', function(err) {
+                console.log(err);
                 reject(err);
             })
             .on('finish', function() {
