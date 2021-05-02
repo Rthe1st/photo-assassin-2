@@ -161,7 +161,15 @@ function processMsg(msg: socketClient.ServerChatMessage, isReplay: boolean, lowR
     game.addChatMessage(msg);
 }
 
-function deletePreview() {
+function deletePreview(triggeredByBackButton=false) {
+    if (!confirm('Delete this photo?')) {
+        return;
+    }
+        
+    if(!triggeredByBackButton){
+        history.back()
+    }
+
     document.getElementById('photo-preview')!.hidden = true;
     document.getElementById('main-in-play')!.hidden = false;
     (<HTMLInputElement>document.getElementById('photo-input')).value = '';
@@ -172,13 +180,29 @@ function deletePreview() {
     (<HTMLImageElement>document.getElementById('preview')).src = '/static/shitty_loader.jpg';
 }
 
-function cameraButton(event: MouseEvent) {
+// called without an event when trigger by a 'page forward'
+function cameraButton(event?: MouseEvent) {
     document.getElementById('photo-input')!.click();
-    (<HTMLImageElement>document.getElementById('preview')).src = '/static/shitty_loader.jpg';
-    event.preventDefault();
+    if(event){
+        event.preventDefault();
+    }
 }
 
 function photoInput(event: Event) {
+    // if we've been triggered by a 'page forward' button
+    // then we don't want to add yet another state
+    if(history.state == null || history.state["type"] == "photo-preview"){
+        // history for back button
+        let message = (<HTMLInputElement>document.getElementById('message')).value;
+        history.pushState({"type": "photo-preview", msg: message, imageId: ""}, "", window.location.pathname);
+    }
+    // hiding/showing the preview screen here, instead of before calling this function
+    // means the user will see the main menu flash up before the preview page is loaded - when returning from the photo app
+    // the way around this is to do the showing/hiding prior to calling this / the camera app
+    // however, we can't do that because the user might press 'back' in th mobile app
+    // if they do that, then we have no way to detect it and the screen ends up in a broken state
+    // fix: change to using the media streaming api
+    // so we can capture images without a native app
     document.getElementById('photo-preview')!.hidden = false;
     document.getElementById('main-in-play')!.hidden = true;
     (<HTMLInputElement>document.getElementById('photo-message')).value = (<HTMLInputElement>document.getElementById('message')).value;
@@ -574,10 +598,16 @@ function shuffleTargets() {
 }
 
 window.onpopstate = function() {
+    // handle forward buttons
     if(history.state !== null && history.state["type"] == "photo"){
         showSnipedScreen(history.state["msg"], history.state["imageId"], false, false)
+    }else if(history.state !== null && history.state["type"] == "photo-preview"){
+        cameraButton();
+    // handle back buttons
     }else if(!document.getElementById('sniped-screen')!.hidden){
         hideSnipedScreen(true)
+    }else if(!document.getElementById('photo-preview')!.hidden){
+        deletePreview(true);
     }
 }
 
@@ -694,7 +724,7 @@ window.onload = function () {
 
     document.getElementById("mark-not-snipe")!.addEventListener('click', markNotSnipe);
 
-    document.getElementById("delete-preview")!.addEventListener('click', deletePreview);
+    document.getElementById("delete-preview")!.addEventListener('click', ()=>deletePreview());
 
     document.getElementById("camera-button")!.addEventListener('click', cameraButton);
 
