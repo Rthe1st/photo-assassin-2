@@ -41,6 +41,7 @@ if (process.env.NODE_ENV == "production") {
         if (gameCodeSpecified != -1 && gameCodeSpecified < process.argv.length) {
             gameCode = process.argv[gameCodeSpecified + 1]
         }
+
         if (clientTypeIndex < process.argv.length) {
             switch (process.argv[clientTypeIndex]) {
                 case "active":

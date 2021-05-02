@@ -47,7 +47,7 @@ function updatePlaceholderChatElement(li: HTMLElement, sender: string, message: 
             var voteButton = document.createElement('button');
             voteButton.setAttribute('class', 'vote-button')
             let targetUser = game.getUsername(snipeInfo.target);
-            voteButton.innerText = `Was ${targetUser} not in the picture?`;
+            voteButton.innerText = `${targetUser} not in the picture?`;
             voteButton.onclick = function () {
                 if (confirm(`Was ${targetUser} not in the picture?`)) {
                     let msg: socketClient.ClientBadSnipe = {
@@ -126,9 +126,6 @@ function createChatElement(sender: string, message: string, imageId?: number, sn
                 }
             };
             li.appendChild(voteButton);
-            if(snipeInfo.undone){
-                markSnipeAsBad(snipeInfo.index);
-            }
         }
     }
     if (message != '') {
@@ -138,6 +135,9 @@ function createChatElement(sender: string, message: string, imageId?: number, sn
     }
     let messages = document.getElementById('messages')!
     messages.appendChild(li);
+    if(snipeInfo != undefined && snipeInfo.undone){
+        markSnipeAsBad(snipeInfo.index);
+    }
     return li
 }
 
@@ -375,7 +375,7 @@ function readOnlyView() {
 }
 
 function markSnipeAsBad(snipeInfosIndex: number) {
-    let imageId = game.getSnipeImageId(snipeInfosIndex)
+    let imageId = game.getSnipeImageId(snipeInfosIndex);
     let snipeImage = document.getElementById(`image-${imageId}`)!;
     if (!document.getElementById(`snipe-text-${snipeInfosIndex}`)) {
         var undotext = document.createElement('p');
@@ -383,7 +383,7 @@ function markSnipeAsBad(snipeInfosIndex: number) {
         undotext.setAttribute('class', 'undotext');
         undotext.setAttribute('id', `snipe-text-${snipeInfosIndex}`);
         snipeImage.parentNode!.appendChild(undotext);
-        (<HTMLButtonElement>(<Element>snipeImage.parentNode).getElementsByTagName('button')[0]).hidden = true;
+        (<HTMLButtonElement>(<Element>snipeImage.parentNode?.parentNode).getElementsByTagName('button')[0]).hidden = true;
     }
 }
 

@@ -200,11 +200,11 @@ body{
     margin-bottom: 0.2em;
     border: 0.1em solid black;
     background-color: rgba(255, 255, 255);
-    max-width: 80%;
+    max-width: 80vw;
     border-radius: 0.5em;
 }
 
-.message-li > p, .message-li > span {
+.message-li > p, .message-li > span, .message-li > button {
     overflow-wrap: anywhere;
     padding-right: 1em;
     margin-top: 0.2em;
@@ -228,7 +228,7 @@ body{
     margin-bottom: 0.2em;
     border: 0.1em solid black;
     background-color: rgba(0, 221, 0);
-    max-width: 80%;
+    max-width: 80vw;
     border-radius: 0.5em;
 }
 
@@ -242,13 +242,16 @@ body{
 
 .undotext {
     position: absolute; 
-    top: 50%; 
+    top: 0; 
     left: 0;
-    width: 100%;
-    color: crimson;
-    font-size: 5em;
-    font-weight: 20;
- }
+    color: white;
+    background-color: black;
+    opacity: 50%;
+    font-weight: bold;
+    max-width: 50%;
+    margin-top: 0;
+    margin-bottom: 0;
+}
 
 .own-message > .message-image-wrapper {
     float: right;
