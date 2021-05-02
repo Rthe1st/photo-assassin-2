@@ -65,7 +65,7 @@ export interface Game {
 function newGame(code: string): Game {
   return {
     chosenSettings: {
-      gameLength: 5 * 60 * 1000,
+      gameLength: 25 * 60 * 1000,
       countDown: 5 * 60 * 1000,
       proposedTargetList: []
     },
