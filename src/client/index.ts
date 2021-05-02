@@ -69,8 +69,6 @@ function updatePlaceholderChatElement(li: HTMLElement, sender: string, message: 
 
 function createChatElement(sender: string, message: string, imageId?: number, snipeInfo?: SharedGame.SnipeInfo, lowResUrl?: string|undefined) {
     var li = document.createElement('li');
-    let messages = document.getElementById('messages')!
-    messages.appendChild(li);
     let previousMessage = game.getLastMessage();
     let previousSender;
     if(previousMessage){
@@ -88,6 +86,9 @@ function createChatElement(sender: string, message: string, imageId?: number, sn
         }
     }
     if (imageId != undefined) {
+        var imgWrapper = document.createElement("div");
+        imgWrapper.classList.add('message-image-wrapper');
+        li.appendChild(imgWrapper);
         var img = new Image;
         img.classList.add('message-image');
         img.setAttribute('id', `image-${imageId}`)
@@ -107,7 +108,7 @@ function createChatElement(sender: string, message: string, imageId?: number, sn
         // maybe no, because we should just show the low res image when clicked
         // if the full one isn't ready
         img.onclick = () => showSnipedScreen(snipeScreenText, imageId);
-        li.appendChild(img);
+        imgWrapper.appendChild(img);
         if (snipeInfo != undefined) {
             // img.setAttribute('id', `snipe-${snipeInfo.index}`)
             var voteButton = document.createElement('button');
@@ -135,6 +136,8 @@ function createChatElement(sender: string, message: string, imageId?: number, sn
         paragraph.innerText = message;
         li.appendChild(paragraph);
     }
+    let messages = document.getElementById('messages')!
+    messages.appendChild(li);
     return li
 }
 

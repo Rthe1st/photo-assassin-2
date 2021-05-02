@@ -23,6 +23,7 @@
     "start": "node ./dist/server/start.js",
     "build-server": "ttsc --build ./src/server/tsconfig.json",
     "build-client": "webpack --config webpack.config.ts",
+    "build": "npm run build-server && npm run build-client",
     "prepublish": "npm run build-server && npm run build-client",
     "pretest": "npm run build-server && npm run build-client",
     "integration-test": "node --experimental-vm-modules --unhandled-rejections=strict node_modules/jest/bin/jest.js --projects ./integration_tests",
