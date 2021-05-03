@@ -290,6 +290,7 @@ function sendPhotoMessage(ev: MouseEvent) {
     (<HTMLInputElement>document.getElementById('is-snipe')).checked = false;
     document.getElementById("mark-snipe")!.innerText = "Yes";
     document.getElementById("mark-not-snipe")!.innerText = "No ✓";
+    history.back();
     document.getElementById('photo-preview')!.hidden = true;
     document.getElementById('main-in-play')!.hidden = false;
     ev.preventDefault();
