@@ -1,8 +1,11 @@
 import * as Game from './game';
 import * as fs from 'fs'
 import * as logging from './logging'
+import dotenv from 'dotenv';
 
 test('basic game', async () => {
+    dotenv.config();
+    Game.setup();
     logging.setupJestLogging();
     var game = Game.newGame("fake-game-code");
     const { publicId: publicId } = Game.addPlayer(game, "player1");

@@ -12,7 +12,21 @@ export class ImageStore{
     bucket: gcStorage.Bucket;
 
     constructor(){
-        const storage = new gcStorage.Storage({keyFilename: 'gcp_config/storage-upload-account.json'});
+
+        let creds = {
+            "type": "service_account",
+            "project_id": "photo-assassin-270012",
+            "private_key_id": process.env.GCP_PRIVATE_KEY_ID,
+            "private_key": process.env.GCP_PRIVATE_KEY,
+            "client_email": process.env.GCP_CLIENT_EMAIL,
+            "client_id": process.env.GCP_CLIENT_ID,
+            "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+            "token_uri": "https://oauth2.googleapis.com/token",
+            "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+            "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/storage-upload-account%40photo-assassin-270012.iam.gserviceaccount.com"
+        };
+
+        const storage = new gcStorage.Storage({credentials: creds});
 
         const bucketName = 'storage-photo-assassin.prangten.com';
 

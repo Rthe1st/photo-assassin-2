@@ -3,6 +3,8 @@ import * as Game from './game'
 import * as socketEvents from '../shared/socketEvents'
 import * as socketHandler from './socketHandler'
 
+Game.setup();
+
 export function setup(
     io: SocketIO.Server
 ) {

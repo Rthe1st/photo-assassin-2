@@ -3,6 +3,7 @@ import * as game from '../shared/game';
 import * as api from '../shared/clientApi';
 import * as fs from 'fs'
 import fetch from 'node-fetch';
+import dotenv from 'dotenv';
 
 import { jest } from '@jest/globals'
 // needed for messy socket tests that don't clean themselves up well
@@ -12,6 +13,9 @@ jest.setTimeout(8000);
 // we don't consider mocking gcp as imageStore shouldn't have much logic
 // to test, independent of the GCP connection
 test('upload file and access it', async () => {
+    // for gcp secrets
+    //todo: make seperate test creds
+    dotenv.config();
     let file = fs.readFileSync('./src/server/sample_snipe_image.jpeg');
     let imageStore = new ImageStore();
     let fileUrl = await imageStore.upload(file, 'test/file/path');
@@ -34,6 +38,7 @@ test('upload file and access it', async () => {
 });
 
 test('upload game state file and access it', async () => {
+    dotenv.config();
     let imageStore = new ImageStore();
     // todo: using a real game here would also
     // let us check that the game serializes correctly

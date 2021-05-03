@@ -9,12 +9,19 @@ import {ImageStore} from './imageStore'
 
 import socketIo from 'socket.io'
 
-import { logger } from './logging'
+import { logger } from './logging';
 
 // todo: we should wrap this in a class
 // it'd make it easier to test
 export let games: Map<string, Game> = new Map();
-let imageStore = new ImageStore();
+
+let imageStore: ImageStore;
+
+export function setup(){
+  if(imageStore == undefined){
+    imageStore = new ImageStore();
+  }
+}
 
 const states = Object.freeze({ "FINISHED": "FINISHED", "NOT_STARTED": "NOT STARTED", "IN_PLAY": "IN PLAY" })
 

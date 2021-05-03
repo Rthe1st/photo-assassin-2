@@ -11,6 +11,9 @@ import * as path from 'path';
 import * as fs from 'fs';
 
 import * as Game from './game';
+
+Game.setup();
+
 import * as socketHandler from './socketHandler';
 import * as socketInterface from './socketInterface';
 import { logger } from './logging';

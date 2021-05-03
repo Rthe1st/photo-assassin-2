@@ -110,3 +110,12 @@ gcloud iam service-accounts list
 # Create a service account key
 gcloud iam service-accounts keys create ./gcp_config/storage-upload-account.json     --iam-account=$STORAGE_UPLOAD_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com
 ```
+
+We then extract the following keys from the created json file and put them in .env/heroku's env variables:
+
+```
+GCP_PRIVATE_KEY_ID
+GCP_PRIVATE_KEY
+GCP_CLIENT_EMAIL
+GCP_CLIENT_ID
+```

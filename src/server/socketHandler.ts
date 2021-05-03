@@ -3,6 +3,8 @@ import * as Game from './game'
 import * as socketInterface from './socketInterface'
 import * as socketEvents from '../shared/socketEvents'
 
+Game.setup();
+
 export function updateSettings(msg: socketEvents.ClientUpdateSettings, game: Game.Game, socket: SocketIO.Socket) {
   if (game.state != Game.states.NOT_STARTED) {
     return;
