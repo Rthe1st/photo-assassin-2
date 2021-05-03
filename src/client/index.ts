@@ -302,6 +302,8 @@ function setCurrentTarget() {
 function updateTimeLeft(sync: boolean = true) {
     let timeLeftElement = (<HTMLParagraphElement>document.getElementById('time-left')!)
     let timeLeft = undefined
+    let previousUpdateTime = whenTimeWasLastUpdated;
+    whenTimeWasLastUpdated = Date.now();
     if(sync){
         let formatedSubState = game.game.subState![0].toUpperCase() + game.game.subState!.substr(1).toLowerCase();
         (<HTMLParagraphElement>document.getElementById('sub-state')!).innerText = formatedSubState;
@@ -314,9 +316,9 @@ function updateTimeLeft(sync: boolean = true) {
         localTimeLeft = timeLeft!
     }else{
         // todo: we should probably update it on the local gamestate
-        // -1000 because localTimeLeft is in ms
-        // and we're called (at most) once per second
-        localTimeLeft -= 1000;
+        // elapsed time is in ms
+        let elapsedTime = whenTimeWasLastUpdated - previousUpdateTime;
+        localTimeLeft -= elapsedTime;
         if(localTimeLeft < 0){
             localTimeLeft = 0;
         }
@@ -533,6 +535,7 @@ function refreshSettings(msg: socketClient.ServerUpdateSettingsMsg) {
 
 let updateTimeInterval: NodeJS.Timeout | undefined = undefined
 let localTimeLeft = 0
+let whenTimeWasLastUpdated = Date.now();
 
 function start(msg: socketClient.ServerStartMsg) {
     game.update(msg.gameState);
