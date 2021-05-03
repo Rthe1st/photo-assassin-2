@@ -3,13 +3,13 @@
 
 import * as stream from 'stream'
 
-import * as gcStorage from '@google-cloud/storage';
+import {Bucket, Storage} from '@google-cloud/storage';
 import {ClientGame} from '../shared/game'
 import * as api from '../shared/clientApi';
 
 export class ImageStore{
 
-    bucket: gcStorage.Bucket;
+    bucket: Bucket;
 
     constructor(){
 
@@ -25,9 +25,9 @@ export class ImageStore{
             "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
             "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/storage-upload-account%40photo-assassin-270012.iam.gserviceaccount.com"
         };
-        console.log(gcStorage);
-        console.log(`gcStorage.Storage: ${gcStorage.Storage}`);
-        const storage = new gcStorage.Storage({credentials: creds});
+        // console.log(gcStorage);
+        // console.log(`gcStorage.Storage: ${gcStorage.Storage}`);
+        const storage = new Storage({credentials: creds});
 
         const bucketName = 'storage-photo-assassin.prangten.com';
 
