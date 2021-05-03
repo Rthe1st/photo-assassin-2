@@ -105,10 +105,8 @@ body{
 
 #photo-preview {
     font-size: 1em;
-    /* this has a gap at the bottom of the screen that isn't covered
-    might be due to URL bar in firefox mobile - think it might go away if scroll bar does*/
-    height: 100vh;
-    width: 100vw;
+    height: 100%;
+    width: 100%;
     position: relative;
     background-color: black;
 }
@@ -137,16 +135,17 @@ body{
 
 #sniped-screen {
     font-size: 1em;
-    /* this has a gap at the bottom of the screen that isn't covered
-    might be due to URL bar in firefox mobile - think it might go away if scroll bar does*/
-    height: 100vh;
-    width: 100vw;
+    height: 100%;
+    width: 100%;
     position: relative;
     background-color: black;
 }
 
 #snipe-image {
-    height: 100vh;
+    /* I think because of the URL bar
+    100vh can cause the image to overflow the screen
+    So we used 90vh on the basis that the url bar is probably < 10vh*/
+    height: 90vh;
     width: 100vw;
     object-fit: contain;
 }
@@ -158,7 +157,10 @@ body{
 }
 
 #preview {
-    height: 100vh;
+    /* I think because of the URL bar
+    100vh can cause the image to overflow the screen
+    So we used 90vh on the basis that the url bar is probably < 10vh*/
+    height: 90vh;
     width: 100vw;
     object-fit: contain;
 }
@@ -204,8 +206,9 @@ body{
     border-radius: 0.5em;
 }
 
-.message-li > p, .message-li > span, .message-li > button {
+.message-li > p, .message-li > span, .message-li > button, .own-message > p, .own-message > button {
     overflow-wrap: anywhere;
+    max-width: 50vw;
     margin-top: 0.2em;
     margin-bottom: 0.2em;
     float: left;
@@ -231,14 +234,6 @@ body{
     border-radius: 0.5em;
 }
 
-.own-message > p, .own-message > button {
-    overflow-wrap: anywhere;
-    float: right;
-    clear: right;
-    margin-top: 0.2em;
-    margin-bottom: 0.2em;
-}
-
 .undotext {
     position: absolute;
     text-align: center; 
@@ -253,27 +248,19 @@ body{
     margin-bottom: 0;
 }
 
-.own-message > .message-image {
-    float: right;
-    clear: right;
-}
-
-.message-li > .message-image {
+.message-image {
+    /*we need to set the width/height to something
+    the browser can calculate before the image is loaded
+    to stop the message box getting resized when it loads*/
+    width: 50vw;
+    height: 50vw;
+    object-fit: cover;
+    border-radius: 0.2em;
     /* could we make this display: block instead?
         would that be better?
     */
     float: left;
     clear: left;
-}
-
-.message-image {
-    /*we need to set the width/height to something
-    the browser can calculate before the image is loaded
-    to stop the message box getting resized when it loads*/
-    width: 10vw;
-    height: 10vw;
-    object-fit: cover;
-    border-radius: 0.2em;
 }
 
 #sniped-alert-text {
