@@ -206,7 +206,6 @@ body{
 
 .message-li > p, .message-li > span, .message-li > button {
     overflow-wrap: anywhere;
-    padding-right: 1em;
     margin-top: 0.2em;
     margin-bottom: 0.2em;
     float: left;
@@ -241,24 +240,25 @@ body{
 }
 
 .undotext {
-    position: absolute; 
-    top: 0; 
-    left: 0;
+    position: absolute;
+    text-align: center; 
     color: white;
     background-color: black;
-    opacity: 50%;
+    opacity: 70%;
     font-weight: bold;
-    max-width: 50%;
+    /* keep in sync with the width of .message-image */
+    width: 10vw;
+    top: 5vw;
     margin-top: 0;
     margin-bottom: 0;
 }
 
-.own-message > .message-image-wrapper {
+.own-message > .message-image {
     float: right;
     clear: right;
 }
 
-.message-li > .message-image-wrapper {
+.message-li > .message-image {
     /* could we make this display: block instead?
         would that be better?
     */
@@ -266,24 +266,12 @@ body{
     clear: left;
 }
 
-/*
-This is a hack so that the image takes up space before it's loaded
-https://itnext.io/how-to-stop-content-jumping-when-images-load-7c915e47f576
-*/
-.message-image-wrapper {
-    position: relative;
-    width: 100%;
-    height: 0;
-    /* Formula is: (height / width * 100%) */
-    padding-top: min(100px, calc(100 / 100 * 100%));
-}
-
 .message-image {
-    position: absolute;
-    top: 0;
-    left: 0;
-    max-width: 100%;
-    height: auto;
+    /*we need to set the width/height to something
+    the browser can calculate before the image is loaded
+    to stop the message box getting resized when it loads*/
+    width: 10vw;
+    height: 10vw;
     object-fit: cover;
     border-radius: 0.2em;
 }

@@ -113,6 +113,12 @@ spin up game with robot players:
 npm start -- --clients listen
 ```
 
+Have robot players join a game you've already made:
+
+```bash
+npm run-script start -- --game-code you-game-code-here --clients passive
+```
+
 It'll be running on [localhost](http://localhost:3000/)
 
 ### Phone browser remote debugging

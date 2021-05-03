@@ -86,9 +86,6 @@ function createChatElement(sender: string, message: string, imageId?: number, sn
         }
     }
     if (imageId != undefined) {
-        var imgWrapper = document.createElement("div");
-        imgWrapper.classList.add('message-image-wrapper');
-        li.appendChild(imgWrapper);
         var img = new Image;
         img.classList.add('message-image');
         img.setAttribute('id', `image-${imageId}`)
@@ -108,7 +105,7 @@ function createChatElement(sender: string, message: string, imageId?: number, sn
         // maybe no, because we should just show the low res image when clicked
         // if the full one isn't ready
         img.onclick = () => showSnipedScreen(snipeScreenText, imageId);
-        imgWrapper.appendChild(img);
+        li.appendChild(img);
         if (snipeInfo != undefined) {
             // img.setAttribute('id', `snipe-${snipeInfo.index}`)
             var voteButton = document.createElement('button');
@@ -408,7 +405,7 @@ function markSnipeAsBad(snipeInfosIndex: number) {
         undotext.setAttribute('class', 'undotext');
         undotext.setAttribute('id', `snipe-text-${snipeInfosIndex}`);
         snipeImage.parentNode!.appendChild(undotext);
-        (<HTMLButtonElement>(<Element>snipeImage.parentNode?.parentNode).getElementsByTagName('button')[0]).hidden = true;
+        (<HTMLButtonElement>(<Element>snipeImage.parentNode).getElementsByTagName('button')[0]).hidden = true;
     }
 }
 
