@@ -1,12 +1,5 @@
 import * as Server from './server';
 import * as Logging from './logging';
-import dotenv from 'dotenv'
-import * as fs from 'fs'
-
-// .env file doesn't exist in prod
-if (fs.existsSync('.env')) {
-    dotenv.config()
-}
 
 if (process.env.NODE_ENV == "production") {
     Logging.setUpLogging('realGame');

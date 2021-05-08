@@ -2,6 +2,43 @@
 
 This project is an app to make playing [Photo Assassin](https://github.com/Rthe1st/photo_assassin) more fun.
 
+## Deployment
+
+We deploy to heroku using docker image built with github actions.
+
+https://devcenter.heroku.com/articles/container-registry-and-runtime#testing-an-image-locally
+
+When adding config vars, use real spaces instead of \n. This is important for GCP_PRIVATE_KEY
+
+### Testing the docker image locally
+
+```bash
+sudo docker build . -t photo-assassin
+sudo docker run --name photo-assassin -p 3000:3000 --env-file .env --volume=`pwd`/secret:/home/node/app/secret photo-assassin
+```
+
+To test code changes without rebuilding the image all the time:
+
+```bash
+npm run-script build
+sudo docker run --name photo-assassin -p 3000:3000 --env-file .env --volume=`pwd`/secret:/home/node/app/secret --volume=`pwd`/dist:/home/node/app/dist photo-assassin
+```
+
+Kill/clean up container
+
+```bash
+# todo: why does adding -t -i to docker run not let ctl+c kill container?
+sudo docker rm photo-assassin -f
+```
+
+### Deploying manually
+
+```bash
+docker login --username=$USERNAME registry.heroku.com
+docker tag photo-assassin registry.heroku.com/photo-assassin/web
+docker push registry.heroku.com/photo-assassin/web
+```
+
 ## Build process
 
 We build for 3 situations, starting from typescript source code and es6 module syntax preferred over commonjs.
