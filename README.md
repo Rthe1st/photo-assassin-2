@@ -34,9 +34,16 @@ sudo docker rm photo-assassin -f
 ### Deploying manually
 
 ```bash
-docker login --username=$USERNAME registry.heroku.com
-docker tag photo-assassin registry.heroku.com/photo-assassin/web
-docker push registry.heroku.com/photo-assassin/web
+sudo docker login --username=$USERNAME registry.heroku.com
+sudo docker tag photo-assassin registry.heroku.com/photo-assassin/web
+sudo docker push registry.heroku.com/photo-assassin/web
+heroku container:release -a photo-assassin web
+```
+
+### View logs
+
+```bash
+heroku logs -a photo-assassin --tail
 ```
 
 ## Build process
