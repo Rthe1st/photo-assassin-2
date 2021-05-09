@@ -330,38 +330,30 @@ function updateTimeLeft(sync: boolean = true) {
     timeLeftElement.innerText = `${timeMinutes}m${timeSeconds}s`
 }
 
-function setSnipe(unset: boolean) {
+function setSnipe(value: boolean) {
     // ui is a bit confusing, make clearer
     var isSnipe = <HTMLInputElement>document.getElementById('is-snipe');
-    if (unset) {
-        isSnipe.checked = false;
-        document.getElementById("mark-snipe")!.innerText = "Yes";
-        document.getElementById("mark-not-snipe")!.innerText = "No ✓";
-    } else {
+    if (value) {
         isSnipe.checked = true;
         document.getElementById("mark-snipe")!.innerText = "Yes ✓";
         document.getElementById("mark-not-snipe")!.innerText = "No";
+    } else {
+        isSnipe.checked = false;
+        document.getElementById("mark-snipe")!.innerText = "Yes";
+        document.getElementById("mark-not-snipe")!.innerText = "No ✓";
     }
 }
 
 function markNotSnipe(_: MouseEvent) {
-    // don't think this needs to check game state
-    // because if theres not game state the button will be hidden
+    setSnipe(false);
+}
+
+function markSnipe(_: MouseEvent) {
     if (game.game.subState == game.inPlaySubStates.COUNTDOWN) {
         alert("Can't snipe yet - wait to countdown is over");
         return;
     }
     setSnipe(true);
-}
-
-function markSnipe(_: MouseEvent) {
-    // don't think this needs to check game state
-    // because if theres not game state the button will be hidden
-    if (game.game.subState == game.inPlaySubStates.COUNTDOWN) {
-        alert("Can't snipe yet - wait to countdown is over");
-        return;
-    }
-    setSnipe(false);
 }
 
 function inPlayView() {
@@ -757,7 +749,7 @@ window.onload = function () {
     }
 
     const gameLink = document.getElementById("game-link")!;
-    gameLink.innerText = `/game/${gameId}\n(Click to share)`
+    gameLink.innerText = `Game: ${gameId}\n(Click to share)`
 
     gameLink.onclick = function() {
         navigator.clipboard.writeText(window.location.href)
