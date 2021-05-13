@@ -26,14 +26,17 @@ function setup(callback: (position: SharedGame.Position) => void) {
         console.log("set fake start pos");
         position.latitude = 51.389;
         position.longitude = 0.012;
-        console.log(position);
     }
+    // a random stack overflow post suggested that firefox is more accurate
+    // with enableHighAccuracy set to false
+    // https://stackoverflow.com/questions/60365952/geolocation-api-not-working-in-firefox-mobile#comment106851658_60365952
+    const isFirefoxBrowser = navigator.userAgent.includes('Firefox');
     navigator.geolocation.watchPosition(
         (geolocationPosition) => {
             updatePosition(geolocationPosition, callback);
         },
         dontUpdatePosition,
-        { enableHighAccuracy: true}
+        { enableHighAccuracy: !isFirefoxBrowser}
     );
 }
 
@@ -42,7 +45,6 @@ function updatePosition(geolocationPosition: GeolocationPosition, callback: (pos
         console.log("mock pos update");
         mockCords();
     } else {
-        console.log("real pos update");
         position.latitude = geolocationPosition.coords.latitude;
         position.longitude = geolocationPosition.coords.longitude;
         position.accuracy = geolocationPosition.coords.accuracy;
@@ -60,7 +62,7 @@ let userNotified = false;
 function dontUpdatePosition(err: GeolocationPositionError): void {
     if(!userNotified){
         userNotified = true;
-        alert("geo faild");
+        alert("GPS failed, please allow location access");
         console.log("geo loc failed");
         console.log(err);
     }
