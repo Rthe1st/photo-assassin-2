@@ -7,6 +7,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Photo Assassin</title>
+  <script
+  src="https://maps.googleapis.com/maps/api/js?key=<%= key %>">
+  </script>
   <link rel="stylesheet" href="/static/index.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 </head>
@@ -17,11 +20,13 @@
       <!-- used to show tool tips and errors-->
     <div class="notification" hidden></div>
     <div class="pre-game-top area">
-        <button id="game-link" style="grid-column: 1/3;grid-row: 1;">Invite</button>
+      <button id="game-link" style="grid-column: 1/span 3;grid-row: 1;">Invite</button>
       <p class="username current-username" style="grid-column: 1;grid-row: 2;"></p>
-      <button id="start" style="grid-column: 2;grid-row: 2;" disabled>Start?</button>
+      <button id="toggle-map" style="grid-column: 2;grid-row: 2;">Map</button>      
+      <button id="start" style="grid-column: 3;grid-row: 2;" disabled>Start?</button>
     </div>
-    <div class="middle-2">
+    <div id="map" hidden></div>
+    <div id="not-started-settings" class="middle-2">
       <div class="left area">
         <h3>Settings</h3>
         <!--todo: https://stackoverflow.com/questions/29661058/how-do-i-add-text-based-units-like-lbs-floated-to-right-inside-of-an-input-ele-->

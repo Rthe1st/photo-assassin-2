@@ -3,6 +3,7 @@ import * as game from './game'
 import * as SharedGame from '../shared/game'
 import * as socketClient from '../shared/socketClient'
 import * as imageManipulation from './imageManipulation'
+import * as gmap from './gmap'
 
 import * as notifications from './notifications';
 
@@ -368,9 +369,6 @@ function inPlayView() {
     document.getElementById('not-started')!.hidden = true;
     document.getElementById('in-play')!.hidden = false;
     document.getElementById('sub-state')!.innerText = game.game.subState!;
-
-    //the first time, before they move
-    gps.setup((position) => socketClient.positionUpdate(socket, position));
 }
 
 function readOnlyView() {
@@ -432,6 +430,13 @@ function initialization(msg: socketClient.ServerInitializationMsg) {
     for (let index = 0; index < userNameElements.length; index++) {
         (<HTMLElement>userNameElements[index]).innerText = game.getUsername(publicId);
     }
+    //the first time, before they move
+    gps.setup((position) => {
+        socketClient.positionUpdate(socket, position)
+        let googlePosition = {lat: position.latitude!, lng: position.longitude!}
+        gameMap.drawPlayer(googlePosition)
+        gameMap.center(googlePosition)
+    });
     if (game.game.state == game.states.IN_PLAY) {
         inPlayView();
     } else if (game.game.state == game.states.NOT_STARTED) {
@@ -679,6 +684,7 @@ const publicId = parseInt(document.cookie.replace(/(?:(?:^|.*;\s*)publicId\s*\=\
 
 let socket: SocketIOClient.Socket;
 let proposedTargetList: number[];
+let gameMap: gmap.Gmap;
 
 window.onload = function () {
 
@@ -706,6 +712,8 @@ window.onload = function () {
         (reason: any) => {notification.notify("disconnecting");console.log(reason)},
         (reason: any) => {notification.notify("connect error");console.log(reason)},
     );
+
+    gameMap = new gmap.Gmap(<HTMLDivElement>document.getElementById("map"));
 
     document.getElementById("exit-sniped-screen")!.addEventListener('click', ()=>hideSnipedScreen());
 
@@ -756,5 +764,17 @@ window.onload = function () {
         .then(()=>{
             notification.notify("Link copied");
         });
+    }
+
+    document.getElementById('toggle-map')!.onclick = function (_) {
+        let mapElement = document.getElementById('map')!;
+        let middle = document.getElementById('not-started-settings')!;
+        if (mapElement.hidden) {
+            mapElement.hidden = false
+            middle.hidden = true
+        }else{
+            mapElement.hidden = true
+            middle.hidden = false
+        }
     }
 };

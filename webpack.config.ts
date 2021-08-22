@@ -96,6 +96,16 @@ module.exports = {
       'process.env': JSON.stringify(envs)
     }),
     new HtmlWebpackPlugin({
+      template: `./assets/templates/index.html`,
+      filename: `index.html`,
+      templateParameters: {
+        'key': envs["GOOGLE_MAPS_KEY"]
+      },
+      chunks: ['index'],
+      inject: "head",
+      scriptLoading: "defer"
+    }),
+    new HtmlWebpackPlugin({
       template: `./assets/templates/archived.html`,
       filename: `archived.html`,
       templateParameters: {
@@ -133,7 +143,7 @@ module.exports = {
       generateStaticErrorPages(errorPages)
     )
     .concat(
-      ['index', 'lobby'].map(name => {
+      ['lobby'].map(name => {
         return new HtmlWebpackPlugin({
           template: `./assets/templates/${name}.html`, // relative path to the HTML files
           filename: `${name}.html`, // output HTML files
