@@ -358,6 +358,7 @@ function markSnipe(_: MouseEvent) {
 }
 
 function inPlayView() {
+    document.getElementById("main-in-play")?.insertBefore(<Node>document.getElementById("map"), document.getElementById("game-info"))
     if(publicId != 0){
         (<HTMLButtonElement>document.getElementById('stop-game')).hidden = true;
     }
@@ -766,15 +767,23 @@ window.onload = function () {
         });
     }
 
-    document.getElementById('toggle-map')!.onclick = function (_) {
-        let mapElement = document.getElementById('map')!;
-        let middle = document.getElementById('not-started-settings')!;
-        if (mapElement.hidden) {
-            mapElement.hidden = false
-            middle.hidden = true
-        }else{
-            mapElement.hidden = true
-            middle.hidden = false
-        }
-    }
+    for(let element of document.getElementsByClassName("toggle-map")){
+        (<HTMLElement>element).onclick = function (_) {
+            let mapElement = document.getElementById('map')!;
+            let middle = document.getElementById('not-started-settings')!;
+            let middleInPlay = document.getElementById("messages-container")!
+            let sendMsg = document.getElementById("send-message-form")!
+            if (mapElement.hidden) {
+                mapElement.hidden = false
+                middle.hidden = true
+                middleInPlay.hidden = true
+                sendMsg.hidden = true
+            }else{
+                mapElement.hidden = true
+                middle.hidden = false
+                middleInPlay.hidden = false
+                sendMsg.hidden = false
+            }
+        }        
+    };
 };

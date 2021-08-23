@@ -22,7 +22,7 @@
     <div class="pre-game-top area">
       <button id="game-link" style="grid-column: 1/span 3;grid-row: 1;">Invite</button>
       <p class="username current-username" style="grid-column: 1;grid-row: 2;"></p>
-      <button id="toggle-map" style="grid-column: 2;grid-row: 2;">Map</button>      
+      <button id="toggle-map" class="toggle-map" style="grid-column: 2;grid-row: 2;">Map</button>
       <button id="start" style="grid-column: 3;grid-row: 2;" disabled>Start?</button>
     </div>
     <div id="map" hidden></div>
@@ -80,7 +80,9 @@
         </div>
         <p id="time-left" style="grid-column: 2;grid-row: 2;"></p>
         <button id="stop-game" style="grid-column: 3;grid-row: 2;">Stop</button>
+        <button id="toggle-map-in-play" class="toggle-map" style="grid-column: 3;grid-row: 3;">Map</button>
       </div>
+      <!-- <div id="map" hidden></div> -->
       <div id="game-info" class="area" hidden>
         <ul id="player-progress"></ul>
       </div>
