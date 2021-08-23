@@ -1,6 +1,12 @@
 import * as dev from './dev'
 import * as SharedGame from '../shared/game'
 
+import * as geolocate from 'mock-geolocation';
+
+if (dev.testMode()) {
+    geolocate.use()
+}
+
 var position: SharedGame.Position = {
     latitude: null,
     longitude: null,
@@ -12,11 +18,11 @@ var position: SharedGame.Position = {
     altitudeAccuracy: null,
 };
 
-// try https://github.com/2gis/mock-geolocation
-//set up timer, change the gps every X seconds, to trigger the normal gps watcher
 function mockCords() {
     position.latitude! += (Math.random() - 0.5) * 0.0001;
     position.longitude! += (Math.random() - 0.5) * 0.0001;
+    position.timestamp = Date.now()
+    position.accuracy = 5
     //todo: mock other stuff
     //todo: save real world results and fill this with them?
 }
@@ -26,6 +32,13 @@ function setup(callback: (position: SharedGame.Position) => void) {
         console.log("set fake start pos");
         position.latitude = 51.389;
         position.longitude = 0.012;
+        let fakeUpdate = ()=>{
+            console.log("mock pos update");
+            mockCords();
+            geolocate.change(position);
+            window.setTimeout(fakeUpdate, 1000)
+        }
+        fakeUpdate()
     }
     // a random stack overflow post suggested that firefox is more accurate
     // with enableHighAccuracy set to false
@@ -41,19 +54,14 @@ function setup(callback: (position: SharedGame.Position) => void) {
 }
 
 function updatePosition(geolocationPosition: GeolocationPosition, callback: (position: SharedGame.Position) => void) {
-    if (dev.testMode()) {
-        console.log("mock pos update");
-        mockCords();
-    } else {
-        position.latitude = geolocationPosition.coords.latitude;
-        position.longitude = geolocationPosition.coords.longitude;
-        position.accuracy = geolocationPosition.coords.accuracy;
-        position.heading = geolocationPosition.coords.heading;
-        position.speed = geolocationPosition.coords.speed;
-        position.timestamp = geolocationPosition.timestamp;
-        position.altitude = geolocationPosition.coords.altitude;
-        position.altitudeAccuracy = geolocationPosition.coords.altitudeAccuracy;
-    }
+    position.latitude = geolocationPosition.coords.latitude;
+    position.longitude = geolocationPosition.coords.longitude;
+    position.accuracy = geolocationPosition.coords.accuracy;
+    position.heading = geolocationPosition.coords.heading;
+    position.speed = geolocationPosition.coords.speed;
+    position.timestamp = geolocationPosition.timestamp;
+    position.altitude = geolocationPosition.coords.altitude;
+    position.altitudeAccuracy = geolocationPosition.coords.altitudeAccuracy;
     callback(position);
 }
 

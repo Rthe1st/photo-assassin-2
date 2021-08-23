@@ -14,14 +14,14 @@ When adding config vars, use real spaces instead of \n. This is important for GC
 
 ```bash
 sudo docker build . -t photo-assassin
-sudo docker run --name photo-assassin -p 3000:3000 --env-file .env --volume=`pwd`/secret:/home/node/app/secret photo-assassin
+sudo docker run -d --rm --name photo-assassin -p 3000:3000 --env-file .env --volume=`pwd`/secret:/home/node/app/secret photo-assassin
 ```
 
 To test code changes without rebuilding the image all the time:
 
 ```bash
 npm run-script build
-sudo docker run --name photo-assassin -p 3000:3000 --env-file .env --volume=`pwd`/secret:/home/node/app/secret --volume=`pwd`/dist:/home/node/app/dist photo-assassin
+sudo docker run -d --rm --name photo-assassin -p 3000:3000 --env-file .env --volume=`pwd`/secret:/home/node/app/secret --volume=`pwd`/dist:/home/node/app/dist photo-assassin
 ```
 
 Kill/clean up container
