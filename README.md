@@ -10,6 +10,11 @@ https://devcenter.heroku.com/articles/container-registry-and-runtime#testing-an-
 
 When adding config vars, use real spaces instead of \n. This is important for GCP_PRIVATE_KEY
 
+### NVM
+
+use [nvm](https://github.com/nvm-sh/nvm) to ensure your node and npm versions match the version used by the docker container.
+`nvm  use` will tell `nvm` to use the version in our`.nvmrc` file
+
 ### Testing the docker image locally
 
 ```bash
