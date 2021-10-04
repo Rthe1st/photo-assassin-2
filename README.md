@@ -62,12 +62,9 @@ We build for 3 situations, starting from typescript source code and es6 module s
     * support use of import.metadata.url by running as es6 modules
         * set `"type": "module"` in package.json
         * https://nodejs.org/api/esm.html#esm_enabling
-    * Node requires explicit .js extensions on imports, and typescript does not add these
-        * use [a transform](https://github.com/Zoltu/typescript-transformer-append-js-extension) to add them
-        * don't add .js extensions explicitly to typescript source. We have shared code that is used in both node and browser contexts (and just-for-node code must build with jest for testing). tsc can resolve explicit .js import to .ts files but webpack + ts-awesome-loader and jest + test-jest cannot (couldn't find good reference for why/if that is a bug)
-            * https://github.com/Microsoft/TypeScript/issues/16577
-    * tsc doesn't support plugin configuration in tsconfig.json
-        * use `ttsc` when buidling for node, which support a `plugins` key for tsconfig
+    * Node requires explicit .js extensions on esm module imports
+        * https://nodejs.org/api/esm.html
+        * use `--experimental-specifier-resolution=node` when running node to fix this
     * Output the compiled JS to a new directory so it's harder for any tooling to accidentally start resolving to js version of a file instead of the ts version
 2) code to be run in a browser
     * bundle JS dependencies / build static assets from templates
@@ -85,10 +82,6 @@ We build for 3 situations, starting from typescript source code and es6 module s
             * https://kulshekhar.github.io/ts-jest/docs/next/guides/esm-support
         * I couldn't work out how to get jest-babel to transpile that to a common-js equivalent (__dirname)
         * ts-jest also offers [some advantages](https://jestjs.io/docs/en/getting-started#using-typescript) of babel-jest
-
-We could of solved the .js -> .ts resolution problem by specifying .js in typescript imports and stripping the extension with webpack/jest transforms. Its a choice between using webpack and jest transforms to strip it vs a tsc transform to add it and ttsc to use the plugin.
-
-Solving this took me forever and I don't understand why this isn't a more common problem. I suppose code that uses typescript + es6 syntax + jest + webpack + runs in node such a niche setup? I feel like I must be missing a bigger architecure problem or something.
 
 Our jest setup doesn't support testing of ./src/client scripts yet, we need to add a jest config for that
 

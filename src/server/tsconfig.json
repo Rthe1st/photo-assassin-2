@@ -1,15 +1,6 @@
 {
     "extends": "../../tsconfig.json",
     "compilerOptions": {
-        "outDir": "../../dist",
-        // this is only used by ttsc, not by tsc
-        // for code that needs to be run by node as esmodules
-        // as node requires esm imports to use .js extension explicitly
-        "plugins": [
-            {
-                "transform": "@zoltu/typescript-transformer-append-js-extension/output/index.js",
-                "after": true,
-            }
-        ],
+        "outDir": "../../dist"
     },
 }
