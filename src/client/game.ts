@@ -84,7 +84,9 @@ export function getTarget(publicId: number, snipeNumber?: number) {
   if (snipeNumber == undefined) {
     snipeNumber = game.targets![publicId].length
   }
-  const totalTargets = game.targetsGot![publicId].concat(game.targets![publicId])
+  const totalTargets = game.targetsGot![publicId].concat(
+    game.targets![publicId]
+  )
   return getUsername(totalTargets[totalTargets.length - snipeNumber])
 }
 
