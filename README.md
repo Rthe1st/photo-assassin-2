@@ -4,18 +4,31 @@ This project is an app to make playing [Photo Assassin](https://github.com/Rthe1
 
 ## Deployment
 
-We deploy to heroku using docker image built with github actions.
+We deplay to heroku using docker images.
+We should build and push these with github actions CI, but for now do it  manually.
 
 https://devcenter.heroku.com/articles/container-registry-and-runtime#testing-an-image-locally
 
 When adding config vars, use real spaces instead of \n. This is important for GCP_PRIVATE_KEY
 
-### NVM
+https://dashboard.heroku.com/apps/photo-assassin/settings
 
-use [nvm](https://github.com/nvm-sh/nvm) to ensure your node and npm versions match the version used by the docker container.
-`nvm  use` will tell `nvm` to use the version in our`.nvmrc` file
+### Deploying manually
 
-### Testing the docker image locally
+```bash
+sudo docker login --username=$USERNAME registry.heroku.com
+sudo docker tag photo-assassin registry.heroku.com/photo-assassin/web
+sudo docker push registry.heroku.com/photo-assassin/web
+heroku container:release -a photo-assassin web
+```
+
+### View logs
+
+```bash
+heroku logs -a photo-assassin --tail
+```
+
+## Testing the docker image locally
 
 ```bash
 sudo docker build . -t photo-assassin
@@ -36,20 +49,10 @@ Kill/clean up container
 sudo docker rm photo-assassin -f
 ```
 
-### Deploying manually
+### NVM
 
-```bash
-sudo docker login --username=$USERNAME registry.heroku.com
-sudo docker tag photo-assassin registry.heroku.com/photo-assassin/web
-sudo docker push registry.heroku.com/photo-assassin/web
-heroku container:release -a photo-assassin web
-```
-
-### View logs
-
-```bash
-heroku logs -a photo-assassin --tail
-```
+use [nvm](https://github.com/nvm-sh/nvm) to ensure your node and npm versions match the version used by the docker container.
+`nvm  use` will tell `nvm` to use the version in our`.nvmrc` file
 
 ## Build process
 

@@ -80,7 +80,12 @@ module.exports = {
   devtool: 'source-map',
   resolve: {
     // Add '.ts' and '.tsx' as resolvable extensions.
-    extensions: [".webpack.js", ".web.js", ".ts", ".tsx", ".js"]
+    extensions: [".webpack.js", ".web.js", ".ts", ".tsx", ".js"],
+    fallback: {
+      "https": require.resolve("https-browserify"),
+      "url": require.resolve("url/"),
+      "http": require.resolve("stream-http")
+    }
   },
   module: {
     rules: [
