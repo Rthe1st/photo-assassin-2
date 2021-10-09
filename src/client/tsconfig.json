@@ -1,7 +1,7 @@
 {
-    "extends": "../../tsconfig.json",
-    "compilerOptions": {
-        "target": "es6",
-        "types": ["googlemaps", "node", "jest"]
-    },
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "target": "es6",
+    "types": ["googlemaps", "node", "jest"]
+  }
 }

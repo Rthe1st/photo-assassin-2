@@ -1,31 +1,32 @@
 // these tests are only concerned with testing
 // the browser client code for making HTTP calls
-import * as httpHelpers from './httpHelpers';
-import * as clientApi from '../src/shared/clientApi';
+import * as httpHelpers from "./httpHelpers"
+import * as clientApi from "../src/shared/clientApi"
 
-import { jest } from '@jest/globals'
+import { jest } from "@jest/globals"
 // needed for messy socket tests that don't clean themselves up well
-jest.setTimeout(8000);
+jest.setTimeout(8000)
 
-let domain = "https://localhost:3000";
+let domain = "https://localhost:3000"
 
-test('clientApi.gameJson', async () => {
+test("clientApi.gameJson", async () => {
+  let gameDetails = await (
+    await httpHelpers.post(`${domain}/make`, "username=player1&format=json")
+  ).json()
 
-    let gameDetails = await (await httpHelpers.post(`${domain}/make`, "username=player1&format=json")).json();
+  // todo: fix, we need to finish the game in order
+  // to trigger an upload of the json
 
-    // todo: fix, we need to finish the game in order
-    // to trigger an upload of the json
-
-    const gameJson = await clientApi.gameJson(gameDetails.gameId);
-    // we don't really care what's in here
-    // other functions can test the game logic values are populated right
-    expect(gameJson).toMatchObject({
-        chosenSettings: expect.anything(),
-        state: expect.anything(),
-        userList: expect.anything(),
-        targets: expect.anything(),
-        targetsGot: expect.anything(),
-        snipeInfos: expect.anything(),
-        latestSnipeIndexes: expect.anything(),
-    });
-});
+  const gameJson = await clientApi.gameJson(gameDetails.gameId)
+  // we don't really care what's in here
+  // other functions can test the game logic values are populated right
+  expect(gameJson).toMatchObject({
+    chosenSettings: expect.anything(),
+    state: expect.anything(),
+    userList: expect.anything(),
+    targets: expect.anything(),
+    targetsGot: expect.anything(),
+    snipeInfos: expect.anything(),
+    latestSnipeIndexes: expect.anything(),
+  })
+})

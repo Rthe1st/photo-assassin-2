@@ -1,101 +1,149 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
+  <head>
+    <!-- for use in api tests -->
+    <!-- index page -->
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Photo Assassin</title>
+    <script src="https://maps.googleapis.com/maps/api/js?key=<%= key %>"></script>
+    <link rel="stylesheet" href="/static/index.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+    />
+  </head>
 
-<head>
-  <!-- for use in api tests -->
-  <!-- index page -->
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Photo Assassin</title>
-  <script
-  src="https://maps.googleapis.com/maps/api/js?key=<%= key %>">
-  </script>
-  <link rel="stylesheet" href="/static/index.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-</head>
-
-<body>
-  <!--todo: use semantic elements-->
-  <div class="container" id="not-started" hidden>
+  <body>
+    <!--todo: use semantic elements-->
+    <div class="container" id="not-started" hidden>
       <!-- used to show tool tips and errors-->
-    <div class="notification" hidden></div>
-    <div class="pre-game-top area">
-      <button id="game-link" style="grid-column: 1/span 3;grid-row: 1;">Invite</button>
-      <p class="username current-username" style="grid-column: 1;grid-row: 2;"></p>
-      <button id="toggle-map" class="toggle-map" style="grid-column: 2;grid-row: 2;">Map</button>
-      <button id="start" style="grid-column: 3;grid-row: 2;" disabled>Start?</button>
-    </div>
-    <div id="map" hidden></div>
-    <div id="not-started-settings" class="middle-2">
-      <div class="left area">
-        <h3>Settings</h3>
-        <!--todo: https://stackoverflow.com/questions/29661058/how-do-i-add-text-based-units-like-lbs-floated-to-right-inside-of-an-input-ele-->
-        <label>Hiding Time (minutes)<input id="count-down" type="number" value="5"></label>
-        <label>Searching Time (minutes)<input id="game-length" type="number" value="25"></label>
-        <h4>Target List</h4>
-        <ul id="proposed-target-list"></ul>
-        <button id="shuffle-targets">Reshuffle</button>
+      <div class="notification" hidden></div>
+      <div class="pre-game-top area">
+        <button id="game-link" style="grid-column: 1 / span 3; grid-row: 1">
+          Invite
+        </button>
+        <p
+          class="username current-username"
+          style="grid-column: 1; grid-row: 2"
+        ></p>
+        <button
+          id="toggle-map"
+          class="toggle-map"
+          style="grid-column: 2; grid-row: 2"
+        >
+          Map
+        </button>
+        <button id="start" style="grid-column: 3; grid-row: 2" disabled>
+          Start?
+        </button>
       </div>
-      <div class="right area">
-        <h3>Players</h3>
-        <ul id="user-list"></ul>
-      </div>
-    </div>
-  </div>
-  <div id="in-play" hidden>
-    <div id="sniped-screen" hidden>
-      <div id="snipe-image-overlay">
-        <button id="exit-sniped-screen">Back</button>
-        <p id="sniped-alert-text"></p>
-      </div>
-      <img id="snipe-image">
-    </div>
-    <div id="photo-preview" hidden >
-      <img id="preview">
-      <div id="preview-overlay">
-        <p id="mark-snipe-question">Is your target in the picture?</p>
-        <div id="preview-buttons">
-          <button id="mark-snipe">Yes</button>
-          <button id="mark-not-snipe">No ✓</button>
-          <button id="delete-preview">Delete</button>
+      <div id="map" hidden></div>
+      <div id="not-started-settings" class="middle-2">
+        <div class="left area">
+          <h3>Settings</h3>
+          <!--todo: https://stackoverflow.com/questions/29661058/how-do-i-add-text-based-units-like-lbs-floated-to-right-inside-of-an-input-ele-->
+          <label
+            >Hiding Time (minutes)<input
+              id="count-down"
+              type="number"
+              value="5"
+          /></label>
+          <label
+            >Searching Time (minutes)<input
+              id="game-length"
+              type="number"
+              value="25"
+          /></label>
+          <h4>Target List</h4>
+          <ul id="proposed-target-list"></ul>
+          <button id="shuffle-targets">Reshuffle</button>
         </div>
-        <form id="send-photo-message-form" action="" class="send-message-form">
-          <textarea id="photo-message" placeholder="Type a message"></textarea>
-          <input id="is-snipe" type="checkbox" hidden />
-          <button id="send-photo-message">Send</button>
-          <input hidden id="photo-input" type="file" accept="image/*" capture="environment">
+        <div class="right area">
+          <h3>Players</h3>
+          <ul id="user-list"></ul>
+        </div>
+      </div>
+    </div>
+    <div id="in-play" hidden>
+      <div id="sniped-screen" hidden>
+        <div id="snipe-image-overlay">
+          <button id="exit-sniped-screen">Back</button>
+          <p id="sniped-alert-text"></p>
+        </div>
+        <img id="snipe-image" />
+      </div>
+      <div id="photo-preview" hidden>
+        <img id="preview" />
+        <div id="preview-overlay">
+          <p id="mark-snipe-question">Is your target in the picture?</p>
+          <div id="preview-buttons">
+            <button id="mark-snipe">Yes</button>
+            <button id="mark-not-snipe">No ✓</button>
+            <button id="delete-preview">Delete</button>
+          </div>
+          <form
+            id="send-photo-message-form"
+            action=""
+            class="send-message-form"
+          >
+            <textarea
+              id="photo-message"
+              placeholder="Type a message"
+            ></textarea>
+            <input id="is-snipe" type="checkbox" hidden />
+            <button id="send-photo-message">Send</button>
+            <input
+              hidden
+              id="photo-input"
+              type="file"
+              accept="image/*"
+              capture="environment"
+            />
+          </form>
+        </div>
+      </div>
+      <div id="main-in-play" class="container">
+        <!-- used to show tool tips and errors-->
+        <div class="notification"></div>
+        <div class="top area">
+          <p
+            class="username current-username"
+            style="grid-column: 1; grid-row: 1"
+          ></p>
+          <p id="sub-state" style="grid-column: 2; grid-row: 1"></p>
+          <button id="show-game-info" style="grid-column: 3; grid-row: 1">
+            Info
+          </button>
+          <div style="grid-column: 1; grid-row: 2">
+            <span style="font-weight: bold">Target:</span>
+            <p id="target" style="display: inline"></p>
+          </div>
+          <p id="time-left" style="grid-column: 2; grid-row: 2"></p>
+          <button id="stop-game" style="grid-column: 3; grid-row: 2">
+            Stop
+          </button>
+          <button
+            id="toggle-map-in-play"
+            class="toggle-map"
+            style="grid-column: 3; grid-row: 3"
+          >
+            Map
+          </button>
+        </div>
+        <!-- <div id="map" hidden></div> -->
+        <div id="game-info" class="area" hidden>
+          <ul id="player-progress"></ul>
+        </div>
+        <div class="middle" id="messages-container">
+          <ul id="messages"></ul>
+        </div>
+        <form id="send-message-form" action="" class="send-message-form area">
+          <textarea id="message" placeholder="Type a message"></textarea>
+          <button id="send-message">Send</button>
+          <button id="camera-button" class="fa">&#xf030;</button>
         </form>
       </div>
     </div>
-    <div id="main-in-play" class="container">
-      <!-- used to show tool tips and errors-->
-      <div class="notification"></div>
-      <div class="top area">
-        <p class="username current-username" style="grid-column: 1;grid-row: 1;"></p>
-        <p id="sub-state" style="grid-column: 2;grid-row: 1;"></p>
-        <button id="show-game-info" style="grid-column: 3;grid-row: 1;">Info</button>
-        <div style="grid-column: 1;grid-row: 2;">
-          <span style="font-weight: bold;">Target:</span>
-          <p id="target" style="display: inline;"></p>
-        </div>
-        <p id="time-left" style="grid-column: 2;grid-row: 2;"></p>
-        <button id="stop-game" style="grid-column: 3;grid-row: 2;">Stop</button>
-        <button id="toggle-map-in-play" class="toggle-map" style="grid-column: 3;grid-row: 3;">Map</button>
-      </div>
-      <!-- <div id="map" hidden></div> -->
-      <div id="game-info" class="area" hidden>
-        <ul id="player-progress"></ul>
-      </div>
-      <div class="middle" id="messages-container">
-        <ul id="messages"></ul>
-      </div>
-      <form id="send-message-form" action="" class="send-message-form area">
-        <textarea id="message" placeholder="Type a message"></textarea>
-        <button id="send-message">Send</button>
-        <button id="camera-button" class="fa">&#xf030;</button>
-      </form>
-    </div>
-  </div>
-</body>
-
+  </body>
 </html>

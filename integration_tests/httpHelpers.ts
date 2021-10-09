@@ -1,16 +1,24 @@
-import * as https from 'https';
-import fetch, { RequestInit } from 'node-fetch';
+import * as https from "https"
+import fetch, { RequestInit } from "node-fetch"
 
 const defaultAgent = new https.Agent({
-    rejectUnauthorized: false
+  rejectUnauthorized: false,
 })
 
-export async function post(url: string, body: string, options: RequestInit={},agent = defaultAgent) {
+export async function post(
+  url: string,
+  body: string,
+  options: RequestInit = {},
+  agent = defaultAgent
+) {
+  let requestOptions: RequestInit = {
+    method: "POST",
+    agent: agent,
+    body: body,
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+  }
 
-    let requestOptions: RequestInit = { method: "POST", agent: agent, body: body, headers: { 'Content-Type': 'application/x-www-form-urlencoded' } };
+  requestOptions = { ...requestOptions, ...options }
 
-    requestOptions = {...requestOptions, ...options};
-
-
-    return fetch(url, requestOptions);
+  return fetch(url, requestOptions)
 }

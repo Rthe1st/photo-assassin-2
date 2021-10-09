@@ -1,4 +1,3 @@
-declare module 'image-blob-reduce' {
-    export function ImageBlobReduce(): any
+declare module "image-blob-reduce" {
+  export function ImageBlobReduce(): any
 }
-

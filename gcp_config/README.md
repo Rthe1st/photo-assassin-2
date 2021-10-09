@@ -21,23 +21,24 @@ https://stackoverflow.com/a/27298841/5832565
 https://stackoverflow.com/questions/49127629/google-managed-services-bigquery-cloud-storage-etc-via-a-vpc-vpn
 
 Options:
-* Use VPC Service Controls to manage bucket access
-    * IP restrictions can be done with that
-    * But it requires an Organization, which requires Google Workspace
-    * Maybe I should make an Organization for this not using my personal account anyway
-    * Possibly could use `Access Context Manager` to set an access level for cloudflare IPs, and then set the access level as an IAM conditions
-        * https://cloud.google.com/iam/docs/conditions-resource-attributes
-        * https://cloud.google.com/storage/docs/access-control
-        * but this still requires an organization
-* Restrict access to a service account, and use Cloudflare workers to add auth details to the request
-    * Worker fetch to Google Cloud will use cache
-    * But worker will be invoked even for requests that would be cached anyway
-    * https://community.cloudflare.com/t/can-i-make-a-worker-only-run-if-cloudflare-hasnt-cached-the-page/94565
-    * how the worker would authneticate:
-    * https://cloud.google.com/storage/docs/authentication#apiauth
-* Switch to amazon S3, they support IP access control
-    * https://stackoverflow.com/a/11457790/5832565
-    * I'd rather not have yet another cloud account to manage
+
+- Use VPC Service Controls to manage bucket access
+  - IP restrictions can be done with that
+  - But it requires an Organization, which requires Google Workspace
+  - Maybe I should make an Organization for this not using my personal account anyway
+  - Possibly could use `Access Context Manager` to set an access level for cloudflare IPs, and then set the access level as an IAM conditions
+    - https://cloud.google.com/iam/docs/conditions-resource-attributes
+    - https://cloud.google.com/storage/docs/access-control
+    - but this still requires an organization
+- Restrict access to a service account, and use Cloudflare workers to add auth details to the request
+  - Worker fetch to Google Cloud will use cache
+  - But worker will be invoked even for requests that would be cached anyway
+  - https://community.cloudflare.com/t/can-i-make-a-worker-only-run-if-cloudflare-hasnt-cached-the-page/94565
+  - how the worker would authneticate:
+  - https://cloud.google.com/storage/docs/authentication#apiauth
+- Switch to amazon S3, they support IP access control
+  - https://stackoverflow.com/a/11457790/5832565
+  - I'd rather not have yet another cloud account to manage
 
 ## Cloudflare DNS config
 
@@ -60,14 +61,15 @@ https://cloud.google.com/storage/docs/request-endpoints#cname
 We must use buckets that are a single subdomain of prangten.com.
 `subdomain.prangten.com`, not `subsubdomain.subdomain.prangten.com`
 
-This is because we use Cloudlflare's Flexable SSL, which gives us a certificate covering *.prangten.com.
-Wildcarded certificates like that do not cover *.*.prangten.com
+This is because we use Cloudlflare's Flexable SSL, which gives us a certificate covering _.prangten.com.
+Wildcarded certificates like that do not cover _.\*.prangten.com
 https://community.cloudflare.com/t/cloudflare-ssl-not-working-on-subdomains/3792/6
 https://community.cloudflare.com/t/community-tip-fixing-ssl-error-no-cypher-overlap-in-mozilla/42323
 
 So, to cover that you'd need to:
-* pay Cloudflare $10/month to support to get this https://developers.cloudflare.com/ssl/advanced-certificate-manager
-* Upgrade to a business account to upload custom certificates (that with make with lets encrypt or similar)
+
+- pay Cloudflare $10/month to support to get this https://developers.cloudflare.com/ssl/advanced-certificate-manager
+- Upgrade to a business account to upload custom certificates (that with make with lets encrypt or similar)
 
 ## Setup
 

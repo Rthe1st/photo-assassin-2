@@ -1,89 +1,91 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
-
-<head>
-  <!-- for use in api tests -->
-  <!-- lobby page -->
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Photo Assassin</title>
-  <!--todo
+  <head>
+    <!-- for use in api tests -->
+    <!-- lobby page -->
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Photo Assassin</title>
+    <!--todo
   * add space below .area divs, to make content more centered verticly
   * style buttons
   * add a bit of space between buttons and input fields
   * make input fields slightly narrower?
   * get subjective opinions how gross design is + why
   -->
-  <style>
-    body {
-      background-image: url("/static/Beckenham_Place_Park.jpg");
-      /* background-image: url("/static/main_background.jpg"); */
-      background-size: cover;
-    }
+    <style>
+      body {
+        background-image: url("/static/Beckenham_Place_Park.jpg");
+        /* background-image: url("/static/main_background.jpg"); */
+        background-size: cover;
+      }
 
-    .area {
-      border-radius: 2em;
-      border: 0.1em solid black;
-      background-color: rgba(255, 255, 255, 0.7);
-    }
+      .area {
+        border-radius: 2em;
+        border: 0.1em solid black;
+        background-color: rgba(255, 255, 255, 0.7);
+      }
 
-    #game-title {
-      border-radius: 2em;
-      border: 0.1em solid black;
-      background-color: rgba(255, 255, 255, 0.7);
-    }
+      #game-title {
+        border-radius: 2em;
+        border: 0.1em solid black;
+        background-color: rgba(255, 255, 255, 0.7);
+      }
 
-    button,
-    input,
-    label {
-      display: table;
-      margin: auto;
-    }
+      button,
+      input,
+      label {
+        display: table;
+        margin: auto;
+      }
 
-    h1,
-    h2,
-    label,
-    input {
-      text-align: center;
-    }
+      h1,
+      h2,
+      label,
+      input {
+        text-align: center;
+      }
 
-    button,
-    input {
-      font-size: larger;
-    }
-  </style>
-</head>
+      button,
+      input {
+        font-size: larger;
+      }
+    </style>
+  </head>
 
-<body>
-  <h1 id="game-title">Photo-Assassin</h1>
-  <div id="join-area" class="area">
-    <h2>Join game</h2>
-    <form id="join-form" action="/join" method="POST">
-      <label>
-        Player Name
-        <input name="username" autocomplete="off" />
-      </label>
-      <label>
-        Game:
-        <input name="code" autocomplete="off" placeholder="XXXX-XXXX-XXXX-XXXX" />
-      </label>
-      <input value="Join game" type="submit" />
-    </form>
-  </div>
-  <hr id="area-divider" />
-  <!--hide this by default, so that it does appear then disappear during page load-->
-  <!-- put below join game, so that it doesnt move that element when it loads-->
-  <div id="make-area" class="area" hidden>
-    <!-- todo: make these POSTs-->
-    <form id="make-form" action="/make" method="POST">
-      <h2>New Game</h2>
-      <label>
-        Player Name
-        <input name="username" autocomplete="off" />
-      </label>
-      <button id="make-game">New game</button>
-    </form>
-  </div>
-</body>
-
+  <body>
+    <h1 id="game-title">Photo-Assassin</h1>
+    <div id="join-area" class="area">
+      <h2>Join game</h2>
+      <form id="join-form" action="/join" method="POST">
+        <label>
+          Player Name
+          <input name="username" autocomplete="off" />
+        </label>
+        <label>
+          Game:
+          <input
+            name="code"
+            autocomplete="off"
+            placeholder="XXXX-XXXX-XXXX-XXXX"
+          />
+        </label>
+        <input value="Join game" type="submit" />
+      </form>
+    </div>
+    <hr id="area-divider" />
+    <!--hide this by default, so that it does appear then disappear during page load-->
+    <!-- put below join game, so that it doesnt move that element when it loads-->
+    <div id="make-area" class="area" hidden>
+      <!-- todo: make these POSTs-->
+      <form id="make-form" action="/make" method="POST">
+        <h2>New Game</h2>
+        <label>
+          Player Name
+          <input name="username" autocomplete="off" />
+        </label>
+        <button id="make-game">New game</button>
+      </form>
+    </div>
+  </body>
 </html>

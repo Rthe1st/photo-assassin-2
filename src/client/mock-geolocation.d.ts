@@ -1,1 +1,1 @@
-declare module 'mock-geolocation';
+declare module "mock-geolocation"

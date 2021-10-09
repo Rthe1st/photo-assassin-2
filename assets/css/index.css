@@ -3,297 +3,302 @@ flexbox doesn't play well with hidden
 https://stackoverflow.com/a/48936804 */
 
 [hidden] {
-    display: none !important;
+  display: none !important;
 }
 
-textarea, button {
-    /*todo: make responsive*/
-    font-size: 16px;
+textarea,
+button {
+  /*todo: make responsive*/
+  font-size: 16px;
 }
 
-body{
-    margin: 0px;
-    font-size: 1em;
-    background-image: url("/static/main_background.jpg");
-    background-size: cover;
+body {
+  margin: 0px;
+  font-size: 1em;
+  background-image: url("/static/main_background.jpg");
+  background-size: cover;
 }
 
 .area {
-    background-color: rgba(255, 255, 255, 0.7);
-  }
+  background-color: rgba(255, 255, 255, 0.7);
+}
 
 #map {
-    height: 100%;
-    width: 100%;
+  height: 100%;
+  width: 100%;
 }
 
 .container {
-    font-size: 1em;
-    height: 100%;
-    width: 100%;
-    position: fixed;
-    display: flex;
-    flex-direction: column;
+  font-size: 1em;
+  height: 100%;
+  width: 100%;
+  position: fixed;
+  display: flex;
+  flex-direction: column;
 }
 
 .pre-game-top {
-    display: grid;
-    text-align: center;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+  display: grid;
+  text-align: center;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .top {
-    display: grid;
-    text-align: center;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+  display: grid;
+  text-align: center;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .middle {
-    list-style-type: none;
-    overflow-y: auto;
-    width: 100%;
-    height: 100%;
-    flex: 1;
+  list-style-type: none;
+  overflow-y: auto;
+  width: 100%;
+  height: 100%;
+  flex: 1;
 }
 
 .middle-2 {
-    list-style-type: none;
-    overflow-y: auto;
-    width: 100%;
-    height: 100%;
-    flex: 1;
-    display: flex;
-    flex-direction: row;
+  list-style-type: none;
+  overflow-y: auto;
+  width: 100%;
+  height: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: row;
 }
 
 #make-targets {
-    margin: 1em;
+  margin: 1em;
 }
 
 #user-list {
-    padding-left: 0;
-    list-style-type: none;
+  padding-left: 0;
+  list-style-type: none;
 }
 
 #proposed-target-list {
-    padding-left: 0;
-    text-align: left;
-    padding-left: 1em;
-    list-style-type: none;
+  padding-left: 0;
+  text-align: left;
+  padding-left: 1em;
+  list-style-type: none;
 }
 
 .user-joined-text {
-    flex-grow: 1;
+  flex-grow: 1;
 }
 
 .user-info-area {
-    display: flex;
-    flex-direction: row;
+  display: flex;
+  flex-direction: row;
 }
 
 .look-disabled {
-    background-color: rgb(226, 226, 226);
+  background-color: rgb(226, 226, 226);
 }
 
 .right {
-    flex: 1;
-    text-align: center;
+  flex: 1;
+  text-align: center;
 }
 
 .left {
-    flex: 1;
-    text-align: center;
+  flex: 1;
+  text-align: center;
 }
 
 #photo-preview {
-    font-size: 1em;
-    height: 100%;
-    width: 100%;
-    position: relative;
-    background-color: black;
+  font-size: 1em;
+  height: 100%;
+  width: 100%;
+  position: relative;
+  background-color: black;
 }
 
 #preview-overlay {
-    text-align:center;
-    width: 100%;
-    position: absolute;
-    bottom: 0;
-    display: flex;
-    flex-direction: column;
-    background-color: rgba(255, 255, 255, 0.75);
-    /* font-size: 1.5em; */
+  text-align: center;
+  width: 100%;
+  position: absolute;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  background-color: rgba(255, 255, 255, 0.75);
+  /* font-size: 1.5em; */
 }
 
 #snipe-image-overlay {
-    text-align:center;
-    width: 100%;
-    position: absolute;
-    bottom: 0;
-    display: flex;
-    flex-direction: column;
-    background-color: rgba(255, 255, 255, 0.75);
-    /* font-size: 1.5em; */
+  text-align: center;
+  width: 100%;
+  position: absolute;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  background-color: rgba(255, 255, 255, 0.75);
+  /* font-size: 1.5em; */
 }
 
 #sniped-screen {
-    font-size: 1em;
-    height: 100%;
-    width: 100%;
-    position: relative;
-    background-color: black;
+  font-size: 1em;
+  height: 100%;
+  width: 100%;
+  position: relative;
+  background-color: black;
 }
 
 #snipe-image {
-    /* I think because of the URL bar
+  /* I think because of the URL bar
     100vh can cause the image to overflow the screen
     So we used 90vh on the basis that the url bar is probably < 10vh*/
-    height: 90vh;
-    width: 100vw;
-    object-fit: contain;
+  height: 90vh;
+  width: 100vw;
+  object-fit: contain;
 }
 
 #preview-buttons {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
 }
 
 #preview {
-    /* I think because of the URL bar
+  /* I think because of the URL bar
     100vh can cause the image to overflow the screen
     So we used 90vh on the basis that the url bar is probably < 10vh*/
-    height: 90vh;
-    width: 100vw;
-    object-fit: contain;
+  height: 90vh;
+  width: 100vw;
+  object-fit: contain;
 }
 
 #camera-button {
-    font-size: 2em;
-    margin: 0.25em;
+  font-size: 2em;
+  margin: 0.25em;
 }
 
 #send-message {
-    margin: 0.25em;
+  margin: 0.25em;
 }
 
 #messages {
-    padding-left: 1em;
-    list-style-type: none;
+  padding-left: 1em;
+  list-style-type: none;
 }
 
 .username {
-    font-weight: bold;
+  font-weight: bold;
 }
 
 #message {
-    flex-grow: 1;
-    margin-left: 1.5em;
+  flex-grow: 1;
+  margin-left: 1.5em;
 }
 
 /* this is needed to make undotext's absoulte position relative to the containing li*/
 .message-li {
-    position: relative;
-    float: left;
-    clear: both;
-    padding-left: 1em;
-    padding-right: 1em;
-    padding-top: 0.5em;
-    padding-bottom: 0.5em;
-    margin: 0.5em;
-    margin-top: 0.2em;
-    margin-bottom: 0.2em;
-    border: 0.1em solid black;
-    background-color: rgba(255, 255, 255);
-    max-width: 80vw;
-    border-radius: 0.5em;
+  position: relative;
+  float: left;
+  clear: both;
+  padding-left: 1em;
+  padding-right: 1em;
+  padding-top: 0.5em;
+  padding-bottom: 0.5em;
+  margin: 0.5em;
+  margin-top: 0.2em;
+  margin-bottom: 0.2em;
+  border: 0.1em solid black;
+  background-color: rgba(255, 255, 255);
+  max-width: 80vw;
+  border-radius: 0.5em;
 }
 
-.message-li > p, .message-li > span, .message-li > button, .own-message > p, .own-message > button {
-    overflow-wrap: anywhere;
-    max-width: 50vw;
-    margin-top: 0.2em;
-    margin-bottom: 0.2em;
-    float: left;
-    clear: left;
-    display: block flow;
- }
+.message-li > p,
+.message-li > span,
+.message-li > button,
+.own-message > p,
+.own-message > button {
+  overflow-wrap: anywhere;
+  max-width: 50vw;
+  margin-top: 0.2em;
+  margin-bottom: 0.2em;
+  float: left;
+  clear: left;
+  display: block flow;
+}
 
 .own-message {
-    position: relative;
-    text-align: left;
-    float: right;
-    clear: both;
-    padding-left: 1em;
-    padding-right: 1em;
-    padding-top: 0.5em;
-    padding-bottom: 0.5em;
-    margin: 0.5em;
-    margin-top: 0.2em;
-    margin-bottom: 0.2em;
-    border: 0.1em solid black;
-    background-color: rgba(0, 221, 0);
-    max-width: 80vw;
-    border-radius: 0.5em;
+  position: relative;
+  text-align: left;
+  float: right;
+  clear: both;
+  padding-left: 1em;
+  padding-right: 1em;
+  padding-top: 0.5em;
+  padding-bottom: 0.5em;
+  margin: 0.5em;
+  margin-top: 0.2em;
+  margin-bottom: 0.2em;
+  border: 0.1em solid black;
+  background-color: rgba(0, 221, 0);
+  max-width: 80vw;
+  border-radius: 0.5em;
 }
 
 .undotext {
-    position: absolute;
-    text-align: center; 
-    color: white;
-    background-color: black;
-    opacity: 70%;
-    font-weight: bold;
-    /* keep in sync with the width of .message-image */
-    width: 10vw;
-    top: 5vw;
-    margin-top: 0;
-    margin-bottom: 0;
+  position: absolute;
+  text-align: center;
+  color: white;
+  background-color: black;
+  opacity: 70%;
+  font-weight: bold;
+  /* keep in sync with the width of .message-image */
+  width: 10vw;
+  top: 5vw;
+  margin-top: 0;
+  margin-bottom: 0;
 }
 
 .message-image {
-    /*we need to set the width/height to something
+  /*we need to set the width/height to something
     the browser can calculate before the image is loaded
     to stop the message box getting resized when it loads*/
-    width: 50vw;
-    height: 50vw;
-    object-fit: cover;
-    border-radius: 0.2em;
-    /* could we make this display: block instead?
+  width: 50vw;
+  height: 50vw;
+  object-fit: cover;
+  border-radius: 0.2em;
+  /* could we make this display: block instead?
         would that be better?
     */
-    float: left;
-    clear: left;
+  float: left;
+  clear: left;
 }
 
 #sniped-alert-text {
-    overflow-wrap: anywhere;
+  overflow-wrap: anywhere;
 }
 
-input[type=checkbox] {
-    transform: scale(3);
+input[type="checkbox"] {
+  transform: scale(3);
 }
 
 #photo-message {
-    background-color: transparent;
-    flex-grow: 1;
+  background-color: transparent;
+  flex-grow: 1;
 }
 
 #message {
-    background-color: transparent;
-    flex-grow: 1;
+  background-color: transparent;
+  flex-grow: 1;
 }
 
 .send-message-form {
-    justify-content: center;
-    display: flex;
-    flex-direction: row;
+  justify-content: center;
+  display: flex;
+  flex-direction: row;
 }
 
 .notification {
-    background-color: yellow;
-    justify-content: center;
-    text-align: center;
-    position:absolute;
-    top: 0px;
-    width: 100%;
+  background-color: yellow;
+  justify-content: center;
+  text-align: center;
+  position: absolute;
+  top: 0px;
+  width: 100%;
 }

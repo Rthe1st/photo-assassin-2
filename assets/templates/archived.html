@@ -1,55 +1,52 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
-
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Photo Assassin</title>
-    <link rel="stylesheet" href="/static/archived.css">
+    <link rel="stylesheet" href="/static/archived.css" />
     <!-- we're not giving google maps a callback because the JS to call back is in another file, and this breaks it
     so we must load the google maps script first (and not async) to make sure it's already loaded before hitting our code-->
-    <script
-        src="https://maps.googleapis.com/maps/api/js?key=<%= key %>">
-        </script>
-  <!-- for use in api tests -->
-  <!-- archived page -->
-</head>
-<body>
+    <script src="https://maps.googleapis.com/maps/api/js?key=<%= key %>"></script>
+    <!-- for use in api tests -->
+    <!-- archived page -->
+  </head>
+  <body>
     <div class="container" id="main">
-        <div class="top">
-            <p id="username" style="grid-column: 1;grid-row: 1;"></p>
-            <button id="show-map" style="grid-column: 2;grid-row: 1;">Map</button>
-            <!--having this seems useful even for historic games
+      <div class="top">
+        <p id="username" style="grid-column: 1; grid-row: 1"></p>
+        <button id="show-map" style="grid-column: 2; grid-row: 1">Map</button>
+        <!--having this seems useful even for historic games
         lets you trace the order games were player in-->
-            <a id="next-game-link" style="grid-column: 3;grid-row: 1;">Next game</a>
-            <a id="save-in-fragment" style="grid-column: 2;grid-row: 2;" >Link</a>
-            <label style="grid-column: 3;grid-row: 2;"><input type="range" min="0" max="1000" value="1000"
-                id="time-lapse"></label>
+        <a id="next-game-link" style="grid-column: 3; grid-row: 1">Next game</a>
+        <a id="save-in-fragment" style="grid-column: 2; grid-row: 2">Link</a>
+        <label style="grid-column: 3; grid-row: 2"
+          ><input type="range" min="0" max="1000" value="1000" id="time-lapse"
+        /></label>
+      </div>
+      <div class="middle-2">
+        <div id="map"></div>
+        <div id="info">
+          <div class="area">
+            <h2>Winner</h2>
+            <p id="game-result"></p>
+          </div>
+          <div class="area">
+            <h3>Scores</h3>
+            <ol id="targets-state"></ol>
+          </div>
         </div>
-        <div class="middle-2">
-            <div id="map"></div>
-            <div id="info">
-                <div class="area">
-                    <h2>Winner</h2>
-                    <p id="game-result"></p>
-                </div>
-                <div class="area">
-                    <h3>Scores</h3>
-                    <ol id="targets-state"></ol>
-                </div>
-            </div>
-            <ul id="options" class="options-map-overlay" hidden>
-                <!--insert checkboxes for each player in the game-->
-            </ul>
-        </div>
+        <ul id="options" class="options-map-overlay" hidden>
+          <!--insert checkboxes for each player in the game-->
+        </ul>
+      </div>
     </div>
     <div id="photo-div" hidden>
-        <div id="photo-overlay">
-            <button id="photo-back">Back</button>
-            <p id="photo-text"></p>
-        </div>
-        <img id="photo"></img>
+      <div id="photo-overlay">
+        <button id="photo-back">Back</button>
+        <p id="photo-text"></p>
+      </div>
+      <img id="photo" />
     </div>
-</body>
-
+  </body>
 </html>

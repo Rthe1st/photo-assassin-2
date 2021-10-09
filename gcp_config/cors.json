@@ -1,8 +1,8 @@
 [
-    {
-      "origin": ["https://photo-assassin.prangten.com", "https://localhost:3000"],
-      "method": ["GET", "OPTIONS"],
-      "responseHeader": ["Content-Type"],
-      "maxAgeSeconds": 10
-    }
-  ]
+  {
+    "origin": ["https://photo-assassin.prangten.com", "https://localhost:3000"],
+    "method": ["GET", "OPTIONS"],
+    "responseHeader": ["Content-Type"],
+    "maxAgeSeconds": 10
+  }
+]

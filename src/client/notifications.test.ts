@@ -1,61 +1,61 @@
-import { jest } from '@jest/globals'
-import * as notifications from './notifications'
-jest.useFakeTimers();
+import { jest } from "@jest/globals"
+import * as notifications from "./notifications"
+jest.useFakeTimers()
 
 let notificationHtml = '<div id="notification" class="notification"></div>'
 
-test("basic notification", ()=>{
-    document.body.innerHTML = notificationHtml;
-    let notificationElement = document.getElementById("notification")!;
-    let notification = new notifications.GameNotification("notification");
+test("basic notification", () => {
+  document.body.innerHTML = notificationHtml
+  let notificationElement = document.getElementById("notification")!
+  let notification = new notifications.GameNotification("notification")
 
-    let notificationText = "new text";
+  let notificationText = "new text"
 
-    notification.notify(notificationText);
+  notification.notify(notificationText)
 
-    expect(notificationElement.hidden).toBe(false);
-    expect(notificationElement.innerText).toBe(notificationText);
+  expect(notificationElement.hidden).toBe(false)
+  expect(notificationElement.innerText).toBe(notificationText)
 
-    jest.runAllTimers();
+  jest.runAllTimers()
 
-    expect(notificationElement.hidden).toBe(true);
+  expect(notificationElement.hidden).toBe(true)
 })
 
-test("custom display time", ()=>{
-    document.body.innerHTML = notificationHtml;
-    let notificationElement = document.getElementById("notification")!;
-    let notification = new notifications.GameNotification("notification");
+test("custom display time", () => {
+  document.body.innerHTML = notificationHtml
+  let notificationElement = document.getElementById("notification")!
+  let notification = new notifications.GameNotification("notification")
 
-    let notificationText = "new text";
+  let notificationText = "new text"
 
-    notification.notify(notificationText, 2);
+  notification.notify(notificationText, 2)
 
-    jest.advanceTimersByTime(1);
+  jest.advanceTimersByTime(1)
 
-    expect(notificationElement.hidden).toBe(false);
+  expect(notificationElement.hidden).toBe(false)
 
-    jest.advanceTimersByTime(1);
+  jest.advanceTimersByTime(1)
 
-    expect(notificationElement.hidden).toBe(true);
+  expect(notificationElement.hidden).toBe(true)
 })
 
-test("overlapping notification times", ()=>{
-    document.body.innerHTML = notificationHtml;
-    let notificationElement = document.getElementById("notification")!;
-    let notification = new notifications.GameNotification("notification");
+test("overlapping notification times", () => {
+  document.body.innerHTML = notificationHtml
+  let notificationElement = document.getElementById("notification")!
+  let notification = new notifications.GameNotification("notification")
 
-    let firstDisplayTime = 1;
+  let firstDisplayTime = 1
 
-    notification.notify("first notification", firstDisplayTime);
+  notification.notify("first notification", firstDisplayTime)
 
-    let secondDisplayTime = 2;
+  let secondDisplayTime = 2
 
-    notification.notify("second notification", secondDisplayTime);
-    expect(notificationElement.hidden).toBe(false);
-    expect(notificationElement.innerText).toBe("second notification");
+  notification.notify("second notification", secondDisplayTime)
+  expect(notificationElement.hidden).toBe(false)
+  expect(notificationElement.innerText).toBe("second notification")
 
-    jest.advanceTimersByTime(firstDisplayTime);
-    expect(notificationElement.hidden).toBe(false);
-    jest.advanceTimersByTime(secondDisplayTime - firstDisplayTime);
-    expect(notificationElement.hidden).toBe(true);
+  jest.advanceTimersByTime(firstDisplayTime)
+  expect(notificationElement.hidden).toBe(false)
+  jest.advanceTimersByTime(secondDisplayTime - firstDisplayTime)
+  expect(notificationElement.hidden).toBe(true)
 })

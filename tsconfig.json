@@ -1,15 +1,15 @@
 {
-    "compilerOptions": {
-        "module": "es2020",
-        // based on  https://github.com/tsconfig/bases/blob/main/bases/node14.json#L8
-        "target": "es2020",
-        "moduleResolution": "node",
-        "allowSyntheticDefaultImports": true,
-        "esModuleInterop": true,
-        "strict": true,
-        "noEmitOnError": true,
-        "noUnusedParameters": true,
-        "forceConsistentCasingInFileNames": true,
-        "noUnusedLocals": true,
-    },
+  "compilerOptions": {
+    "module": "es2020",
+    // based on  https://github.com/tsconfig/bases/blob/main/bases/node14.json#L8
+    "target": "es2020",
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "strict": true,
+    "noEmitOnError": true,
+    "noUnusedParameters": true,
+    "forceConsistentCasingInFileNames": true,
+    "noUnusedLocals": true
+  }
 }

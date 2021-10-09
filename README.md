@@ -5,7 +5,7 @@ This project is an app to make playing [Photo Assassin](https://github.com/Rthe1
 ## Deployment
 
 We deplay to heroku using docker images.
-We should build and push these with github actions CI, but for now do it  manually.
+We should build and push these with github actions CI, but for now do it manually.
 
 https://devcenter.heroku.com/articles/container-registry-and-runtime#testing-an-image-locally
 
@@ -52,60 +52,62 @@ sudo docker rm photo-assassin -f
 ### NVM
 
 use [nvm](https://github.com/nvm-sh/nvm) to ensure your node and npm versions match the version used by the docker container.
-`nvm  use` will tell `nvm` to use the version in our`.nvmrc` file
+`nvm use` will tell `nvm` to use the version in our`.nvmrc` file
 
 ## Build process
 
 We build for 3 situations, starting from typescript source code and es6 module syntax preferred over commonjs.
 
-1) code to be run with node
+1. code to be run with node
 
-    * compile typescript files into Javascript
-        * build with `tsc`
-    * support use of import.metadata.url by running as es6 modules
-        * set `"type": "module"` in package.json
-        * https://nodejs.org/api/esm.html#esm_enabling
-    * Node requires explicit .js extensions on esm module imports
-        * https://nodejs.org/api/esm.html
-        * use `--experimental-specifier-resolution=node` when running node to fix this
-    * Output the compiled JS to a new directory so it's harder for any tooling to accidentally start resolving to js version of a file instead of the ts version
-2) code to be run in a browser
-    * bundle JS dependencies / build static assets from templates
-    * use webpack
-    * compile typescript files into Javascript
-        * use ts-loader webpack plugin
-        * as noted above, webpack + ts-loader means we can't use explicit .js extensions in imports
-3) code to be run in Jest tests
-    * compile typescript files into Javascript
-        * ts-jest jest transform
-        * as noted above, jest + ts-jest means we can't use explicit .js extensions in imports
-    * use es6 module syntax like import.metadata.url
-        * config forces jest/ts-jest into es6 module mode
-            * https://jestjs.io/docs/en/ecmascript-modules
-            * https://kulshekhar.github.io/ts-jest/docs/next/guides/esm-support
-        * I couldn't work out how to get jest-babel to transpile that to a common-js equivalent (__dirname)
-        * ts-jest also offers [some advantages](https://jestjs.io/docs/en/getting-started#using-typescript) of babel-jest
+   - compile typescript files into Javascript
+     - build with `tsc`
+   - support use of import.metadata.url by running as es6 modules
+     - set `"type": "module"` in package.json
+     - https://nodejs.org/api/esm.html#esm_enabling
+   - Node requires explicit .js extensions on esm module imports
+     - https://nodejs.org/api/esm.html
+     - use `--experimental-specifier-resolution=node` when running node to fix this
+   - Output the compiled JS to a new directory so it's harder for any tooling to accidentally start resolving to js version of a file instead of the ts version
+
+2. code to be run in a browser
+   - bundle JS dependencies / build static assets from templates
+   - use webpack
+   - compile typescript files into Javascript
+     - use ts-loader webpack plugin
+     - as noted above, webpack + ts-loader means we can't use explicit .js extensions in imports
+3. code to be run in Jest tests
+   - compile typescript files into Javascript
+     - ts-jest jest transform
+     - as noted above, jest + ts-jest means we can't use explicit .js extensions in imports
+   - use es6 module syntax like import.metadata.url
+     - config forces jest/ts-jest into es6 module mode
+       - https://jestjs.io/docs/en/ecmascript-modules
+       - https://kulshekhar.github.io/ts-jest/docs/next/guides/esm-support
+     - I couldn't work out how to get jest-babel to transpile that to a common-js equivalent (\_\_dirname)
+     - ts-jest also offers [some advantages](https://jestjs.io/docs/en/getting-started#using-typescript) of babel-jest
 
 ### folder structure
 
-* ./src: our typescript source code and unit tests for it
-  * ./src/server: code can only rely on running in the node-runtime environment, built directly with typescript compiler (tsc)
-  * ./src/client: code can only rely on running in a browser, built with webpack
-  * ./src/shared: code must be able to run on both, used in both webpack and tsc builds
-* ./assets: all non-js static files to server to clients, including templates that are modified during the build process.
-* ./dist: After building, this contains all the code needed to run the server.
-  * ./dist/public should contain all static assets that need to be served to clients
-* ./integration_tests: jest tests for integration testing our api. Spins up the full server and connects to it as a client.
-* ./secret: files that we can't leak to version control, api keys, certificate keys
-* ./logs: logs generated by the server while running
+- ./src: our typescript source code and unit tests for it
+  - ./src/server: code can only rely on running in the node-runtime environment, built directly with typescript compiler (tsc)
+  - ./src/client: code can only rely on running in a browser, built with webpack
+  - ./src/shared: code must be able to run on both, used in both webpack and tsc builds
+- ./assets: all non-js static files to server to clients, including templates that are modified during the build process.
+- ./dist: After building, this contains all the code needed to run the server.
+  - ./dist/public should contain all static assets that need to be served to clients
+- ./integration_tests: jest tests for integration testing our api. Spins up the full server and connects to it as a client.
+- ./secret: files that we can't leak to version control, api keys, certificate keys
+- ./logs: logs generated by the server while running
 
 ## Resources
 
-* [Deployment](https://dashboard.heroku.com/apps/photo-assassin/deploy/github)
-* [demo socket-io project](https://github.com/socketio/chat-example)
-* [google maps api](https://developers.google.com/maps/documentation/javascript/examples/polyline-simple)
-* [error reporting](https://sentry.io/organizations/photo-snipe/)
-  * There's a bug where sentry sometimes labels events as happening days in the past.
+- [Deployment](https://dashboard.heroku.com/apps/photo-assassin/deploy/github)
+- [demo socket-io project](https://github.com/socketio/chat-example)
+- [google maps api](https://developers.google.com/maps/documentation/javascript/examples/polyline-simple)
+- [error reporting](https://sentry.io/organizations/photo-snipe/)
+
+  - There's a bug where sentry sometimes labels events as happening days in the past.
 
     Don't know the cause but seen in error reporting in index.js. You can tell these events because the latency in their received and occurred times will be massive
 
@@ -160,16 +162,16 @@ It'll be running on [localhost](http://localhost:3000/)
 
 https://developer.mozilla.org/en-US/docs/Tools/about:debugging
 
-* Run adb - [no install needed, just download and run it](https://askubuntu.com/a/964987)
+- Run adb - [no install needed, just download and run it](https://askubuntu.com/a/964987)
 
 ```bash
 sudo ./adb devices`
 ```
 
-* [enable dev options on phone](https://developer.android.com/studio/debug/dev-options)
-* plug phone in usb, aurthise debug, etc
-* Find the device on about:debugging in firefox and connect
-* connect to server using local network IP, like: http://192.168.8.117:3000
+- [enable dev options on phone](https://developer.android.com/studio/debug/dev-options)
+- plug phone in usb, aurthise debug, etc
+- Find the device on about:debugging in firefox and connect
+- connect to server using local network IP, like: http://192.168.8.117:3000
 
 ## test structure/philosophy
 
@@ -200,5 +202,5 @@ Last leak was caused by logging entire Game instances on GPS update
 
 ## Cloudflare setup
 
-We have a page rule to cache everything on storage-photo-assassin.prangten.com/*
+We have a page rule to cache everything on storage-photo-assassin.prangten.com/\*
 todo: commit a script that recreates all the cloudflare settings

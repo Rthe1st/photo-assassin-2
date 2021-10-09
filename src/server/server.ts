@@ -1,36 +1,45 @@
-import * as Sentry from '@sentry/node';
+import * as Sentry from "@sentry/node"
 
-import cookieParser from 'cookie-parser';
-import express, { NextFunction, Request, Response } from 'express';
+import cookieParser from "cookie-parser"
+import express, { NextFunction, Request, Response } from "express"
 
-import socketIo from 'socket.io'
-import * as https from 'https'
-import * as http from 'http'
+import socketIo from "socket.io"
+import * as https from "https"
+import * as http from "http"
 
-import * as path from 'path';
-import * as fs from 'fs';
+import * as path from "path"
+import * as fs from "fs"
 
-import * as Game from './game';
+import * as Game from "./game"
 
-Game.setup();
+Game.setup()
 
-import * as socketHandler from './socketHandler';
-import * as socketInterface from './socketInterface';
-import { logger } from './logging';
+import * as socketHandler from "./socketHandler"
+import * as socketInterface from "./socketInterface"
+import { logger } from "./logging"
 
-function devErrorHandler(err: any, req: Request, res: Response, _: NextFunction) {
+function devErrorHandler(
+  err: any,
+  req: Request,
+  res: Response,
+  _: NextFunction
+) {
   console.log("express error")
   console.log(`path: ${req.path}`)
   console.log(`query string: ${Object.entries(req.query)}`)
   console.error(err.stack)
-  res.status(500).send('Internal server error - dev handler')
+  res.status(500).send("Internal server error - dev handler")
 }
 
-export function createServer(port = process.env.PORT || 3000, staticDir = "dist/public/", useSentry = true): http.Server {
-  var app = express();
-  app.use(express.urlencoded({ extended: true }));
+export function createServer(
+  port = process.env.PORT || 3000,
+  staticDir = "dist/public/",
+  useSentry = true
+): http.Server {
+  var app = express()
+  app.use(express.urlencoded({ extended: true }))
 
-  let httpServer;
+  let httpServer
   if (process.env.NODE_ENV != "production") {
     // counterintuitively, we only want https in dev mode
     // because to use GPS in browser, the client needs an https connection
@@ -38,12 +47,12 @@ export function createServer(port = process.env.PORT || 3000, staticDir = "dist/
     // and we can't do TLS from Cloudflare to origin because Heroku only support
     // TLS for paid dynamos
     let httpsOptions = {
-      key: fs.readFileSync('./secret/self_signed.key'),
-      cert: fs.readFileSync('./secret/self_signed.pem')
+      key: fs.readFileSync("./secret/self_signed.key"),
+      cert: fs.readFileSync("./secret/self_signed.pem"),
     }
-    httpServer = <http.Server>(https.createServer(httpsOptions, app));
+    httpServer = <http.Server>https.createServer(httpsOptions, app)
   } else {
-    httpServer = http.createServer(app);
+    httpServer = http.createServer(app)
   }
 
   //io needs to be accessablrwhen we setup game - pass it in
@@ -58,47 +67,51 @@ export function createServer(port = process.env.PORT || 3000, staticDir = "dist/
     pingInterval: 250000,
     // bumping to socket io v3 or v4 makes this the default anyway
     // https://github.com/socketio/socket.io/issues/3477#issuecomment-610265035
-    perMessageDeflate: false
-  });
+    perMessageDeflate: false,
+  })
 
   if (useSentry) {
-    Sentry.init({ dsn: process.env.NODE_SENTRY });
+    Sentry.init({ dsn: process.env.NODE_SENTRY })
     if (process.env.SENTRY_TESTS == "true") {
-      Sentry.captureException(new Error("sentry test server.js"));
+      Sentry.captureException(new Error("sentry test server.js"))
     }
     // The request handler must be the first middleware on the app
-    app.use(Sentry.Handlers.requestHandler());
+    app.use(Sentry.Handlers.requestHandler())
   }
-  app.use(cookieParser());
-  app.use('/static', express.static(staticDir));
+  app.use(cookieParser())
+  app.use("/static", express.static(staticDir))
 
   staticDir = path.resolve(staticDir) + "/"
 
   // todo: instead of hacking in games with arrow functions
   // have the middlewares fetch games from db or w/e
-  app.get('/', (req, res) => root(staticDir, req, res));
+  app.get("/", (req, res) => root(staticDir, req, res))
   // for game's we've deleted but client has game data in URL fragment
   // don't server this on game code specific URL
   // so we can cache the page more
   // todo: does the caching logic above even make sense?
-  app.get('/archived', (_, res) => res.sendFile(staticDir + 'archived.html'));
+  app.get("/archived", (_, res) => res.sendFile(staticDir + "archived.html"))
 
-  app.get('/game/:code', (req, res) => gamePage(staticDir, req, res));
-  app.get('/game/:code/download', (req, res) => gameDownloadPage(staticDir, req, res));
+  app.get("/game/:code", (req, res) => gamePage(staticDir, req, res))
+  app.get("/game/:code/download", (req, res) =>
+    gameDownloadPage(staticDir, req, res)
+  )
   // todo: should these be .use()
   // so we can redirect if someone navigate there by mistake
-  app.post('/make', (req, res) => make(staticDir, req, res, io));
-  app.post('/join', (req, res) => join(staticDir, req, res));
+  app.post("/make", (req, res) => make(staticDir, req, res, io))
+  app.post("/join", (req, res) => join(staticDir, req, res))
   if (useSentry) {
     // The error handler must be before any other error middleware and after all controllers
-    app.use(Sentry.Handlers.errorHandler());
+    app.use(Sentry.Handlers.errorHandler())
   }
   if (process.env.NODE_ENV != "production") {
-    app.use('/deliberate-error', () => { throw new Error("test error") })
+    app.use("/deliberate-error", () => {
+      throw new Error("test error")
+    })
     app.use(devErrorHandler)
   }
 
-  httpServer.listen(port);
+  httpServer.listen(port)
 
   // todo: work out an optimime value for this
   // too frequent and I'm worried it's events will deplay processing
@@ -106,105 +119,140 @@ export function createServer(port = process.env.PORT || 3000, staticDir = "dist/
   // but needs to be low enough for:
   // * telling client the countdown time is over
   // * telling client the game is over
-  setInterval(() => { socketHandler.checkGameTiming(Game.games, io) }, 1000);
+  setInterval(() => {
+    socketHandler.checkGameTiming(Game.games, io)
+  }, 1000)
 
-  return httpServer;
+  return httpServer
 }
 
 function root(staticDir: string, req: express.Request, res: express.Response) {
   if (req.query.code == undefined) {
-    res.sendFile(staticDir + 'lobby.html');
-    return;
+    res.sendFile(staticDir + "lobby.html")
+    return
   }
 
-  var game = Game.getGame(req.query.code.toString());
+  var game = Game.getGame(req.query.code.toString())
   if (game == undefined) {
-    logger.log("verbose", `/ Accessing invalid game: ${req.query.code}`);
-    res.status(404);
-    res.sendFile(`${staticDir}/game_doesnt_exist.html`);
+    logger.log("verbose", `/ Accessing invalid game: ${req.query.code}`)
+    res.status(404)
+    res.sendFile(`${staticDir}/game_doesnt_exist.html`)
   } else if (game.state != Game.states.NOT_STARTED) {
     // todo: what if user is already in the game?
     // maybe root should leave this case for /join to handle
     // (same with code doesnt exist as well?)
-    logger.log("verbose", "/ Attempt to join game " + req.query.code + " that has already started");
-    res.status(403);
-    res.sendFile(`${staticDir}/game_in_progress.html`);
+    logger.log(
+      "verbose",
+      "/ Attempt to join game " + req.query.code + " that has already started"
+    )
+    res.status(403)
+    res.sendFile(`${staticDir}/game_in_progress.html`)
   } else {
-    res.sendFile(staticDir + 'lobby.html');
+    res.sendFile(staticDir + "lobby.html")
   }
-};
-
-function addUserToGame(game: Game.Game, res: express.Response, username: string) {
-
-  const { privateId: privateId, publicId: publicId } = Game.addPlayer(game, username);
-
-  socketHandler.addUser(publicId, game);
-
-  // todo: set good settings (https only, etc)
-  res.cookie("gameId", game.code, { sameSite: "strict" });
-  res.cookie("privateId", privateId, { sameSite: "strict" });
-  res.cookie("publicId", publicId, { sameSite: "strict" });
-  logger.log("verbose", "Adding user to game", { publicId: publicId, gameCode: game.code });
-
-  return [privateId, publicId];
 }
 
-function make(staticDir: string, req: express.Request, res: express.Response, io: socketIo.Server) {
-  if (!req.body.username) {
-    res.status(400);
-    res.sendFile(`${staticDir}/no_username.html`);
-    return;
-  }
-  let game = socketInterface.setup(
-    io
+function addUserToGame(
+  game: Game.Game,
+  res: express.Response,
+  username: string
+) {
+  const { privateId: privateId, publicId: publicId } = Game.addPlayer(
+    game,
+    username
   )
-  var [privateId, publicId] = addUserToGame(game, res, req.body.username.toString());
-  if (req.body.format == 'json') {
-    res.json({ publicId: publicId, privateId: privateId, gameId: game.code });
-  } else {
-    res.redirect(`/game/${game.code}`);
+
+  socketHandler.addUser(publicId, game)
+
+  // todo: set good settings (https only, etc)
+  res.cookie("gameId", game.code, { sameSite: "strict" })
+  res.cookie("privateId", privateId, { sameSite: "strict" })
+  res.cookie("publicId", publicId, { sameSite: "strict" })
+  logger.log("verbose", "Adding user to game", {
+    publicId: publicId,
+    gameCode: game.code,
+  })
+
+  return [privateId, publicId]
+}
+
+function make(
+  staticDir: string,
+  req: express.Request,
+  res: express.Response,
+  io: socketIo.Server
+) {
+  if (!req.body.username) {
+    res.status(400)
+    res.sendFile(`${staticDir}/no_username.html`)
+    return
   }
-};
+  let game = socketInterface.setup(io)
+  var [privateId, publicId] = addUserToGame(
+    game,
+    res,
+    req.body.username.toString()
+  )
+  if (req.body.format == "json") {
+    res.json({ publicId: publicId, privateId: privateId, gameId: game.code })
+  } else {
+    res.redirect(`/game/${game.code}`)
+  }
+}
 
 function join(staticDir: string, req: express.Request, res: express.Response) {
   if (req.body.code == undefined) {
-    logger.log("debug", 'no code supplied');
-    res.status(403);
-    res.sendFile(`${staticDir}/no_code.html`);
-    return;
+    logger.log("debug", "no code supplied")
+    res.status(403)
+    res.sendFile(`${staticDir}/no_code.html`)
+    return
   }
-  let game = Game.getGame(req.body.code);
+  let game = Game.getGame(req.body.code)
   if (game == undefined) {
-    logger.log("verbose", `Accessing invalid game: ${req.body.code}`);
-    res.status(404);
-    res.sendFile(`${staticDir}/game_doesnt_exist.html`);
-    return;
+    logger.log("verbose", `Accessing invalid game: ${req.body.code}`)
+    res.status(404)
+    res.sendFile(`${staticDir}/game_doesnt_exist.html`)
+    return
   }
   if (game.state != Game.states.NOT_STARTED) {
-    logger.log("verbose", "Attempt to join game " + game.code + " that has already started");
-    res.status(403);
-    res.sendFile(`${staticDir}/game_in_progress.html`);
-    return;
+    logger.log(
+      "verbose",
+      "Attempt to join game " + game.code + " that has already started"
+    )
+    res.status(403)
+    res.sendFile(`${staticDir}/game_in_progress.html`)
+    return
   }
-  logger.log("debug", 'adding to game');
+  logger.log("debug", "adding to game")
   if (req.body.username == undefined) {
-    logger.log("verbose", "Attempt to join game " + game.code + " without a username");
-    res.status(403);
-    res.sendFile(`${staticDir}/no_username.html`);
-    return;
+    logger.log(
+      "verbose",
+      "Attempt to join game " + game.code + " without a username"
+    )
+    res.status(403)
+    res.sendFile(`${staticDir}/no_username.html`)
+    return
   }
-  var [privateId, publicId] = addUserToGame(game, res, req.body.username.toString());
+  var [privateId, publicId] = addUserToGame(
+    game,
+    res,
+    req.body.username.toString()
+  )
 
-  if (req.body.format == 'json') {
-    res.json({ publicId: publicId, privateId: privateId, gameId: game.code });
+  if (req.body.format == "json") {
+    res.json({ publicId: publicId, privateId: privateId, gameId: game.code })
   } else {
-    res.redirect(`/game/${game.code}`);
+    res.redirect(`/game/${game.code}`)
   }
-};
+}
 
-function gamePage(staticDir: string, req: express.Request, res: express.Response) {
-  logger.log("debug", `Accessing game: ${req.params.code}`);
-  var game = Game.getGame(req.params.code);
+function gamePage(
+  staticDir: string,
+  req: express.Request,
+  res: express.Response
+) {
+  logger.log("debug", `Accessing game: ${req.params.code}`)
+  var game = Game.getGame(req.params.code)
   if (game == undefined) {
     // then we assume its a finished game
     // that we no longer keep in memory and have push to google cloud
@@ -214,18 +262,22 @@ function gamePage(staticDir: string, req: express.Request, res: express.Response
     // but then caches it aggressively
     // one answer: combine archived and index pages into one
     // and cache it always
-    res.sendFile(staticDir + 'archived.html');
-    return;
-  } else if (!(game.idMapping.has(req.cookies["privateId"]))) {
-    res.redirect(`/?code=${req.params.code}`);
-    return;
+    res.sendFile(staticDir + "archived.html")
+    return
+  } else if (!game.idMapping.has(req.cookies["privateId"])) {
+    res.redirect(`/?code=${req.params.code}`)
+    return
   }
-  res.sendFile(staticDir + 'index.html');
-};
+  res.sendFile(staticDir + "index.html")
+}
 
-function gameDownloadPage(staticDir: string, _: express.Request, res: express.Response) {
+function gameDownloadPage(
+  staticDir: string,
+  _: express.Request,
+  res: express.Response
+) {
   //todo: replace $$gamedataplaceholder$$ in archived_for_save.html with the game data json
   // then grab all the images and put them in a zip file with the html
-  res.sendFile(staticDir + 'archived_for_save.html');
-  return;
+  res.sendFile(staticDir + "archived_for_save.html")
+  return
 }
