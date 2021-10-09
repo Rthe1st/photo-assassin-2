@@ -1,8 +1,7 @@
 {
     "extends": "../../tsconfig.json",
     "compilerOptions": {
-        "target": "ES2019",
-        "types": ["googlemaps", "node"]
+        "target": "es6",
+        "types": ["googlemaps", "node", "jest"]
     },
-    "exclude": ["notifications.test.ts", "imageManipulation.test.ts"]
 }

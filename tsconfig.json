@@ -1,7 +1,8 @@
 {
     "compilerOptions": {
-        "module": "ESNext",
-        "target": "ESNext",
+        "module": "es2020",
+        // based on  https://github.com/tsconfig/bases/blob/main/bases/node14.json#L8
+        "target": "es2020",
         "moduleResolution": "node",
         "allowSyntheticDefaultImports": true,
         "esModuleInterop": true,

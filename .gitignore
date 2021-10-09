@@ -1,10 +1,6 @@
 node_modules
 logs/
-public/*.js
-public/*.html
-public/*.js.map
 .env
 dist/*
 secret/*
-public/*
 gcp_config/storage-upload-account.json

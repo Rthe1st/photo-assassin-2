@@ -28,4 +28,5 @@ COPY --from=builder /home/node/app/dist ./dist
 VOLUME [ "/home/node/app/secret","/home/node/app/dist" ]
 
 EXPOSE 3000
-CMD [ "npm", "run-script", "start" ]
+# https://github.com/nodejs/docker-node/blob/main/docs/BestPractices.md#cmd
+CMD [ "node", "--experimental-specifier-resolution=node", "./dist/server/start.js" ]
