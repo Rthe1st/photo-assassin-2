@@ -7,10 +7,10 @@ import { jest } from "@jest/globals"
 // needed for messy socket tests that don't clean themselves up well
 jest.setTimeout(8000)
 
-let domain = "https://localhost:3000"
+const domain = "https://localhost:3000"
 
 test("clientApi.gameJson", async () => {
-  let gameDetails = await (
+  const gameDetails = await (
     await httpHelpers.post(`${domain}/make`, "username=player1&format=json")
   ).json()
 

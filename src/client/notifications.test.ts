@@ -2,14 +2,14 @@ import { jest } from "@jest/globals"
 import * as notifications from "./notifications"
 jest.useFakeTimers()
 
-let notificationHtml = '<div id="notification" class="notification"></div>'
+const notificationHtml = '<div id="notification" class="notification"></div>'
 
 test("basic notification", () => {
   document.body.innerHTML = notificationHtml
-  let notificationElement = document.getElementById("notification")!
-  let notification = new notifications.GameNotification("notification")
+  const notificationElement = document.getElementById("notification")!
+  const notification = new notifications.GameNotification("notification")
 
-  let notificationText = "new text"
+  const notificationText = "new text"
 
   notification.notify(notificationText)
 
@@ -23,10 +23,10 @@ test("basic notification", () => {
 
 test("custom display time", () => {
   document.body.innerHTML = notificationHtml
-  let notificationElement = document.getElementById("notification")!
-  let notification = new notifications.GameNotification("notification")
+  const notificationElement = document.getElementById("notification")!
+  const notification = new notifications.GameNotification("notification")
 
-  let notificationText = "new text"
+  const notificationText = "new text"
 
   notification.notify(notificationText, 2)
 
@@ -41,14 +41,14 @@ test("custom display time", () => {
 
 test("overlapping notification times", () => {
   document.body.innerHTML = notificationHtml
-  let notificationElement = document.getElementById("notification")!
-  let notification = new notifications.GameNotification("notification")
+  const notificationElement = document.getElementById("notification")!
+  const notification = new notifications.GameNotification("notification")
 
-  let firstDisplayTime = 1
+  const firstDisplayTime = 1
 
   notification.notify("first notification", firstDisplayTime)
 
-  let secondDisplayTime = 2
+  const secondDisplayTime = 2
 
   notification.notify("second notification", secondDisplayTime)
   expect(notificationElement.hidden).toBe(false)

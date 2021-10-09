@@ -19,18 +19,18 @@ if (process.env.NODE_ENV == "test") {
   requestOptions = {}
 }
 
-export function gameStateUrl(code: string) {
+export function gameStateUrl(code: string): string {
   return "https://storage-photo-assassin.prangten.com/" + gameStatePath(code)
 }
 
-export function gameStatePath(code: string) {
+export function gameStatePath(code: string): string {
   return `${code}/state.json`
 }
 
 // todo: server should use same type when sending it
 // like we do for sockets
 export async function gameJson(code: string): Promise<SharedGame.ClientGame> {
-  let url = gameStateUrl(code)
+  const url = gameStateUrl(code)
   requestOptions["Content-Type"] = "application/json"
   requestOptions["Access-Control-Request-Method"] = "GET"
   requestOptions["Access-Control-Request-Headers"] = "Content-Type"

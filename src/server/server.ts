@@ -36,7 +36,7 @@ export function createServer(
   staticDir = "dist/public/",
   useSentry = true
 ): http.Server {
-  var app = express()
+  const app = express()
   app.use(express.urlencoded({ extended: true }))
 
   let httpServer
@@ -46,7 +46,7 @@ export function createServer(
     // In prod, this is provided by Cloudflare using flexible TLS
     // and we can't do TLS from Cloudflare to origin because Heroku only support
     // TLS for paid dynamos
-    let httpsOptions = {
+    const httpsOptions = {
       key: fs.readFileSync("./secret/self_signed.key"),
       cert: fs.readFileSync("./secret/self_signed.pem"),
     }
@@ -57,7 +57,7 @@ export function createServer(
 
   //io needs to be accessablrwhen we setup game - pass it in
   // https://github.com/socketio/socket.io/issues/2276
-  var io = socketIo(httpServer, {
+  const io = socketIo(httpServer, {
     cookie: false,
     // todo: this is a hack to prevent our connection being terminated
     // during large file uploads because we're blocking and can't reply to pongs
@@ -132,7 +132,7 @@ function root(staticDir: string, req: express.Request, res: express.Response) {
     return
   }
 
-  var game = Game.getGame(req.query.code.toString())
+  const game = Game.getGame(req.query.code.toString())
   if (game == undefined) {
     logger.log("verbose", `/ Accessing invalid game: ${req.query.code}`)
     res.status(404)
@@ -187,8 +187,8 @@ function make(
     res.sendFile(`${staticDir}/no_username.html`)
     return
   }
-  let game = socketInterface.setup(io)
-  var [privateId, publicId] = addUserToGame(
+  const game = socketInterface.setup(io)
+  const [privateId, publicId] = addUserToGame(
     game,
     res,
     req.body.username.toString()
@@ -207,7 +207,7 @@ function join(staticDir: string, req: express.Request, res: express.Response) {
     res.sendFile(`${staticDir}/no_code.html`)
     return
   }
-  let game = Game.getGame(req.body.code)
+  const game = Game.getGame(req.body.code)
   if (game == undefined) {
     logger.log("verbose", `Accessing invalid game: ${req.body.code}`)
     res.status(404)
@@ -233,7 +233,7 @@ function join(staticDir: string, req: express.Request, res: express.Response) {
     res.sendFile(`${staticDir}/no_username.html`)
     return
   }
-  var [privateId, publicId] = addUserToGame(
+  const [privateId, publicId] = addUserToGame(
     game,
     res,
     req.body.username.toString()
@@ -252,7 +252,7 @@ function gamePage(
   res: express.Response
 ) {
   logger.log("debug", `Accessing game: ${req.params.code}`)
-  var game = Game.getGame(req.params.code)
+  const game = Game.getGame(req.params.code)
   if (game == undefined) {
     // then we assume its a finished game
     // that we no longer keep in memory and have push to google cloud

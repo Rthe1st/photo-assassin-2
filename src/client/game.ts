@@ -21,8 +21,8 @@ export function getSettings() {
   return game.chosenSettings
 }
 
-export function getPublicIds(sortByProgress: boolean = false) {
-  let players = Object.keys(game.userList).map((x) => parseInt(x))
+export function getPublicIds(sortByProgress = false) {
+  const players = Object.keys(game.userList).map((x) => parseInt(x))
   if (sortByProgress) {
     players.sort(
       (a, b) => game.targetsGot![b].length - game.targetsGot![a].length
@@ -37,7 +37,7 @@ export function startTime(): number {
   // instead of trying to work it out
   let earliestTime = Number.POSITIVE_INFINITY
   for (const playerPublicId of getPublicIds()) {
-    let firstPosition = game.positions![playerPublicId][0]
+    const firstPosition = game.positions![playerPublicId][0]
     if (firstPosition != undefined) {
       earliestTime = Math.min(earliestTime, firstPosition.timestamp!)
     }
@@ -59,15 +59,15 @@ export function getUsername(publicId: number) {
 }
 
 export function getLastSnipedPlayerId(publicId: number) {
-  let targetsGot = game.targetsGot![publicId]
+  const targetsGot = game.targetsGot![publicId]
   return targetsGot[targetsGot.length - 1]
 }
 
 export function getSnipeInfos(publicId: number) {
   let snipeInfoIndex = game.latestSnipeIndexes[publicId]
-  let snipeInfos = []
+  const snipeInfos = []
   while (snipeInfoIndex != undefined) {
-    let snipeInfo = game.snipeInfos[snipeInfoIndex]
+    const snipeInfo = game.snipeInfos[snipeInfoIndex]
     snipeInfos.push(snipeInfo)
     snipeInfoIndex = snipeInfo.previousSnipe
   }
@@ -75,8 +75,8 @@ export function getSnipeInfos(publicId: number) {
 }
 
 export function getPlayerProgress(publicId: number) {
-  let got = game.targetsGot![publicId].length
-  let remaining = got + game.targets![publicId].length
+  const got = game.targetsGot![publicId].length
+  const remaining = got + game.targets![publicId].length
   return [got, remaining]
 }
 
@@ -84,7 +84,7 @@ export function getTarget(publicId: number, snipeNumber?: number) {
   if (snipeNumber == undefined) {
     snipeNumber = game.targets![publicId].length
   }
-  let totalTargets = game.targetsGot![publicId].concat(game.targets![publicId])
+  const totalTargets = game.targetsGot![publicId].concat(game.targets![publicId])
   return getUsername(totalTargets[totalTargets.length - snipeNumber])
 }
 
@@ -93,10 +93,10 @@ export function getTarget(publicId: number, snipeNumber?: number) {
 // because we want the game object to accurately reflect the server's view of the state
 // (so don't save the local reshuffle to the game)
 export function getProposedTargetPairs(proposedTargetList: number[]) {
-  let pairs = []
-  for (var i = 0; i < proposedTargetList.length; i++) {
-    let sniper = proposedTargetList[i]
-    let target = proposedTargetList[(i + 1) % proposedTargetList.length]
+  const pairs = []
+  for (let i = 0; i < proposedTargetList.length; i++) {
+    const sniper = proposedTargetList[i]
+    const target = proposedTargetList[(i + 1) % proposedTargetList.length]
     pairs.push([getUsername(sniper), getUsername(target)])
   }
   return pairs
@@ -137,7 +137,7 @@ export function getImageUrl(
 
 // todo: once game state is updated from server with deltas
 // we should move this into game
-let chatMessages: SharedSocketEvents.ServerChatMessage[] = []
+const chatMessages: SharedSocketEvents.ServerChatMessage[] = []
 
 export function addChatMessage(
   chatMessage: SharedSocketEvents.ServerChatMessage
@@ -162,6 +162,6 @@ export interface ClientOnly {
   unconfirmedMessages: { [id: number]: UnconfirmedMessage }
 }
 
-export let clientOnly: ClientOnly = {
+export const clientOnly: ClientOnly = {
   unconfirmedMessages: [],
 }

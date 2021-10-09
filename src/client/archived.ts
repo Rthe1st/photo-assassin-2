@@ -20,15 +20,15 @@ function urlGameId(): string {
 function getPublicId(): number | undefined {
   const cookieGameId = decodeURIComponent(
     document.cookie.replace(
-      /(?:(?:^|.*;\s*)gameId\s*\=\s*([^;]*).*$)|^.*$/,
+      /(?:(?:^|.*;\s*)gameId\s*=\s*([^;]*).*$)|^.*$/,
       "$1"
     )
   )
 
   if (cookieGameId == urlGameId()) {
-    let publicId = parseInt(
+    const publicId = parseInt(
       document.cookie.replace(
-        /(?:(?:^|.*;\s*)publicId\s*\=\s*([^;]*).*$)|^.*$/,
+        /(?:(?:^|.*;\s*)publicId\s*=\s*([^;]*).*$)|^.*$/,
         "$1"
       )
     )
@@ -46,25 +46,25 @@ function getPlayerColor(playerPublicId: number) {
 }
 
 function buildTargetsState(playerPublicId: number) {
-  var outerLi = document.createElement("li")
+  const outerLi = document.createElement("li")
   outerLi.setAttribute("class", "player-area")
-  var summaryStats = document.createElement("p")
+  const summaryStats = document.createElement("p")
 
-  let username = Game.getUsername(playerPublicId)
-  let [got, remaining] = Game.getPlayerProgress(playerPublicId)
-  let total = got + remaining
+  const username = Game.getUsername(playerPublicId)
+  const [got, remaining] = Game.getPlayerProgress(playerPublicId)
+  const total = got + remaining
 
   summaryStats.innerText = `${username}: ${got}/${total}`
 
   outerLi.appendChild(summaryStats)
-  var ul = document.createElement("ul")
+  const ul = document.createElement("ul")
   ul.setAttribute("class", "target-list")
   outerLi.appendChild(ul)
-  for (let snipeInfo of Game.getSnipeInfos(playerPublicId)) {
-    var innerLi = document.createElement("li")
-    var targetButton = document.createElement("button")
-    let targetUsername = Game.getUsername(snipeInfo.target)
-    let sniperUsername = Game.getUsername(snipeInfo.snipePlayer)
+  for (const snipeInfo of Game.getSnipeInfos(playerPublicId)) {
+    const innerLi = document.createElement("li")
+    const targetButton = document.createElement("button")
+    const targetUsername = Game.getUsername(snipeInfo.target)
+    const sniperUsername = Game.getUsername(snipeInfo.snipePlayer)
     targetButton.onclick = function () {
       showPhoto(`${sniperUsername} got ${targetUsername}`, snipeInfo.imageId)
     }
@@ -76,18 +76,18 @@ function buildTargetsState(playerPublicId: number) {
 }
 
 function buildPlayerTickBox(publicId: number, username: string) {
-  var labelItem = document.createElement("li")
-  let inputId = `show-player-${username}`
-  var label = document.createElement("label")
+  const labelItem = document.createElement("li")
+  const inputId = `show-player-${username}`
+  const label = document.createElement("label")
   label.innerText = username
   label.setAttribute("for", inputId)
-  let playerColour = getPlayerColor(publicId)
+  const playerColour = getPlayerColor(publicId)
   label.setAttribute("style", `background-color: ${playerColour}`)
-  var input = document.createElement("input")
+  const input = document.createElement("input")
   input.setAttribute("type", "checkbox")
   input.setAttribute("checked", "true")
   input.addEventListener("change", () => {
-    var checkbox = <HTMLInputElement>(
+    const checkbox = <HTMLInputElement>(
       document.getElementById(`show-player-${username}`)
     )
     if (checkbox.checked) {
@@ -118,9 +118,9 @@ function setUpPage(gameState: SharedGame.ClientGame, publicId?: number) {
   }
   document.getElementById("game-result")!.innerText = `🎉🎉${winner}🎉🎉`
 
-  var targetsState = document.getElementById("targets-state")!
-  for (let playerPublicId of Game.getPublicIds(true)) {
-    let outerLi = buildTargetsState(playerPublicId)
+  const targetsState = document.getElementById("targets-state")!
+  for (const playerPublicId of Game.getPublicIds(true)) {
+    const outerLi = buildTargetsState(playerPublicId)
     targetsState.appendChild(outerLi)
   }
 
@@ -134,9 +134,9 @@ function setUpPage(gameState: SharedGame.ClientGame, publicId?: number) {
     document.getElementById("next-game-link")!.hidden = true
   }
 
-  var options = document.getElementById("options")!
-  for (let playerPublicId of Game.getPublicIds()) {
-    let labelItem = buildPlayerTickBox(
+  const options = document.getElementById("options")!
+  for (const playerPublicId of Game.getPublicIds()) {
+    const labelItem = buildPlayerTickBox(
       playerPublicId,
       Game.getUsername(playerPublicId)
     )
@@ -145,8 +145,8 @@ function setUpPage(gameState: SharedGame.ClientGame, publicId?: number) {
 }
 
 function getDataFromUrlFragment(): Promise<SharedGame.ClientGame> {
-  let a = new Promise<SharedGame.ClientGame>((resolve, reject) => {
-    let data = decodeURIComponent(window.location.hash.substr(1))
+  const a = new Promise<SharedGame.ClientGame>((resolve, reject) => {
+    const data = decodeURIComponent(window.location.hash.substr(1))
     // todo: we should check it's actually valid after parsing
     if (data.length == 0) {
       reject()
@@ -158,12 +158,12 @@ function getDataFromUrlFragment(): Promise<SharedGame.ClientGame> {
 }
 
 async function getDataFromApi(): Promise<SharedGame.ClientGame> {
-  let gameId = urlGameId()
-  let gameState = api.gameJson(gameId)
+  const gameId = urlGameId()
+  const gameState = api.gameJson(gameId)
   return gameState
 }
 
-var map: google.maps.Map
+let map: google.maps.Map
 let gameState: SharedGame.ClientGame
 let mapData: MapData
 
@@ -175,11 +175,11 @@ window.onload = function () {
     .then(
       (lgameState: SharedGame.ClientGame) => {
         gameState = lgameState
-        let archivedLink = `/archived#${JSON.stringify(gameState)}`
+        const archivedLink = `/archived#${JSON.stringify(gameState)}`
         ;(<HTMLLinkElement>document.getElementById("save-in-fragment")).href =
           archivedLink
 
-        let publicId = getPublicId()
+        const publicId = getPublicId()
 
         Game.update(gameState)
 
@@ -223,16 +223,16 @@ window.onload = function () {
   }
 
   document.getElementById("time-lapse")!.oninput = function () {
-    let sliderValue = Number.parseInt(
+    const sliderValue = Number.parseInt(
       (<HTMLInputElement>document.getElementById("time-lapse")).value
     )
 
-    let sliderPercent = sliderValue / 1000
+    const sliderPercent = sliderValue / 1000
 
-    let startTime = Game.startTime()
-    let endTime = Game.endTime()
+    const startTime = Game.startTime()
+    const endTime = Game.endTime()
 
-    let scaledMaxTime = startTime + (endTime - startTime) * sliderPercent
+    const scaledMaxTime = startTime + (endTime - startTime) * sliderPercent
 
     mapData.changeTimeRange(0, scaledMaxTime)
   }
@@ -240,7 +240,7 @@ window.onload = function () {
 
 // hardcode distinct colours, and reuse if too many players
 // todo: find a js library to handle colour generation
-var playerColours = [
+const playerColours = [
   "#FFB300", //Vivid Yellow
   "#803E75", //Strong Purple
   "#FF6800", //Vivid Orange

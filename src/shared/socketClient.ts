@@ -25,7 +25,7 @@ export function setup(
   disconnecting = (reason: any) => console.log(reason),
   connectError = (reason: any) => console.log(reason)
 ): SocketIOClient.Socket {
-  let socket = io(
+  const socket = io(
     // leading slash is needed so IO nows we're giving it a path
     // otherwise it uses it as a domain
     `${hostname}/game/${gameId}`,
@@ -103,6 +103,6 @@ export function stopGame(socket: SocketIOClient.Socket) {
 }
 
 export function removeUser(socket: SocketIOClient.Socket, publicId: number) {
-  let msg: SocketEvents.ClientRemoveUser = { publicId: publicId }
+  const msg: SocketEvents.ClientRemoveUser = { publicId: publicId }
   socket.emit("remove user", msg)
 }

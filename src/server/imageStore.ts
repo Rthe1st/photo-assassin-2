@@ -13,9 +13,9 @@ export class ImageStore {
   constructor() {
     // we use a .env file for local development
     // and this doesn't seem to allow new lines in a variables value
-    let gcpPrivateKey = process.env.GCP_PRIVATE_KEY?.replace(/\\n/g, "\n")
+    const gcpPrivateKey = process.env.GCP_PRIVATE_KEY?.replace(/\\n/g, "\n")
 
-    let creds = {
+    const creds = {
       type: "service_account",
       project_id: "photo-assassin-270012",
       private_key_id: process.env.GCP_PRIVATE_KEY_ID,
@@ -72,7 +72,7 @@ export class ImageStore {
     // https://stackoverflow.com/a/38789848/5832565
     const file = this.bucket.file(path)
 
-    var bufferStream = new stream.PassThrough()
+    const bufferStream = new stream.PassThrough()
     bufferStream.end(image)
 
     return new Promise((resolve, reject) => {
@@ -96,8 +96,8 @@ export class ImageStore {
   // but this would only be for the use case where a server crashes
   // and needs to resume games
   async uploadGameState(gameState: ClientGame, code: string): Promise<string> {
-    let asJson = JSON.stringify(gameState)
-    let path = api.gameStatePath(code)
+    const asJson = JSON.stringify(gameState)
+    const path = api.gameStatePath(code)
     const file = this.bucket.file(path)
 
     const readable = stream.Readable.from([asJson])

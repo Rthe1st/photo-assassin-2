@@ -14,8 +14,8 @@ if (process.env.NODE_ENV == "production") {
   // where socketClient is never used
   ;(async () => {
     // we need an explicit extension here as typescript-transformer-append-js-extension doesn't recognize dynamic imports
-    let socketClient = await import("./socketBots.js")
-    let gameCodeSpecified = process.argv.indexOf("--game-code")
+    const socketClient = await import("./socketBots.js")
+    const gameCodeSpecified = process.argv.indexOf("--game-code")
     if (process.argv.includes("--prod")) {
       socketClient.useProd()
     } else if (gameCodeSpecified == -1) {
@@ -24,11 +24,11 @@ if (process.env.NODE_ENV == "production") {
       Server.createServer()
     }
 
-    let clientsSpecified = process.argv.indexOf("--clients")
+    const clientsSpecified = process.argv.indexOf("--clients")
     if (clientsSpecified == -1) {
       return
     }
-    let clientTypeIndex = clientsSpecified + 1
+    const clientTypeIndex = clientsSpecified + 1
 
     let gameCode
     if (gameCodeSpecified != -1 && gameCodeSpecified < process.argv.length) {

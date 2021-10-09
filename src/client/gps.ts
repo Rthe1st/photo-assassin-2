@@ -7,7 +7,7 @@ if (dev.testMode()) {
   geolocate.use()
 }
 
-var position: SharedGame.Position = {
+const position: SharedGame.Position = {
   latitude: null,
   longitude: null,
   accuracy: null,
@@ -32,7 +32,7 @@ function setup(callback: (position: SharedGame.Position) => void) {
     console.log("set fake start pos")
     position.latitude = 51.389
     position.longitude = 0.012
-    let fakeUpdate = () => {
+    const fakeUpdate = () => {
       console.log("mock pos update")
       mockCords()
       geolocate.change(position)

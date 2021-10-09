@@ -12,23 +12,43 @@ export async function makeSocket(
     socket: SocketIOClient.Socket
     msg: SocketEvents.ServerInitializationMsg
   }>((resolve, reject) => {
-    let socket = socketClient.setup(
+    const socket = socketClient.setup(
       gameId,
       privateId,
       (msg) => {
         resolve({ socket, msg })
       },
-      () => {},
-      () => {},
-      () => {},
-      () => {},
-      () => {},
-      () => {},
-      () => {},
-      (_) => {},
-      () => {},
-      domain,
-      () => {}
+      () => {
+        //todo
+      },
+      () => {
+        //todo
+      },
+      () => {
+        //todo
+      },
+      () => {
+        //todo
+      },
+      () => {
+        //todo
+      },
+      () => {
+        //todo
+      },
+      () => {
+        //todo
+      },
+      (_) => {
+        //todo
+      },
+      () => {
+        //todo
+      },
+      () => {
+        //todo
+      },
+      domain
     )
 
     setTimeout(reject, 2000)
@@ -47,16 +67,16 @@ export function startGame(
   socket: SocketIOClient.Socket,
   msg: SocketEvents.ClientUpdateSettings
 ): Promise<SocketEvents.ServerStartMsg> {
-  let emit_fn = () => socketClient.startGame(socket, msg)
-  let resolve_fn = (resolve: any) => socket.on("start", resolve)
+  const emit_fn = () => socketClient.startGame(socket, msg)
+  const resolve_fn = (resolve: any) => socket.on("start", resolve)
   return socketCall(emit_fn, resolve_fn)
 }
 
 export function stopGame(
   socket: SocketIOClient.Socket
 ): Promise<SocketEvents.ServerStartMsg> {
-  let emit_fn = () => socketClient.stopGame(socket)
-  let resolve_fn = (resolve: any) => socket.on("game finished", resolve)
+  const emit_fn = () => socketClient.stopGame(socket)
+  const resolve_fn = (resolve: any) => socket.on("game finished", resolve)
   return socketCall(emit_fn, resolve_fn)
 }
 
@@ -65,7 +85,7 @@ export async function makeGame(domain: string, username: string) {
     await httpHelpers.post(`${domain}/make`, `username=${username}&format=json`)
   ).json()
 
-  let { socket: socket } = await makeSocket(
+  const { socket: socket } = await makeSocket(
     domain,
     details.gameId,
     details.privateId
@@ -84,6 +104,6 @@ export async function joinGame(
       `code=${gameId}&username=${username}&format=json`
     )
   ).json()
-  let { socket: socket } = await makeSocket(domain, gameId, details.privateId)
+  const { socket: socket } = await makeSocket(domain, gameId, details.privateId)
   return socket
 }

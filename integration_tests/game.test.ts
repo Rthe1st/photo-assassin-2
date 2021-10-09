@@ -5,11 +5,11 @@ import * as socketHelpers from "./socketHelpers"
 
 import * as socketBots from "../src/server/socketBots"
 
-let domain = "https://localhost:3000"
+const domain = "https://localhost:3000"
 
 test("whole game", async () => {
   let details = await socketBots.makeGame("hostplayer", domain)
-  let { socket: player1, msg: initMessage } = await socketHelpers.makeSocket(
+  const { socket: player1, msg: initMessage } = await socketHelpers.makeSocket(
     domain,
     details.gameId,
     details.privateId
@@ -20,9 +20,9 @@ test("whole game", async () => {
     chatHistory: [],
   })
 
-  let gameId = details.gameId
+  const gameId = details.gameId
   details = await socketBots.joinGame("passiveplayer", gameId!, domain)
-  let { socket: player2, msg: initMessage2 } = await socketHelpers.makeSocket(
+  const { socket: player2, msg: initMessage2 } = await socketHelpers.makeSocket(
     domain,
     details.gameId,
     details.privateId
@@ -33,14 +33,14 @@ test("whole game", async () => {
     chatHistory: [],
   })
 
-  let gameSettings = {
+  const gameSettings = {
     gameLength: 60000,
     countDown: 0,
     proposedTargetList: [0, 1],
   }
 
-  let msg = await socketHelpers.startGame(player1, gameSettings)
-  let expectedGameState = {
+  const msg = await socketHelpers.startGame(player1, gameSettings)
+  const expectedGameState = {
     chosenSettings: {
       countDown: 0,
       gameLength: 60000,
@@ -66,7 +66,7 @@ test("whole game", async () => {
   }
   expect(msg).toMatchObject({ gameState: expectedGameState })
 
-  let finishedMsg = await socketHelpers.stopGame(player1)
+  const finishedMsg = await socketHelpers.stopGame(player1)
   expect(finishedMsg).toMatchObject({
     nextCode: expect.stringMatching(/[a-f\d]+-[a-f\d]+-\d/),
     winner: "game stopped",

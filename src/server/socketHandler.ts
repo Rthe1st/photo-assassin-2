@@ -112,7 +112,7 @@ export function chatMsg(
   // snipes must contain an image
   // but not all images have to be snipes
   // for example, to send a selfie
-  var wasSnipe =
+  const wasSnipe =
     msg.isSnipe && msg.image && game.subState == Game.inPlaySubStates.PLAYING
 
   logger.log("debug", "positionUpdate", {
@@ -125,9 +125,11 @@ export function chatMsg(
 
   // is there a better way of doing this?
   // we know socket IO turns the File type (client side) into a buffer
-  let image = msg.image as Buffer
+  const image = msg.image as Buffer
 
   let imageId: number | undefined
+  let botMessage: any
+  let snipeInfo: any
   if (image) {
     // 1000*1000 pixel image, 10 bytes per pixel
     // https://stackoverflow.com/questions/9806091/maximum-file-size-of-jpeg-image-with-known-dimensions
@@ -138,7 +140,7 @@ export function chatMsg(
       // todo: push message to client to explain the error
       return
     }
-    let res = Game.saveImage(game, image)
+    const res = Game.saveImage(game, image)
     imageId = res.imageId
     // because of this
     // https://developer.mozilla.org/en-US/docs/Web/JavaScript/EventLoop#run-to-completion
@@ -174,12 +176,15 @@ export function chatMsg(
         // for now, just leave it undefined so client sees loader image
       })
 
+    let gameOver: boolean
+
     if (wasSnipe) {
-      var {
-        botMessage: botMessage,
-        snipeInfo: snipeInfo,
-        gameOver: gameOver,
-      } = Game.snipe(game, publicId, imageId, msg.position)
+      ;({ botMessage, snipeInfo, gameOver } = Game.snipe(
+        game,
+        publicId,
+        imageId,
+        msg.position
+      ))
 
       logger.log("verbose", "Snipe", {
         gameCode: game.code,
@@ -193,7 +198,7 @@ export function chatMsg(
     }
   }
 
-  let clientState = Game.gameStateForClient(game)
+  const clientState = Game.gameStateForClient(game)
 
   // snipeInfo already contains imageID
   // maybe we should make this:
@@ -201,7 +206,7 @@ export function chatMsg(
   // instead (and store the text in those types as well)
   // this will also help with stoing non-snipe images on the game obvject
   // for lookup in the archieve page
-  var outgoingMsg: socketEvents.ServerChatMessage = {
+  const outgoingMsg: socketEvents.ServerChatMessage = {
     publicId: publicId,
     text: msg.text,
     imageId: imageId,
@@ -222,7 +227,7 @@ export function badSnipe(
   socket: SocketIO.Socket,
   publicId: number
 ) {
-  var undoneSnipeIndexes = Game.badSnipe(game, msg.snipeInfosIndex, publicId)
+  const undoneSnipeIndexes = Game.badSnipe(game, msg.snipeInfosIndex, publicId)
   if (undoneSnipeIndexes) {
     //we need to tell the client which snipes need ot be marked as canceled in the gui
     //undosnipe should probs return that
@@ -241,7 +246,7 @@ export function addUser(publicId: number, game: Game.Game) {
 }
 
 function finishGame(game: Game.Game, winner: string, io: SocketIO.Server) {
-  let nextGame = socketInterface.setup(io)
+  const nextGame = socketInterface.setup(io)
 
   // we wait for the gamestate to get uploaded
   // and only then tell clients the game is over
@@ -265,9 +270,9 @@ export function checkGameTiming(
   games: Map<string, Game.Game>,
   io: SocketIO.Server
 ) {
-  for (let [gameId, game] of games.entries()) {
-    let namespace = game.namespace
-    let now = Date.now()
+  for (const [gameId, game] of games.entries()) {
+    const namespace = game.namespace
+    const now = Date.now()
     //todo: need a record when we're in count down vs real game
     if (
       game.state == Game.states.IN_PLAY &&
@@ -283,7 +288,7 @@ export function checkGameTiming(
         gameState: game.state,
       })
     } else if (game.state == Game.states.IN_PLAY) {
-      var timeLeft =
+      const timeLeft =
         game.startTime! +
         game.chosenSettings.countDown +
         game.chosenSettings.gameLength -
@@ -305,7 +310,7 @@ export function checkGameTiming(
       ) {
         game.subState = Game.inPlaySubStates.PLAYING
       }
-      var forClient: socketEvents.ServerTimeLeftMsg = {
+      const forClient: socketEvents.ServerTimeLeftMsg = {
         gameState: Game.gameStateForClient(game),
       }
       socketInterface.timeLeft(namespace!, forClient)

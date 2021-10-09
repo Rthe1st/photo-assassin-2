@@ -1,7 +1,7 @@
 // source: https://www.ef.edu/english-resources/english-vocabulary/top-1000-words/
 // but with "n't" switched for "nub"
 // and all lower case'd
-export let commonWords = [
+export const commonWords = [
   "a",
   "ability",
   "able",

@@ -1,7 +1,8 @@
+// webpack doesn't allow esm imports without babel
+/* eslint @typescript-eslint/no-var-requires:"off" */
 const dotenv = require("dotenv")
 const path = require("path")
 const webpack = require("webpack")
-
 const CopyPlugin = require("copy-webpack-plugin")
 const HtmlWebpackPlugin = require("html-webpack-plugin")
 
@@ -15,7 +16,7 @@ if (envs == undefined) {
 
 // error if variables we depend on aren't set
 // because I lost 2 hours from setting BROWSER_SENTRY
-let expected_vars = [
+const expected_vars = [
   "BROWSER_SENTRY",
   "NODE_SENTRY",
   "NODE_ENV",
@@ -23,14 +24,14 @@ let expected_vars = [
   "SENTRY_TESTS",
   "GOOGLE_MAPS_KEY",
 ]
-for (let env of expected_vars) {
+for (const env of expected_vars) {
   if (envs[env] == undefined) {
     console.log(env)
     throw Error(`no ${env} environment variable`)
   }
 }
 
-let errorPages = [
+const errorPages = [
   {
     name: "game_doesnt_exist.html",
     message: "Can't join - game doesn't exist",
@@ -52,10 +53,10 @@ let errorPages = [
 function generateStaticErrorPages(
   errorPages: { name: string; message: string }[]
 ) {
-  let plugins = []
+  const plugins = []
 
-  for (let errorPage of errorPages) {
-    let plugin = new HtmlWebpackPlugin({
+  for (const errorPage of errorPages) {
+    const plugin = new HtmlWebpackPlugin({
       template: `./assets/templates/error.html`, // relative path to the HTML files
       filename: errorPage.name, // output HTML files
       templateParameters: {

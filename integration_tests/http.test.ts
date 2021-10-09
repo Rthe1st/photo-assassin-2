@@ -13,7 +13,7 @@ import { jest } from "@jest/globals"
 // needed for messy socket tests that don't clean themselves up well
 jest.setTimeout(8000)
 
-let domain = "https://localhost:3000"
+const domain = "https://localhost:3000"
 
 const agent = new https.Agent({
   rejectUnauthorized: false,
@@ -48,10 +48,10 @@ test("GET / for non-existent game", async () => {
 })
 
 test("GET / for game that already started", async () => {
-  let [player1, gameId] = await socketHelpers.makeGame(domain, "player1")
-  let player2 = await socketHelpers.joinGame(domain, gameId, "player2")
+  const [player1, gameId] = await socketHelpers.makeGame(domain, "player1")
+  const player2 = await socketHelpers.joinGame(domain, gameId, "player2")
   //todo: move into some default settings object
-  let gameSettings = {
+  const gameSettings = {
     gameLength: 60000,
     countDown: 0,
     proposedTargetList: [0, 1],
@@ -71,7 +71,7 @@ test("GET / for game that already started", async () => {
 // test /make
 
 test("POST /make", async () => {
-  let requestOptions: RequestInit = { redirect: "manual" }
+  const requestOptions: RequestInit = { redirect: "manual" }
 
   const response = await httpHelpers.post(
     `${domain}/make`,
@@ -104,7 +104,7 @@ test("POST /make JSON", async () => {
   // and auth using the private ID (/an apikey)
   // expect(response.headers.raw()).not.toHaveProperty('set-cookie')
 
-  let json = await response.json()
+  const json = await response.json()
 
   // todo: workout how to only check publicId is positive int
   expect(json).toEqual({
@@ -139,11 +139,11 @@ test("dev error handler", async () => {
 // test /join
 
 test("POST /join valid game", async () => {
-  let gameDetails = await (
+  const gameDetails = await (
     await httpHelpers.post(`${domain}/make`, "username=player1&format=json")
   ).json()
 
-  let requestOptions: RequestInit = { redirect: "manual" }
+  const requestOptions: RequestInit = { redirect: "manual" }
   const response = await httpHelpers.post(
     `${domain}/join`,
     `username=player2&code=${gameDetails.gameId}`,
@@ -162,11 +162,11 @@ test("POST /join valid game", async () => {
 })
 
 test("POST /join json", async () => {
-  let gameDetails = await (
+  const gameDetails = await (
     await httpHelpers.post(`${domain}/make`, "username=player1&format=json")
   ).json()
 
-  let requestOptions: RequestInit = { redirect: "manual" }
+  const requestOptions: RequestInit = { redirect: "manual" }
   const response = await httpHelpers.post(
     `${domain}/join`,
     `username=player2&code=${gameDetails.gameId}&format=json`,
@@ -175,7 +175,7 @@ test("POST /join json", async () => {
   expect(response.status).toBe(200)
   checkCookies(response.headers)
 
-  let json = await response.json()
+  const json = await response.json()
 
   // todo: workout how to only check publicId is positive int
   expect(json).toEqual({
@@ -193,7 +193,7 @@ test("POST /join no code", async () => {
 })
 
 test("POST /join no username", async () => {
-  let gameDetails = await (
+  const gameDetails = await (
     await httpHelpers.post(`${domain}/make`, "username=player1&format=json")
   ).json()
 
@@ -217,10 +217,10 @@ test("POST /join invalid code", async () => {
 })
 
 test("POST /join for game that already started", async () => {
-  let [player1, gameId] = await socketHelpers.makeGame(domain, "player1")
-  let player2 = await socketHelpers.joinGame(domain, gameId, "player2")
+  const [player1, gameId] = await socketHelpers.makeGame(domain, "player1")
+  const player2 = await socketHelpers.joinGame(domain, gameId, "player2")
   //todo: move into some default settings object
-  let gameSettings = {
+  const gameSettings = {
     gameLength: 60000,
     countDown: 0,
     proposedTargetList: [0, 1],

@@ -24,12 +24,12 @@ function updatePlaceholderChatElement(
   snipeInfo?: SharedGame.SnipeInfo,
   lowResUrl?: string | undefined
 ) {
-  let messages = document.getElementById("messages")!
+  const messages = document.getElementById("messages")!
   messages.removeChild(li)
   messages.appendChild(li)
   li.setAttribute("class", "own-message")
   if (imageId != undefined) {
-    var img = new Image()
+    const img = new Image()
     img.classList.add("message-image")
     img.setAttribute("id", `image-${imageId}`)
     if (lowResUrl != undefined) {
@@ -48,17 +48,19 @@ function updatePlaceholderChatElement(
     // maybe no, because we should just show the low res image when clicked
     // if the full one isn't ready
     img.onclick = () => showSnipedScreen(snipeScreenText, imageId)
-    let placeHolderImg = <HTMLImageElement>document.getElementById(`image--1`)!
+    const placeHolderImg = <HTMLImageElement>(
+      document.getElementById(`image--1`)!
+    )
     placeHolderImg.replaceWith(img)
     if (snipeInfo != undefined) {
       // img.setAttribute('id', `snipe-${snipeInfo.index}`)
-      var voteButton = document.createElement("button")
+      const voteButton = document.createElement("button")
       voteButton.setAttribute("class", "vote-button")
-      let targetUser = game.getUsername(snipeInfo.target)
+      const targetUser = game.getUsername(snipeInfo.target)
       voteButton.innerText = `${targetUser} not in the picture?`
       voteButton.onclick = function () {
         if (confirm(`Was ${targetUser} not in the picture?`)) {
-          let msg: socketClient.ClientBadSnipe = {
+          const msg: socketClient.ClientBadSnipe = {
             snipeInfosIndex: snipeInfo.index,
           }
           socketClient.badSnipe(socket, msg)
@@ -82,8 +84,8 @@ function createChatElement(
   snipeInfo?: SharedGame.SnipeInfo,
   lowResUrl?: string | undefined
 ) {
-  var li = document.createElement("li")
-  let previousMessage = game.getLastMessage()
+  const li = document.createElement("li")
+  const previousMessage = game.getLastMessage()
   let previousSender
   if (previousMessage) {
     previousSender = game.getUsername(previousMessage.publicId)
@@ -93,14 +95,14 @@ function createChatElement(
   } else {
     li.setAttribute("class", "message-li")
     if (previousSender !== sender) {
-      var span = document.createElement("span")
+      const span = document.createElement("span")
       span.innerText = sender
       span.classList.add("username")
       li.appendChild(span)
     }
   }
   if (imageId != undefined) {
-    var img = new Image()
+    const img = new Image()
     img.classList.add("message-image")
     img.setAttribute("id", `image-${imageId}`)
     if (lowResUrl != undefined) {
@@ -122,13 +124,13 @@ function createChatElement(
     li.appendChild(img)
     if (snipeInfo != undefined) {
       // img.setAttribute('id', `snipe-${snipeInfo.index}`)
-      var voteButton = document.createElement("button")
+      const voteButton = document.createElement("button")
       voteButton.setAttribute("class", "vote-button")
-      let targetUser = game.getUsername(snipeInfo.target)
+      const targetUser = game.getUsername(snipeInfo.target)
       voteButton.innerText = `Was ${targetUser} not in the picture?`
       voteButton.onclick = function () {
         if (confirm(`Was ${targetUser} not in the picture?`)) {
-          let msg: socketClient.ClientBadSnipe = {
+          const msg: socketClient.ClientBadSnipe = {
             snipeInfosIndex: snipeInfo.index,
           }
           socketClient.badSnipe(socket, msg)
@@ -140,11 +142,11 @@ function createChatElement(
     }
   }
   if (message != "") {
-    let paragraph = document.createElement("p")
+    const paragraph = document.createElement("p")
     paragraph.innerText = message
     li.appendChild(paragraph)
   }
-  let messages = document.getElementById("messages")!
+  const messages = document.getElementById("messages")!
   messages.appendChild(li)
   if (snipeInfo != undefined && snipeInfo.undone) {
     markSnipeAsBad(snipeInfo.index)
@@ -165,7 +167,7 @@ function processMsg(
     msg.publicId == publicId &&
     game.clientOnly.unconfirmedMessages[msg.nonce]
   ) {
-    let li = game.clientOnly.unconfirmedMessages[msg.nonce].placeHolderMessage
+    const li = game.clientOnly.unconfirmedMessages[msg.nonce].placeHolderMessage
     updatePlaceholderChatElement(
       li,
       game.getUsername(msg.publicId),
@@ -233,7 +235,7 @@ function photoInput(event: Event) {
   // then we don't want to add yet another state
   if (history.state == null || history.state["type"] == "photo-preview") {
     // history for back button
-    let message = (<HTMLInputElement>document.getElementById("message")).value
+    const message = (<HTMLInputElement>document.getElementById("message")).value
     history.pushState(
       { type: "photo-preview", msg: message, imageId: "" },
       "",
@@ -252,11 +254,11 @@ function photoInput(event: Event) {
   ;(<HTMLInputElement>document.getElementById("photo-message")).value = (<
     HTMLInputElement
   >document.getElementById("message")).value
-  let img = <HTMLImageElement>document.getElementById("preview")
+  const img = <HTMLImageElement>document.getElementById("preview")
 
   //todo: can a change event leave files undefined?
   img.src = URL.createObjectURL((<HTMLInputElement>event.target).files![0])
-  let target = game.getTarget(publicId)
+  const target = game.getTarget(publicId)
   document.getElementById(
     "mark-snipe-question"
   )!.innerText = `Is ${target} in the picture?`
@@ -276,9 +278,9 @@ function messagePlaceholder(text: string, has_photo = false) {
     element = createChatElement(game.getUsername(publicId), text)
   }
 
-  var array = new Uint32Array(1)
+  const array = new Uint32Array(1)
   window.crypto.getRandomValues(array)
-  let nonce = array[0]
+  const nonce = array[0]
   game.clientOnly.unconfirmedMessages[nonce] = {
     placeHolderMessage: element,
   }
@@ -286,12 +288,12 @@ function messagePlaceholder(text: string, has_photo = false) {
 }
 
 function sendTextMessage(ev: MouseEvent) {
-  let messageElement = <HTMLInputElement>document.getElementById("message")
+  const messageElement = <HTMLInputElement>document.getElementById("message")
   if (messageElement.value == "") {
     return
   }
-  let nonce = messagePlaceholder(messageElement.value)
-  let message: socketClient.ClientChatMessage = {
+  const nonce = messagePlaceholder(messageElement.value)
+  const message: socketClient.ClientChatMessage = {
     text: messageElement.value,
     position: gps.position,
     image: undefined,
@@ -308,19 +310,21 @@ function sendTextMessage(ev: MouseEvent) {
 }
 
 function sendPhotoMessage(ev: MouseEvent) {
-  let text = (<HTMLInputElement>document.getElementById("photo-message")).value
+  const text = (<HTMLInputElement>document.getElementById("photo-message"))
+    .value
 
-  let nonce = messagePlaceholder(text, true)
+  const nonce = messagePlaceholder(text, true)
 
-  var file: File = (<HTMLInputElement>document.getElementById("photo-input"))
+  const file: File = (<HTMLInputElement>document.getElementById("photo-input"))
     .files![0]
 
-  let isSnipe = (<HTMLInputElement>document.getElementById("is-snipe")).checked
+  const isSnipe = (<HTMLInputElement>document.getElementById("is-snipe"))
+    .checked
   file
     .arrayBuffer()
     .then(imageManipulation.process)
     .then((reducedArraryBuffer) => {
-      let message = {
+      const message = {
         text: text,
         image: reducedArraryBuffer,
         position: gps.position,
@@ -347,19 +351,19 @@ function sendPhotoMessage(ev: MouseEvent) {
 }
 
 function setCurrentTarget() {
-  var targetElement = document.getElementById("target")!
+  const targetElement = document.getElementById("target")!
   targetElement.innerText = game.getTarget(publicId, undefined)
 }
 
-function updateTimeLeft(sync: boolean = true) {
-  let timeLeftElement = <HTMLParagraphElement>(
+function updateTimeLeft(sync = true) {
+  const timeLeftElement = <HTMLParagraphElement>(
     document.getElementById("time-left")!
   )
   let timeLeft = undefined
-  let previousUpdateTime = whenTimeWasLastUpdated
+  const previousUpdateTime = whenTimeWasLastUpdated
   whenTimeWasLastUpdated = Date.now()
   if (sync) {
-    let formatedSubState =
+    const formatedSubState =
       game.game.subState![0].toUpperCase() +
       game.game.subState!.substr(1).toLowerCase()
     ;(<HTMLParagraphElement>document.getElementById("sub-state")!).innerText =
@@ -374,22 +378,22 @@ function updateTimeLeft(sync: boolean = true) {
   } else {
     // todo: we should probably update it on the local gamestate
     // elapsed time is in ms
-    let elapsedTime = whenTimeWasLastUpdated - previousUpdateTime
+    const elapsedTime = whenTimeWasLastUpdated - previousUpdateTime
     localTimeLeft -= elapsedTime
     if (localTimeLeft < 0) {
       localTimeLeft = 0
     }
     timeLeft = localTimeLeft
   }
-  let timeInSeconds = timeLeft! / 1000
-  let timeMinutes = Math.floor(timeInSeconds / 60)
-  let timeSeconds = Math.floor(timeInSeconds % 60)
+  const timeInSeconds = timeLeft! / 1000
+  const timeMinutes = Math.floor(timeInSeconds / 60)
+  const timeSeconds = Math.floor(timeInSeconds % 60)
   timeLeftElement.innerText = `${timeMinutes}m${timeSeconds}s`
 }
 
 function setSnipe(value: boolean) {
   // ui is a bit confusing, make clearer
-  var isSnipe = <HTMLInputElement>document.getElementById("is-snipe")
+  const isSnipe = <HTMLInputElement>document.getElementById("is-snipe")
   if (value) {
     isSnipe.checked = true
     document.getElementById("mark-snipe")!.innerText = "Yes ✓"
@@ -434,7 +438,7 @@ function inPlayView() {
 }
 
 function readOnlyView() {
-  let settings = game.getSettings()
+  const settings = game.getSettings()
   refreshProposedTargets(settings.proposedTargetList)
   ;(<HTMLInputElement>document.getElementById("game-length")).value = String(
     settings.gameLength / 1000 / 60
@@ -449,17 +453,17 @@ function readOnlyView() {
   ;(<HTMLButtonElement>document.getElementById("shuffle-targets")).disabled =
     true
   resetUserList(game.game.userList)
-  let deleteButtons = document.getElementsByClassName("delete-user-button")
+  const deleteButtons = document.getElementsByClassName("delete-user-button")
   for (let i = 0; i < deleteButtons.length; i++) {
     ;(<HTMLButtonElement>deleteButtons[i]).hidden = true
   }
 }
 
 function markSnipeAsBad(snipeInfosIndex: number) {
-  let imageId = game.getSnipeImageId(snipeInfosIndex)
-  let snipeImage = document.getElementById(`image-${imageId}`)!
+  const imageId = game.getSnipeImageId(snipeInfosIndex)
+  const snipeImage = document.getElementById(`image-${imageId}`)!
   if (!document.getElementById(`snipe-text-${snipeInfosIndex}`)) {
-    var undotext = document.createElement("p")
+    const undotext = document.createElement("p")
     undotext.innerText = "BAD SNIPE"
     undotext.setAttribute("class", "undotext")
     undotext.setAttribute("id", `snipe-text-${snipeInfosIndex}`)
@@ -471,13 +475,13 @@ function markSnipeAsBad(snipeInfosIndex: number) {
 }
 
 function refreshProposedTargets(proposedTargetList: number[]) {
-  let targetList = document.getElementById("proposed-target-list")!
+  const targetList = document.getElementById("proposed-target-list")!
   targetList.innerHTML = ""
-  for (var [sniper, target] of game.getProposedTargetPairs(
+  for (const [sniper, target] of game.getProposedTargetPairs(
     proposedTargetList
   )) {
-    var element = document.createElement("li")
-    var text = `${sniper}: ${target}`
+    const element = document.createElement("li")
+    const text = `${sniper}: ${target}`
     element.innerText = text
     targetList.appendChild(element)
   }
@@ -486,9 +490,9 @@ function refreshProposedTargets(proposedTargetList: number[]) {
 function initialization(msg: socketClient.ServerInitializationMsg) {
   console.log("initialized")
   game.update(msg.gameState)
-  for (let message of msg.chatHistory) {
+  for (const message of msg.chatHistory) {
     if (message.imageId != undefined) {
-      let lowResUrl = game.getImageUrl(message.imageId, true)
+      const lowResUrl = game.getImageUrl(message.imageId, true)
       // lowResUrl could still come back undefined
       // if the image has been processed by the server
       // but the call to upload it to gcloud hasn't finished yet
@@ -497,7 +501,7 @@ function initialization(msg: socketClient.ServerInitializationMsg) {
       processMsg(message, true)
     }
   }
-  let userNameElements = document.getElementsByClassName("current-username")
+  const userNameElements = document.getElementsByClassName("current-username")
   for (let index = 0; index < userNameElements.length; index++) {
     ;(<HTMLElement>userNameElements[index]).innerText =
       game.getUsername(publicId)
@@ -505,7 +509,7 @@ function initialization(msg: socketClient.ServerInitializationMsg) {
   //the first time, before they move
   gps.setup((position) => {
     socketClient.positionUpdate(socket, position)
-    let googlePosition = { lat: position.latitude!, lng: position.longitude! }
+    const googlePosition = { lat: position.latitude!, lng: position.longitude! }
     gameMap.drawPlayer(googlePosition)
     gameMap.center(googlePosition)
   })
@@ -524,7 +528,8 @@ function initialization(msg: socketClient.ServerInitializationMsg) {
         document.getElementById("start")!.removeAttribute("disabled")
       }
       resetUserList(game.game.userList)
-      let deleteButtons = document.getElementsByClassName("delete-user-button")
+      const deleteButtons =
+        document.getElementsByClassName("delete-user-button")
       for (let i = 0; i < deleteButtons.length; i++) {
         ;(<HTMLButtonElement>deleteButtons[i]).hidden = false
       }
@@ -535,13 +540,13 @@ function initialization(msg: socketClient.ServerInitializationMsg) {
 function badSnipe(msg: socketClient.ServerBadSnipeMsg) {
   game.update(msg.gameState)
   setCurrentTarget()
-  for (let snipeInfoIndex of msg.undoneSnipeIndexes) {
+  for (const snipeInfoIndex of msg.undoneSnipeIndexes) {
     markSnipeAsBad(snipeInfoIndex)
   }
 }
 
 function resetUserList(userList: SharedGame.UserList) {
-  var userListElement = document.getElementById("user-list")!
+  const userListElement = document.getElementById("user-list")!
   userListElement.innerHTML = ""
   for (const [publicId, user] of Object.entries(userList)) {
     userListElement.append(
@@ -551,20 +556,21 @@ function resetUserList(userList: SharedGame.UserList) {
 }
 
 function createUserElement(username: string, publicId: number) {
-  var li = document.createElement("li")
+  const li = document.createElement("li")
   li.setAttribute("class", "user-info-area")
-  var text = document.createElement("p")
+  const text = document.createElement("p")
   text.setAttribute("class", "user-joined-text")
   text.innerText = username
   li.appendChild(text)
+  let remove: HTMLButtonElement
   if (publicId == 0) {
-    var remove = document.createElement("button")
+    remove = document.createElement("button")
     remove.setAttribute("class", "delete-user-button")
     remove.disabled = true
     remove.innerText = "Admin"
     li.appendChild(remove)
   } else {
-    var remove = document.createElement("button")
+    remove = document.createElement("button")
     remove.setAttribute("id", `delete-user-${publicId}`)
     remove.setAttribute("class", "delete-user-button")
     remove.innerText = "Remove"
@@ -585,8 +591,8 @@ function newUser(msg: socketClient.NewUserMsg) {
   if (publicId == 0 && Object.entries(game.game.userList).length > 1) {
     document.getElementById("start")!.removeAttribute("disabled")
   }
-  let newUser = game.getUsername(msg.publicId)
-  var userList = document.getElementById("user-list")!
+  const newUser = game.getUsername(msg.publicId)
+  const userList = document.getElementById("user-list")!
   userList.append(createUserElement(newUser, msg.publicId))
 }
 
@@ -614,7 +620,7 @@ function start(msg: socketClient.ServerStartMsg) {
 }
 
 function finished() {
-  location.reload(true)
+  location.reload()
 }
 
 function timeLeft(msg: socketClient.ServerTimeLeftMsg) {
@@ -624,11 +630,11 @@ function timeLeft(msg: socketClient.ServerTimeLeftMsg) {
 
 function resizeDone(msg: socketClient.ServerResizeDone) {
   game.game.lowResUploadsDone[msg.imageId] = msg.url
-  let placeHolderImage = <HTMLImageElement>(
+  const placeHolderImage = <HTMLImageElement>(
     document.getElementById(`image-${msg.imageId}`)
   )
   if (placeHolderImage != null) {
-    var img = new Image()
+    const img = new Image()
     img.classList.add("message-image")
     img.setAttribute("id", `image-${msg.imageId}`)
     img.src = msg.url
@@ -640,8 +646,8 @@ function resizeDone(msg: socketClient.ServerResizeDone) {
 function imageUploadDone(msg: socketClient.ServerImageUploadDone) {
   game.game.imageUploadsDone[msg.imageId] = msg.url
   if (document.getElementById("sniped-screen")!.hidden == false) {
-    let previousSnipedScreen = document.getElementById("snipe-image")!
-    var img = new Image()
+    const previousSnipedScreen = document.getElementById("snipe-image")!
+    const img = new Image()
     img.setAttribute("id", "snipe-image")
     img.src = msg.url
     previousSnipedScreen.replaceWith(img)
@@ -659,7 +665,7 @@ function chatMessage(msg: socketClient.ServerChatMessage) {
   setCurrentTarget()
 
   //if we're scrolled to the bottom of messages, stick to the bottom
-  let messages = document.getElementById("messages-container")!
+  const messages = document.getElementById("messages-container")!
   // if(messages.scrollTop == (messages.scrollHeight - messages.offsetHeight)){
   messages.scrollTo(0, messages.scrollHeight)
   // }
@@ -715,7 +721,7 @@ function showSnipedScreen(
     )
   }
   document.getElementById("sniped-alert-text")!.innerText = msg
-  let imageUrl = game.getImageUrl(imageId, false)
+  const imageUrl = game.getImageUrl(imageId, false)
 
   // we always set the image to the loading image first
   // because if the real image is not in the browser cache it takes time to load
@@ -741,19 +747,19 @@ function showSnipedScreen(
 }
 
 function showGameInfo() {
-  let gameInfoDiv = document.getElementById("game-info")!
-  let middle = <HTMLElement>document.getElementsByClassName("middle")[0]
-  let sendMessageForm = document.getElementById("send-message-form")!
+  const gameInfoDiv = document.getElementById("game-info")!
+  const middle = <HTMLElement>document.getElementsByClassName("middle")[0]
+  const sendMessageForm = document.getElementById("send-message-form")!
   if (gameInfoDiv.hidden) {
     gameInfoDiv.hidden = false
     sendMessageForm.hidden = true
     middle.hidden = true
-    let playerProgressList = document.getElementById("player-progress")!
+    const playerProgressList = document.getElementById("player-progress")!
     playerProgressList.innerHTML = ""
-    for (let [publicIdString, user] of Object.entries(game.game.userList)) {
-      let publicId = parseInt(publicIdString)
-      let playerElement = document.createElement("li")
-      let [got, remaining] = game.getPlayerProgress(publicId)
+    for (const [publicIdString, user] of Object.entries(game.game.userList)) {
+      const publicId = parseInt(publicIdString)
+      const playerElement = document.createElement("li")
+      const [got, remaining] = game.getPlayerProgress(publicId)
       playerElement.innerText =
         user["username"] +
         ", current target: " +
@@ -772,11 +778,11 @@ function showGameInfo() {
 }
 
 function updateSettings() {
-  var gameLength =
+  const gameLength =
     Number((<HTMLInputElement>document.getElementById("game-length")).value) *
     1000 *
     60
-  var countDown =
+  const countDown =
     Number((<HTMLInputElement>document.getElementById("count-down")).value) *
     1000 *
     60
@@ -790,15 +796,15 @@ function updateSettings() {
 // gameId needs to be decoded because it contains a '/'
 // which gets URI encoded otherwise
 const gameId = decodeURIComponent(
-  document.cookie.replace(/(?:(?:^|.*;\s*)gameId\s*\=\s*([^;]*).*$)|^.*$/, "$1")
+  document.cookie.replace(/(?:(?:^|.*;\s*)gameId\s*=\s*([^;]*).*$)|^.*$/, "$1")
 )
 const privateId = document.cookie.replace(
-  /(?:(?:^|.*;\s*)privateId\s*\=\s*([^;]*).*$)|^.*$/,
+  /(?:(?:^|.*;\s*)privateId\s*=\s*([^;]*).*$)|^.*$/,
   "$1"
 )
 const publicId = parseInt(
   document.cookie.replace(
-    /(?:(?:^|.*;\s*)publicId\s*\=\s*([^;]*).*$)|^.*$/,
+    /(?:(?:^|.*;\s*)publicId\s*=\s*([^;]*).*$)|^.*$/,
     "$1"
   )
 )
@@ -808,7 +814,7 @@ let proposedTargetList: number[]
 let gameMap: gmap.Gmap
 
 window.onload = function () {
-  let notification = new notifications.GameNotification("notification")
+  const notification = new notifications.GameNotification("notification")
 
   // do in onload, so that we can't accidentally receive a socket event
   // before dom loaded
@@ -887,22 +893,20 @@ window.onload = function () {
   document
     .getElementById("send-photo-message")!
     .addEventListener("click", sendPhotoMessage)
-
   ;(<HTMLInputElement>document.getElementById("count-down")).onchange =
     updateSettings
-
   ;(<HTMLInputElement>document.getElementById("game-length")).onchange =
     updateSettings
 
   document.getElementById("start")!.onclick = function (_) {
     if (confirm("Start the game?")) {
-      var gameLength =
+      const gameLength =
         Number(
           (<HTMLInputElement>document.getElementById("game-length")).value
         ) *
         1000 *
         60
-      var countDown =
+      const countDown =
         Number(
           (<HTMLInputElement>document.getElementById("count-down")).value
         ) *
@@ -931,12 +935,12 @@ window.onload = function () {
     })
   }
 
-  for (let element of document.getElementsByClassName("toggle-map")) {
+  for (const element of document.getElementsByClassName("toggle-map")) {
     ;(<HTMLElement>element).onclick = function (_) {
-      let mapElement = document.getElementById("map")!
-      let middle = document.getElementById("not-started-settings")!
-      let middleInPlay = document.getElementById("messages-container")!
-      let sendMsg = document.getElementById("send-message-form")!
+      const mapElement = document.getElementById("map")!
+      const middle = document.getElementById("not-started-settings")!
+      const middleInPlay = document.getElementById("messages-container")!
+      const sendMsg = document.getElementById("send-message-form")!
       if (mapElement.hidden) {
         mapElement.hidden = false
         middle.hidden = true

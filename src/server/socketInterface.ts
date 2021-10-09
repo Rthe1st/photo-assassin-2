@@ -6,8 +6,8 @@ import * as socketHandler from "./socketHandler"
 Game.setup()
 
 export function setup(io: SocketIO.Server) {
-  var game = Game.generateGame()
-  var namespace = io.of(`/game/${game.code}`)
+  const game = Game.generateGame()
+  const namespace = io.of(`/game/${game.code}`)
   // I don't like namespace getting registered on game after game is already made
   game.namespace = namespace
   // register connection after setting game space to prevent race condition
@@ -21,16 +21,16 @@ function socketConnect(
   game: Game.Game,
   io: SocketIO.Server
 ) {
-  var gameId = socket.nsp.name.substr("/game/".length)
+  const gameId = socket.nsp.name.substr("/game/".length)
 
   if (game == undefined) {
     logger.log("verbose", `invalid game ${gameId}`)
     return
   }
-  let privateId = socket.handshake.query.privateId
+  const privateId = socket.handshake.query.privateId
 
   //todo: allow sockets to connect in "view only" mode if they're not players
-  let publicId = game.idMapping.get(privateId)!
+  const publicId = game.idMapping.get(privateId)!
   if (publicId == undefined) {
     logger.log("verbose", `invalid privateId ${privateId}`)
     return
@@ -41,7 +41,7 @@ function socketConnect(
     gameCode: gameId,
   })
 
-  let initializationMsg: socketEvents.ServerInitializationMsg = {
+  const initializationMsg: socketEvents.ServerInitializationMsg = {
     gameState: Game.gameStateForClient(game),
     chatHistory: game.chatHistory,
   }

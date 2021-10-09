@@ -13,8 +13,8 @@ export class GameNotification {
     this.notificationClassName = notificationClassName
   }
 
-  notify(text: string, displayTime = this.defaultDisplayTime) {
-    for (let element of document.getElementsByClassName(
+  notify(text: string, displayTime = this.defaultDisplayTime): void {
+    for (const element of document.getElementsByClassName(
       this.notificationClassName
     ) as HTMLCollectionOf<HTMLElement>) {
       element.innerText = text
@@ -26,7 +26,7 @@ export class GameNotification {
     setTimeout(() => {
       // only hide if no other notify calls been made while we were waiting
       if (this.lastSymbol == symbol) {
-        for (let element of document.getElementsByClassName(
+        for (const element of document.getElementsByClassName(
           this.notificationClassName
         ) as HTMLCollectionOf<HTMLElement>) {
           element.hidden = true

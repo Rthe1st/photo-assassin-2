@@ -75,13 +75,13 @@ export class MapData {
   hidePlayer(playerPublicId: number) {
     this.playerPaths[playerPublicId].setMap(null)
     this.rawPlayerPaths[playerPublicId].setMap(null)
-    for (let snipe of this.playerSnipes[playerPublicId]) {
+    for (const snipe of this.playerSnipes[playerPublicId]) {
       snipe.marker.setMap(null)
       if (snipe.arrow) {
         snipe.arrow.setMap(null)
       }
     }
-    for (let point of this.points[playerPublicId]) {
+    for (const point of this.points[playerPublicId]) {
       point.setMap(null)
     }
   }
@@ -105,13 +105,13 @@ export class MapData {
       this.rawPlayerPaths[playerPublicId].setMap(this.map)
     }
 
-    let positions = this.gameState.positions![playerPublicId]
-    let path = []
-    for (var position of positions) {
+    const positions = this.gameState.positions![playerPublicId]
+    const path = []
+    for (const position of positions) {
       if (position.timestamp! < minTime) {
         continue
       }
-      let rawLatlng: google.maps.ReadonlyLatLngLiteral = {
+      const rawLatlng: google.maps.ReadonlyLatLngLiteral = {
         lat: position.latitude!,
         lng: position.longitude!,
       }
@@ -148,14 +148,14 @@ export class MapData {
       this.playerPaths[playerPublicId].setMap(this.map)
     }
 
-    let positions = this.gameState.positions![playerPublicId]
-    let path = []
+    const positions = this.gameState.positions![playerPublicId]
+    const path = []
     const kalmanFilter = new kalman.GPSKalmanFilter()
-    for (var position of positions) {
+    for (const position of positions) {
       if (position.timestamp! < minTime) {
         continue
       }
-      let updatedCoord = kalmanFilter.process(
+      const updatedCoord = kalmanFilter.process(
         position.latitude!,
         position.longitude!,
         position.accuracy!,
@@ -163,7 +163,7 @@ export class MapData {
       )
       const estLongitude = updatedCoord[0]
       const estLatitude = updatedCoord[1]
-      let latlng: google.maps.ReadonlyLatLngLiteral = {
+      const latlng: google.maps.ReadonlyLatLngLiteral = {
         lat: estLatitude,
         lng: estLongitude,
       }
@@ -183,12 +183,12 @@ export class MapData {
     minTime: number,
     maxTime: number
   ) {
-    let positions = this.gameState.positions![playerPublicId]
+    const positions = this.gameState.positions![playerPublicId]
 
     if (!(playerPublicId in this.points)) {
       this.points[playerPublicId] = []
-      for (var position of positions) {
-        let rawLatlng: google.maps.ReadonlyLatLngLiteral = {
+      for (const position of positions) {
+        const rawLatlng: google.maps.ReadonlyLatLngLiteral = {
           lat: position.latitude!,
           lng: position.longitude!,
         }
@@ -207,8 +207,8 @@ export class MapData {
       }
     }
 
-    for (var index = 0; index < positions.length; index += 1) {
-      let position = positions[index]
+    for (let index = 0; index < positions.length; index += 1) {
+      const position = positions[index]
       if (position.timestamp! < minTime) {
         this.points[playerPublicId][index].setMap(null)
       } else if (position.timestamp! > maxTime) {
@@ -223,11 +223,11 @@ export class MapData {
     playerPublicId: number,
     clickHandler: (title: string, imageId: number) => void
   ) {
-    let snipes = Game.getSnipeInfos(playerPublicId)
+    const snipes = Game.getSnipeInfos(playerPublicId)
     //todo: plot non-snipe images as well
     if (!(playerPublicId in this.playerSnipes)) {
       this.playerSnipes[playerPublicId] = []
-      for (let snipeInfo of snipes) {
+      for (const snipeInfo of snipes) {
         if (snipeInfo.undone) {
           //todo: show them but greyed out or w/e
           continue
@@ -243,9 +243,9 @@ export class MapData {
           // middle of the map? interpolation between known positions?
           latlng = { lat: 0, lng: 0 }
         }
-        let target = Game.getUsername(snipeInfo.target)
-        let title = `${playerPublicId} got ${target}`
-        var marker = new google.maps.Marker({
+        const target = Game.getUsername(snipeInfo.target)
+        const title = `${playerPublicId} got ${target}`
+        const marker = new google.maps.Marker({
           position: latlng,
           title: title,
         })
@@ -254,17 +254,17 @@ export class MapData {
           clickHandler(title, snipeInfo.imageId)
         })
 
-        var obj: PlayerSnipe = { marker: marker, arrow: undefined }
+        const obj: PlayerSnipe = { marker: marker, arrow: undefined }
 
         if (snipeInfo.targetPosition != undefined) {
-          var lineSymbol = {
+          const lineSymbol = {
             path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
           }
-          var targetLatLng: google.maps.ReadonlyLatLngLiteral = {
+          const targetLatLng: google.maps.ReadonlyLatLngLiteral = {
             lat: snipeInfo.targetPosition.latitude!,
             lng: snipeInfo.targetPosition.longitude!,
           }
-          var arrow = new google.maps.Polyline({
+          const arrow = new google.maps.Polyline({
             path: [latlng, targetLatLng],
             icons: [
               {
@@ -279,9 +279,9 @@ export class MapData {
       }
     }
 
-    let snipeObjs = this.playerSnipes[playerPublicId]
+    const snipeObjs = this.playerSnipes[playerPublicId]
 
-    for (var index = 0; index < snipes.length; index += 1) {
+    for (let index = 0; index < snipes.length; index += 1) {
       // todo: timestamp support
       // let snipe = snipes[index];
       // if (snipe.timestamp! < minTime) {
@@ -291,7 +291,7 @@ export class MapData {
       // }else {
       //     snipeObjs[index].setMap(this.map);
       // }
-      let snipeObj = snipeObjs[index]
+      const snipeObj = snipeObjs[index]
       snipeObj["marker"].setMap(this.map)
       if (snipeObj["arrow"]) {
         snipeObj["arrow"].setMap(this.map)

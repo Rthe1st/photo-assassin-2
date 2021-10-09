@@ -9,7 +9,7 @@ import randomSeed from "random-seed"
 import * as SharedGame from "../shared/game"
 import * as https from "https"
 
-let domain: string = "https://localhost:3000"
+let domain = "https://localhost:3000"
 
 export function useProd() {
   domain = "https://photo-assassin.prangten.com"
@@ -28,7 +28,7 @@ export async function getData(url: string) {
 export async function makeGame(username: string, host: string = domain) {
   const url = `${host}/make`
 
-  let requestOptions = {
+  const requestOptions = {
     method: "POST",
     agent: agent,
     body: `username=${username}&format=json`,
@@ -45,7 +45,7 @@ export async function joinGame(
 ) {
   const url = `${host}/join`
 
-  let requestOptions = {
+  const requestOptions = {
     method: "POST",
     agent: agent,
     body: `code=${gameId}&username=${username}&format=json`,
@@ -74,17 +74,17 @@ async function gameSetup(players: Player[], gameId: string | undefined) {
   let hostPlayer: Player | undefined
   let details
 
-  let wasGamePremade = gameId != undefined
+  const wasGamePremade = gameId != undefined
   if (!wasGamePremade) {
     hostPlayer = players.shift()!
     details = await makeGame(hostPlayer.name)
     gameId = details.gameId
     console.log(`https://localhost:3000/game/${gameId}`)
   }
-  let sockets = new Map()
-  for (let player of players) {
-    let details = await joinGame(player.name, gameId!)
-    let socket = player.algo(
+  const sockets = new Map()
+  for (const player of players) {
+    const details = await joinGame(player.name, gameId!)
+    const socket = player.algo(
       details.gameId,
       details.privateId,
       player,
@@ -93,7 +93,7 @@ async function gameSetup(players: Player[], gameId: string | undefined) {
     sockets.set(details.publicId, socket)
   }
   if (!wasGamePremade) {
-    let socket = hostPlayer!.algo(
+    const socket = hostPlayer!.algo(
       details.gameId,
       details.privateId,
       hostPlayer!,
@@ -104,8 +104,8 @@ async function gameSetup(players: Player[], gameId: string | undefined) {
 }
 
 function activePlayer(gameId: string, privateId: string, player: Player) {
-  var randomGenerator = randomSeed.create("seedvalue")
-  let socket = socketClient.setup(
+  const randomGenerator = randomSeed.create("seedvalue")
+  const socket = socketClient.setup(
     gameId,
     privateId,
     (msg) => {
@@ -118,14 +118,22 @@ function activePlayer(gameId: string, privateId: string, player: Player) {
         })
       }
     },
-    () => {},
-    () => {},
-    (_) => {},
-    () => {},
+    () => {
+      //todo
+    },
+    () => {
+      //todo
+    },
+    (_) => {
+      //todo
+    },
+    () => {
+      //todo
+    },
     (_) => {
       console.log("start")
-      let file = fs.readFileSync("./src/server/sample_snipe_image.jpeg")
-      let message = {
+      const file = fs.readFileSync("./src/server/sample_snipe_image.jpeg")
+      const message = {
         text: "gotya",
         image: file,
         position: {
@@ -148,12 +156,14 @@ function activePlayer(gameId: string, privateId: string, player: Player) {
     () => {
       console.log("game over")
     },
-    () => {},
+    () => {
+      //todo
+    },
     (_) => {
       player.position.latitude! += (Math.random() - 0.5) * 0.001
       player.position.longitude! += (Math.random() - 0.5) * 0.001
-      let file = fs.readFileSync("./src/server/sample_snipe_image.jpeg")
-      let message = {
+      const file = fs.readFileSync("./src/server/sample_snipe_image.jpeg")
+      const message = {
         text: "gotya",
         image: file,
         position: {
@@ -172,27 +182,45 @@ function activePlayer(gameId: string, privateId: string, player: Player) {
       }
       socketClient.chatMessage(socket, message)
     },
-    () => {},
-    () => {},
+    () => {
+      //todo
+    },
+    () => {
+      //todo
+    },
     domain
   )
   return socket
 }
 
 function passivePlayer(gameId: string, privateId: string, player: Player) {
-  let socket = socketClient.setup(
+  const socket = socketClient.setup(
     gameId,
     privateId,
     () => {
       console.log("passive init")
     },
-    () => {},
-    () => {},
-    () => {},
-    () => {},
-    () => {},
-    () => {},
-    () => {},
+    () => {
+      //todo
+    },
+    () => {
+      //todo
+    },
+    () => {
+      //todo
+    },
+    () => {
+      //todo
+    },
+    () => {
+      //todo
+    },
+    () => {
+      //todo
+    },
+    () => {
+      //todo
+    },
     (_) => {
       player.position.latitude! += (Math.random() - 0.5) * 0.001
       player.position.longitude! += (Math.random() - 0.5) * 0.001
@@ -207,8 +235,12 @@ function passivePlayer(gameId: string, privateId: string, player: Player) {
         altitudeAccuracy: null,
       })
     },
-    () => {},
-    () => {},
+    () => {
+      //todo
+    },
+    () => {
+      //todo
+    },
     domain
   )
   return socket
@@ -226,16 +258,16 @@ function listeningPlayer(
   function processCommand(msg: any) {
     player.position.latitude! += (Math.random() - 0.5) * 0.001
     player.position.longitude! += (Math.random() - 0.5) * 0.001
-    let parts = msg.text.split(" ")
-    let command = parts[0]
-    let name = parts[1]
+    const parts = msg.text.split(" ")
+    const command = parts[0]
+    const name = parts[1]
     if (name == player.name || name == "all") {
       console.log(command)
       console.log(name)
       if (command == "snipe") {
         console.log("sniping")
-        let file = fs.readFileSync("./src/server/sample_snipe_image.jpeg")
-        let message = {
+        const file = fs.readFileSync("./src/server/sample_snipe_image.jpeg")
+        const message = {
           text: "gotya",
           image: file,
           position: {
@@ -269,8 +301,8 @@ function listeningPlayer(
         })
       } else if (command == "picture") {
         console.log("pictureing")
-        let file = fs.readFileSync("./src/server/sample_snipe_image.jpeg")
-        let message = {
+        const file = fs.readFileSync("./src/server/sample_snipe_image.jpeg")
+        const message = {
           text: "picture",
           image: file,
           position: {
@@ -290,7 +322,7 @@ function listeningPlayer(
         socketClient.chatMessage(socket, message)
       } else if (command == "message") {
         console.log("messging")
-        let message: socketClient.ClientChatMessage = {
+        const message: socketClient.ClientChatMessage = {
           text: "blahblah",
           position: {
             longitude: player.position.longitude,
@@ -310,7 +342,7 @@ function listeningPlayer(
         socketClient.chatMessage(socket, message)
       } else if (command == "badsnipe" && parts.length == 3) {
         console.log("badsniping")
-        let msg: socketClient.ClientBadSnipe = {
+        const msg: socketClient.ClientBadSnipe = {
           snipeInfosIndex: parts[2],
         }
         socketClient.badSnipe(socket, msg)
@@ -320,19 +352,19 @@ function listeningPlayer(
     }
   }
 
-  let socket = socketClient.setup(
+  const socket = socketClient.setup(
     gameId,
     privateId,
     (msg) => {
       console.log("init:")
       console.log(player)
       let commandsInHistory = 0
-      for (let message of msg.chatHistory) {
-        let parts = message.text.split(" ")
+      for (const message of msg.chatHistory) {
+        const parts = message.text.split(" ")
         if (parts.length < 2) {
           continue
         }
-        let name = parts[1]
+        const name = parts[1]
         if (name == player.name || name == "all") {
           commandsInHistory += 1
           if (commandsInHistory > commandsSeen) {
@@ -344,15 +376,21 @@ function listeningPlayer(
         }
       }
     },
-    () => {},
+    () => {
+      //todo
+    },
     (msg) => {
       //remove user
       if (msg.publicId == publicId) {
         socket.close()
       }
     },
-    (_) => {},
-    () => {},
+    (_) => {
+      //todo
+    },
+    () => {
+      //todo
+    },
     (_) => {
       console.log("start")
       console.log("start move")
@@ -372,10 +410,16 @@ function listeningPlayer(
     () => {
       console.log("game over")
     },
-    () => {},
+    () => {
+      //todo
+    },
     processCommand,
-    () => {},
-    () => {},
+    () => {
+      //todo
+    },
+    () => {
+      //todo
+    },
     domain
   )
   return socket
@@ -574,15 +618,15 @@ export function listenGame(gameCode?: string) {
 }
 
 function gpsPlayer(gameId: string, privateId: string, _: Player) {
-  let socket = socketClient.setup(
+  const socket = socketClient.setup(
     gameId,
     privateId,
     (msg) => {
       console.log("init, starting")
-      var gpsData = JSON.parse(
+      const gpsData = JSON.parse(
         fs.readFileSync("./src/server/gps_test_data.json", "utf8")
       )
-      let gameLength =
+      const gameLength =
         gpsData[gpsData.length - 1]["timestamp"] - gpsData[0]["timestamp"]
       socketClient.startGame(socket, {
         gameLength: gameLength,
@@ -590,23 +634,41 @@ function gpsPlayer(gameId: string, privateId: string, _: Player) {
         proposedTargetList: msg.gameState.chosenSettings.proposedTargetList,
       })
     },
-    () => {},
-    () => {},
-    () => {},
-    () => {},
+    () => {
+      //todo
+    },
+    () => {
+      //todo
+    },
+    () => {
+      //todo
+    },
+    () => {
+      //todo
+    },
     (_) => {
       console.log("started")
-      var gpsData = JSON.parse(fs.readFileSync("gps_test_data.json", "utf8"))
-      for (let position of gpsData) {
+      const gpsData = JSON.parse(fs.readFileSync("gps_test_data.json", "utf8"))
+      for (const position of gpsData) {
         socketClient.positionUpdate(socket, position)
       }
       socketClient.stopGame(socket)
     },
-    () => {},
-    () => {},
-    () => {},
-    () => {},
-    () => {},
+    () => {
+      //todo
+    },
+    () => {
+      //todo
+    },
+    () => {
+      //todo
+    },
+    () => {
+      //todo
+    },
+    () => {
+      //todo
+    },
     domain
   )
   return socket

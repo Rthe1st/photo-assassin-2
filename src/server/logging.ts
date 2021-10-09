@@ -1,10 +1,10 @@
 import winston from "winston"
 import * as stream from "stream"
-var Writable = stream.Writable
+const Writable = stream.Writable
 export let logger: winston.Logger // & {nextLog():string};
 
 export function setupJestLogging() {
-  let config = {
+  const config = {
     level: "info",
     format: winston.format.json(),
     defaultMeta: { service: "game logs" },
@@ -25,8 +25,8 @@ export function setupTestLogging(filePrefix: string) {
   // this is used in tests where you want to assert
   // what's been logger without looking in a log file
   setUpLogging(filePrefix)
-  var logsForTests: string[] = []
-  var ws = new Writable({ objectMode: true })
+  const logsForTests: string[] = []
+  const ws = new Writable({ objectMode: true })
   ws._write = function (chunk, _, next) {
     logsForTests.push(chunk)
     next()
@@ -39,7 +39,7 @@ export function setupTestLogging(filePrefix: string) {
 }
 
 export function setUpLogging(filePrefix: string) {
-  let config = {
+  const config = {
     level: "info",
     format: winston.format.json(),
     defaultMeta: { service: "game logs" },

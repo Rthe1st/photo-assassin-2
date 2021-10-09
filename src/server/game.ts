@@ -13,7 +13,7 @@ import { logger } from "./logging"
 
 // todo: we should wrap this in a class
 // it'd make it easier to test
-export let games: Map<string, Game> = new Map()
+export const games: Map<string, Game> = new Map()
 
 let imageStore: ImageStore
 
@@ -115,7 +115,7 @@ export function saveImage(
   resizePromise: Promise<string>
   imagePromise: Promise<string>
 } {
-  let imageId = game.nextImageId
+  const imageId = game.nextImageId
   // we put the urls in the game state even before the upload is done
   // so that if the game is marked as finished
   // the game state uploaded to goog already has the right URL links
@@ -130,8 +130,8 @@ export function saveImage(
       imageStore.getUploadImageLowResUrl(game.code, imageId)
   )
   game.nextImageId += 1
-  let asWebp = sharp(image).webp()
-  let imagePromise = asWebp
+  const asWebp = sharp(image).webp()
+  const imagePromise = asWebp
     .toBuffer()
     .catch((e) => {
       console.log(e)
@@ -144,7 +144,7 @@ export function saveImage(
       return url
     })
 
-  let resizePromise = asWebp
+  const resizePromise = asWebp
     .resize(100, 100) //todo: choose a better size
     .toBuffer()
     .then((lowResBuffer) => {
@@ -177,11 +177,11 @@ function updateSettings(
 
 function start(game: Game) {
   game.startTime = Date.now()
-  let chosenSettings = game.chosenSettings
-  for (var i = 0; i < game.chosenSettings.proposedTargetList.length; i++) {
-    let targetsBeforePlayer = chosenSettings.proposedTargetList.slice(i + 1)
-    let targetsAfterPlayer = chosenSettings.proposedTargetList.slice(0, i)
-    let player = chosenSettings.proposedTargetList[i]
+  const chosenSettings = game.chosenSettings
+  for (let i = 0; i < game.chosenSettings.proposedTargetList.length; i++) {
+    const targetsBeforePlayer = chosenSettings.proposedTargetList.slice(i + 1)
+    const targetsAfterPlayer = chosenSettings.proposedTargetList.slice(0, i)
+    const player = chosenSettings.proposedTargetList[i]
     game.targets[player] = targetsBeforePlayer.concat(targetsAfterPlayer)
     game.targetsGot[player] = []
   }
@@ -203,25 +203,25 @@ function snipe(
   snipeInfo: SharedGame.SnipeInfo
   botMessage: string | undefined
 } {
-  var snipedId = game.targets[sniperPublicId][0]
+  const snipedId = game.targets[sniperPublicId][0]
 
-  let targetPosition =
+  const targetPosition =
     game.positions.get(snipedId)![game.positions.get(snipedId)!.length - 1]
 
-  var usernameWhoDidSniping = game.userList.get(sniperPublicId).username
-  var usernameThatGotSniped = game.userList.get(
+  const usernameWhoDidSniping = game.userList.get(sniperPublicId).username
+  const usernameThatGotSniped = game.userList.get(
     game.targets[sniperPublicId][0]
   ).username
   //todo: move botmessage computation to client side
-  var botMessage = usernameWhoDidSniping + " sniped " + usernameThatGotSniped
+  const botMessage = usernameWhoDidSniping + " sniped " + usernameThatGotSniped
 
-  var targets = game.targets[sniperPublicId]
+  const targets = game.targets[sniperPublicId]
 
   //targets[0] becomes the new target
   game.targetsGot[sniperPublicId].push(targets.shift()!)
-  var gameOver = targets.length == 0
+  const gameOver = targets.length == 0
 
-  let snipeInfo = {
+  const snipeInfo = {
     index: game.snipeInfos.length,
     snipePlayer: sniperPublicId,
     target: snipedId,
@@ -243,18 +243,18 @@ function snipe(
 }
 
 function undoSnipe(game: Game, snipeInfo: SocketEvents.SnipeInfo): number[] {
-  let undoneSnipeIndexes: number[] = [snipeInfo.index]
+  const undoneSnipeIndexes: number[] = [snipeInfo.index]
   snipeInfo.undone = true
   game.targets[snipeInfo.snipePlayer].unshift(
     game.targetsGot[snipeInfo.snipePlayer].pop()!
   )
 
-  let previousSnipeIndex = snipeInfo.previousSnipe
+  const previousSnipeIndex = snipeInfo.previousSnipe
   if (previousSnipeIndex == undefined) {
     game.latestSnipeIndexes[snipeInfo.snipePlayer] = undefined
   } else {
     game.latestSnipeIndexes[snipeInfo.snipePlayer] = previousSnipeIndex
-    let previousSnipe = game.snipeInfos[previousSnipeIndex]
+    const previousSnipe = game.snipeInfos[previousSnipeIndex]
     previousSnipe.undoneNextSnipes.push(snipeInfo.index)
     previousSnipe.nextSnipe = undefined
   }
@@ -277,7 +277,7 @@ function undoSnipe(game: Game, snipeInfo: SocketEvents.SnipeInfo): number[] {
 }
 
 function gameStateForClient(game: Game) {
-  var state: SharedGame.ClientGame = {
+  const state: SharedGame.ClientGame = {
     chosenSettings: game.chosenSettings,
     userList: Object.fromEntries(game.userList),
     targets: game.targets,
@@ -306,22 +306,22 @@ function addPlayer(
   game: Game,
   username: string
 ): { privateId: string; publicId: number } {
-  var randomness = crypto.randomBytes(256).toString("hex")
-  var publicId = game.nextId
+  const randomness = crypto.randomBytes(256).toString("hex")
+  const publicId = game.nextId
   // because people can leave the game, we cannot use the current number of players to work out the max id
   game.nextId += 1 //todo: handle this malicously overflowing
   // including publicId because its guaranteed to be unique
-  var privateId = `${randomness}-${publicId}`
+  const privateId = `${randomness}-${publicId}`
   game.idMapping.set(privateId, publicId)
   game.userList.set(publicId, { username: username })
   game.positions.set(publicId, [])
-  let proposedTargetList = shuffle(Array.from(game.userList.keys()))
+  const proposedTargetList = shuffle(Array.from(game.userList.keys()))
   game.chosenSettings.proposedTargetList = proposedTargetList
   return { privateId: privateId, publicId: publicId }
 }
 
 function removePlayer(game: Game, publicId: number) {
-  for (var [privateId, currentPublicId] of game.idMapping.entries()) {
+  for (const [privateId, currentPublicId] of game.idMapping.entries()) {
     if (publicId == currentPublicId) {
       game.idMapping.delete(privateId)
       break
@@ -329,7 +329,7 @@ function removePlayer(game: Game, publicId: number) {
   }
   game.userList.delete(publicId)
   game.positions.delete(publicId)
-  let proposedTargetList = shuffle(Array.from(game.userList.keys()))
+  const proposedTargetList = shuffle(Array.from(game.userList.keys()))
   game.chosenSettings.proposedTargetList = proposedTargetList
 }
 
@@ -354,8 +354,8 @@ function updatePosition(
   position: SharedGame.Position
 ) {
   if (
-    position.hasOwnProperty("longitude") &&
-    position.hasOwnProperty("latitude") &&
+    Object.prototype.hasOwnProperty.call(position, "longitude") &&
+    Object.prototype.hasOwnProperty.call(position, "latitude") &&
     position.longitude != null &&
     position.latitude != null &&
     game.state == states.IN_PLAY
@@ -385,7 +385,7 @@ function updatePosition(
 }
 
 function badSnipe(game: Game, snipeInfosIndex: number, publicId: number) {
-  let snipeInfo = game.snipeInfos[snipeInfosIndex]
+  const snipeInfo = game.snipeInfos[snipeInfosIndex]
 
   if (snipeInfo.undone) {
     return
@@ -398,10 +398,10 @@ function badSnipe(game: Game, snipeInfosIndex: number, publicId: number) {
     return
   }
 
-  let voteCount = snipeInfo.votes.length
+  const voteCount = snipeInfo.votes.length
 
   if (publicId == snipeInfo.snipePlayer || voteCount > 2) {
-    let undoneSnipes = undoSnipe(game, snipeInfo)
+    const undoneSnipes = undoSnipe(game, snipeInfo)
 
     return undoneSnipes
   }
@@ -424,19 +424,19 @@ function badSnipe(game: Game, snipeInfosIndex: number, publicId: number) {
 // todo: consider curating the list of words to use shorter words
 // to save screen width space
 function generateGameCode(uniqueId: number): string {
-  let randomWords = []
+  const randomWords = []
   for (let wordIndex = 0; wordIndex < 3; wordIndex++) {
     randomWords.push(commonWords[crypto.randomInt(commonWords.length)])
   }
 
-  let uniqueWord = commonWords[uniqueId + 1]
+  const uniqueWord = commonWords[uniqueId + 1]
 
   return randomWords.join("-") + `-${uniqueWord}`
 }
 function generateGame() {
   // todo: when we're running in prod the number of game is likely to go up as well as down, we should probably use a dedicated counter that loops on overflow or something
-  let code = generateGameCode(games.size)
-  let game = newGame(code)
+  const code = generateGameCode(games.size)
+  const game = newGame(code)
   logger.log("verbose", "making game", { gameCode: code })
   games.set(game.code, game)
   return game
