@@ -8,6 +8,7 @@ import fs from "fs"
 import randomSeed from "random-seed"
 import * as SharedGame from "../shared/game"
 import * as https from "https"
+import { Socket } from "socket.io-client"
 
 let domain = "https://localhost:3000"
 
@@ -62,7 +63,7 @@ interface Player {
     privateId: string,
     player: Player,
     publicId: number
-  ) => SocketIOClient.Socket
+  ) => Socket
   position: SharedGame.Position
 }
 

@@ -3,7 +3,7 @@ import * as Sentry from "@sentry/node"
 import cookieParser from "cookie-parser"
 import express, { NextFunction, Request, Response } from "express"
 
-import socketIo from "socket.io"
+import { Server } from "socket.io"
 import * as https from "https"
 import * as http from "http"
 
@@ -57,7 +57,7 @@ export function createServer(
 
   //io needs to be accessablrwhen we setup game - pass it in
   // https://github.com/socketio/socket.io/issues/2276
-  const io = socketIo(httpServer, {
+  const ioServer = new Server(httpServer, {
     cookie: false,
     // todo: this is a hack to prevent our connection being terminated
     // during large file uploads because we're blocking and can't reply to pongs
@@ -98,7 +98,7 @@ export function createServer(
   )
   // todo: should these be .use()
   // so we can redirect if someone navigate there by mistake
-  app.post("/make", (req, res) => make(staticDir, req, res, io))
+  app.post("/make", (req, res) => make(staticDir, req, res, ioServer))
   app.post("/join", (req, res) => join(staticDir, req, res))
   if (useSentry) {
     // The error handler must be before any other error middleware and after all controllers
@@ -120,7 +120,7 @@ export function createServer(
   // * telling client the countdown time is over
   // * telling client the game is over
   setInterval(() => {
-    socketHandler.checkGameTiming(Game.games, io)
+    socketHandler.checkGameTiming(Game.games, ioServer)
   }, 1000)
 
   return httpServer
@@ -180,7 +180,7 @@ function make(
   staticDir: string,
   req: express.Request,
   res: express.Response,
-  io: socketIo.Server
+  io: Server
 ) {
   if (!req.body.username) {
     res.status(400)

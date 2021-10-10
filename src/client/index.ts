@@ -9,6 +9,7 @@ import * as notifications from "./notifications"
 
 import * as Sentry from "@sentry/browser"
 import { shuffle } from "../shared/shuffle"
+import { Socket } from "socket.io-client"
 
 Sentry.init({ dsn: process.env.BROWSER_SENTRY })
 if (process.env.SENTRY_TESTS == "true") {
@@ -809,7 +810,7 @@ const publicId = parseInt(
   )
 )
 
-let socket: SocketIOClient.Socket
+let socket: Socket
 let proposedTargetList: number[]
 let gameMap: gmap.Gmap
 

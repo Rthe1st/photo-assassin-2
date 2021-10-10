@@ -2,13 +2,14 @@ import { logger } from "./logging"
 import * as Game from "./game"
 import * as socketInterface from "./socketInterface"
 import * as socketEvents from "../shared/socketEvents"
+import { Server, Socket } from "socket.io"
 
 Game.setup()
 
 export function updateSettings(
   msg: socketEvents.ClientUpdateSettings,
   game: Game.Game,
-  socket: SocketIO.Socket
+  socket: Socket
 ) {
   if (game.state != Game.states.NOT_STARTED) {
     return
@@ -31,7 +32,7 @@ export function updateSettings(
 export function removeUser(
   msg: socketEvents.ClientRemoveUser,
   game: Game.Game,
-  socket: SocketIO.Socket
+  socket: Socket
 ) {
   //todo: kill the socket connection of the removed user
   if (game.state != Game.states.NOT_STARTED) {
@@ -48,7 +49,7 @@ export function start(
   publicId: number,
   msg: socketEvents.ClientUpdateSettings,
   game: Game.Game,
-  socket: SocketIO.Socket
+  socket: Socket
 ) {
   if (publicId != 0) {
     return
@@ -72,7 +73,7 @@ export function start(
   socketInterface.start(socket, { gameState: Game.gameStateForClient(game) })
 }
 
-export function stop(game: Game.Game, io: SocketIO.Server) {
+export function stop(game: Game.Game, io: Server) {
   if (game.state == Game.states.IN_PLAY) {
     finishGame(game, "game stopped", io)
     logger.log("verbose", "Stopping", {
@@ -94,9 +95,9 @@ export function positionUpdate(
 export function chatMsg(
   msg: socketEvents.ClientChatMessage,
   game: Game.Game,
-  socket: SocketIO.Socket,
+  socket: Socket,
   publicId: number,
-  io: SocketIO.Server
+  io: Server
 ) {
   if (game.state != Game.states.IN_PLAY) {
     logger.log("debug", "chat message while not IN_PLAY")
@@ -224,7 +225,7 @@ export function chatMsg(
 export function badSnipe(
   msg: socketEvents.ClientBadSnipe,
   game: Game.Game,
-  socket: SocketIO.Socket,
+  socket: Socket,
   publicId: number
 ) {
   const undoneSnipeIndexes = Game.badSnipe(game, msg.snipeInfosIndex, publicId)
@@ -245,7 +246,7 @@ export function addUser(publicId: number, game: Game.Game) {
   })
 }
 
-function finishGame(game: Game.Game, winner: string, io: SocketIO.Server) {
+function finishGame(game: Game.Game, winner: string, io: Server) {
   const nextGame = socketInterface.setup(io)
 
   // we wait for the gamestate to get uploaded
@@ -266,10 +267,7 @@ function finishGame(game: Game.Game, winner: string, io: SocketIO.Server) {
   })
 }
 
-export function checkGameTiming(
-  games: Map<string, Game.Game>,
-  io: SocketIO.Server
-) {
+export function checkGameTiming(games: Map<string, Game.Game>, io: Server) {
   for (const [gameId, game] of games.entries()) {
     const namespace = game.namespace
     const now = Date.now()

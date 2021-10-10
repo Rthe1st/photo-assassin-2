@@ -2,10 +2,11 @@ import { logger } from "./logging"
 import * as Game from "./game"
 import * as socketEvents from "../shared/socketEvents"
 import * as socketHandler from "./socketHandler"
+import { Namespace, Server, Socket } from "socket.io"
 
 Game.setup()
 
-export function setup(io: SocketIO.Server) {
+export function setup(io: Server) {
   const game = Game.generateGame()
   const namespace = io.of(`/game/${game.code}`)
   // I don't like namespace getting registered on game after game is already made
@@ -16,21 +17,26 @@ export function setup(io: SocketIO.Server) {
   return game
 }
 
-function socketConnect(
-  socket: SocketIO.Socket,
-  game: Game.Game,
-  io: SocketIO.Server
-) {
+function socketConnect(socket: Socket, game: Game.Game, io: Server) {
   const gameId = socket.nsp.name.substr("/game/".length)
 
   if (game == undefined) {
     logger.log("verbose", `invalid game ${gameId}`)
     return
   }
-  const privateId = socket.handshake.query.privateId
+
+  if (Array.isArray(socket.handshake.query.privateId)) {
+    logger.log(
+      "error",
+      `more then one private ID supplied: {socket.handshake.query.privateId}`
+    )
+    throw Error("more then one private ID supplied")
+  }
+
+  const privateId = <string>socket.handshake.query.privateId
 
   //todo: allow sockets to connect in "view only" mode if they're not players
-  const publicId = game.idMapping.get(privateId)!
+  const publicId = game.idMapping.get(privateId)
   if (publicId == undefined) {
     logger.log("verbose", `invalid privateId ${privateId}`)
     return
@@ -79,70 +85,55 @@ function socketConnect(
   })
 }
 
-export function resizeDone(
-  socket: SocketIO.Socket,
-  msg: socketEvents.ServerResizeDone
-) {
+export function resizeDone(socket: Socket, msg: socketEvents.ServerResizeDone) {
   socket.nsp.emit("resize done", msg)
 }
 
 export function imageUploadDone(
-  socket: SocketIO.Socket,
+  socket: Socket,
   msg: socketEvents.ServerImageUploadDone
 ) {
   socket.nsp.emit("image upload done", msg)
 }
 
 export function updateSettings(
-  socket: SocketIO.Socket,
+  socket: Socket,
   msg: socketEvents.ServerUpdateSettingsMsg
 ) {
   socket.nsp.emit("update settings", msg)
 }
 
-export function removeUser(
-  socket: SocketIO.Socket,
-  msg: socketEvents.RemoveUserMsg
-) {
+export function removeUser(socket: Socket, msg: socketEvents.RemoveUserMsg) {
   socket.nsp.emit("Remove user", msg)
 }
 
-export function start(
-  socket: SocketIO.Socket,
-  msg: socketEvents.ServerStartMsg
-) {
+export function start(socket: Socket, msg: socketEvents.ServerStartMsg) {
   socket.nsp.emit("start", msg)
 }
 
 export function chatMessage(
-  socket: SocketIO.Socket,
+  socket: Socket,
   msg: socketEvents.ServerChatMessage
 ) {
   socket.nsp.emit("chat message", msg)
 }
-export function badSnipe(
-  socket: SocketIO.Socket,
-  msg: socketEvents.ServerBadSnipeMsg
-) {
+export function badSnipe(socket: Socket, msg: socketEvents.ServerBadSnipeMsg) {
   socket.nsp.emit("bad snipe", msg)
 }
 
-export function newUser(
-  namespace: SocketIO.Namespace,
-  msg: socketEvents.NewUserMsg
-) {
+export function newUser(namespace: Namespace, msg: socketEvents.NewUserMsg) {
   namespace.emit("New user", msg)
 }
 
 export function finished(
-  namespace: SocketIO.Namespace,
+  namespace: Namespace,
   msg: socketEvents.ServerFinishedMsg
 ) {
   namespace.emit("game finished", msg)
 }
 
 export function timeLeft(
-  namespace: SocketIO.Namespace,
+  namespace: Namespace,
   msg: socketEvents.ServerTimeLeftMsg
 ) {
   namespace.emit("timeLeft", msg)

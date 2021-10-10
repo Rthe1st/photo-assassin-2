@@ -1,6 +1,7 @@
 import * as socketClient from "../src/shared/socketClient"
 import * as httpHelpers from "./httpHelpers"
 import * as SocketEvents from "../src/shared/socketEvents"
+import { Socket } from "socket.io-client"
 
 //todo: have this buffer events it recieves
 export async function makeSocket(
@@ -9,7 +10,7 @@ export async function makeSocket(
   privateId: string
 ) {
   return new Promise<{
-    socket: SocketIOClient.Socket
+    socket: Socket
     msg: SocketEvents.ServerInitializationMsg
   }>((resolve, reject) => {
     const socket = socketClient.setup(
@@ -64,7 +65,7 @@ export function socketCall(emit_fn: any, resolve_fn: any): Promise<any> {
 }
 
 export function startGame(
-  socket: SocketIOClient.Socket,
+  socket: Socket,
   msg: SocketEvents.ClientUpdateSettings
 ): Promise<SocketEvents.ServerStartMsg> {
   const emit_fn = () => socketClient.startGame(socket, msg)
@@ -72,9 +73,7 @@ export function startGame(
   return socketCall(emit_fn, resolve_fn)
 }
 
-export function stopGame(
-  socket: SocketIOClient.Socket
-): Promise<SocketEvents.ServerStartMsg> {
+export function stopGame(socket: Socket): Promise<SocketEvents.ServerStartMsg> {
   const emit_fn = () => socketClient.stopGame(socket)
   const resolve_fn = (resolve: any) => socket.on("game finished", resolve)
   return socketCall(emit_fn, resolve_fn)

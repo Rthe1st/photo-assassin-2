@@ -1,4 +1,4 @@
-import io from "socket.io-client"
+import io, { Socket } from "socket.io-client"
 
 import * as SocketEvents from "./socketEvents"
 export * from "./socketEvents"
@@ -24,7 +24,7 @@ export function setup(
   error = (reason: any) => console.log(reason),
   disconnecting = (reason: any) => console.log(reason),
   connectError = (reason: any) => console.log(reason)
-): SocketIOClient.Socket {
+): Socket {
   const socket = io(
     // leading slash is needed so IO nows we're giving it a path
     // otherwise it uses it as a domain
@@ -64,45 +64,42 @@ export function setup(
 }
 
 export function chatMessage(
-  socket: SocketIOClient.Socket,
+  socket: Socket,
   message: SocketEvents.ClientChatMessage
 ) {
   socket.emit("chat message", message)
 }
 
-export function badSnipe(
-  socket: SocketIOClient.Socket,
-  msg: SocketEvents.ClientBadSnipe
-) {
+export function badSnipe(socket: Socket, msg: SocketEvents.ClientBadSnipe) {
   socket.emit("bad snipe", msg)
 }
 
 export function updateSettings(
-  socket: SocketIOClient.Socket,
+  socket: Socket,
   msg: SocketEvents.ClientUpdateSettings
 ) {
   socket.emit("update settings", msg)
 }
 
 export function startGame(
-  socket: SocketIOClient.Socket,
+  socket: Socket,
   msg: SocketEvents.ClientUpdateSettings
 ) {
   socket.emit("start game", msg)
 }
 
 export function positionUpdate(
-  socket: SocketIOClient.Socket,
+  socket: Socket,
   position: SocketEvents.ClientPositionUpdate
 ) {
   socket.emit("positionUpdate", position)
 }
 
-export function stopGame(socket: SocketIOClient.Socket) {
+export function stopGame(socket: Socket) {
   socket.emit("stop game")
 }
 
-export function removeUser(socket: SocketIOClient.Socket, publicId: number) {
+export function removeUser(socket: Socket, publicId: number) {
   const msg: SocketEvents.ClientRemoveUser = { publicId: publicId }
   socket.emit("remove user", msg)
 }
