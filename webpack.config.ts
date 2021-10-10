@@ -8,6 +8,7 @@ const HtmlWebpackPlugin = require("html-webpack-plugin")
 
 // this is used to upload map files to sentry
 // but I can't work out how to get sentry to actually used them in issues
+const SentryCliPlugin = require("@sentry/webpack-plugin")
 // const SentryWebpackPlugin = require('@sentry/webpack-plugin');
 let envs = dotenv.config().parsed
 if (envs == undefined) {
@@ -23,6 +24,8 @@ const expected_vars = [
   // if true log artificial errors to sentry to prove that it's working
   "SENTRY_TESTS",
   "GOOGLE_MAPS_KEY",
+  "SENTRY_RELEASE",
+  "SENTRY_AUTH_TOKEN",
 ]
 for (const env of expected_vars) {
   if (envs[env] == undefined) {
@@ -143,13 +146,14 @@ module.exports = {
         { from: "./assets/images", to: "." },
       ],
     }),
-    // ,
-    // new SentryWebpackPlugin({
-    //   include: '.',
-    //   ignoreFile: '.sentrycliignore',
-    //   ignore: ['node_modules', 'webpack.config.ts'],
-    //   configFile: 'sentry.properties'
-    // })
+    new SentryCliPlugin({
+      include: "./dist/public",
+      // from https://sentry.io/settings/account/api/auth-tokens/
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+      org: "photo-snipe",
+      project: "javascript",
+      release: "SENTRY_RELEASE",
+    }),
   ]
     .concat(generateStaticErrorPages(errorPages))
     .concat(

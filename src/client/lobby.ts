@@ -1,3 +1,10 @@
+import * as Sentry from "@sentry/browser"
+
+Sentry.init({ dsn: process.env.BROWSER_SENTRY })
+if (process.env.SENTRY_TESTS == "true") {
+  Sentry.captureException(new Error("sentry test in index.js"))
+}
+
 function showOnlyJoinContent() {
   const urlParameters: { [key: string]: string } = {}
   location.search

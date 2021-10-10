@@ -1,4 +1,13 @@
 {
+  // https://typestrong.org/ts-node/docs/module-type-overrides/
+  "ts-node": {
+    "transpileOnly": true,
+    "moduleTypes": {
+      "jest.config.ts": "cjs",
+      "./src/**/jest.config.ts": "cjs",
+      "webpack.config.ts": "cjs",
+    }
+  },
   "compilerOptions": {
     "module": "es2020",
     // based on  https://github.com/tsconfig/bases/blob/main/bases/node14.json#L8
@@ -10,6 +19,7 @@
     "noEmitOnError": true,
     "noUnusedParameters": true,
     "forceConsistentCasingInFileNames": true,
-    "noUnusedLocals": true
+    "noUnusedLocals": true,
+    "sourceMap": true
   }
 }

@@ -26,7 +26,10 @@ export async function getData(url: string) {
   return json
 }
 
-export async function makeGame(username: string, host: string = domain) {
+export async function makeGame(
+  username: string,
+  host: string = domain
+): Promise<any> {
   const url = `${host}/make`
 
   const requestOptions = {
@@ -43,7 +46,7 @@ export async function joinGame(
   username: string,
   gameId: string,
   host: string = domain
-) {
+): Promise<any> {
   const url = `${host}/join`
 
   const requestOptions = {
