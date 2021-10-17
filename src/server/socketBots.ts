@@ -16,11 +16,10 @@ export function useProd() {
   domain = "https://photo-assassin.prangten.com"
 }
 
-const agent = new https.Agent({
-  rejectUnauthorized: false,
-})
-
 export async function getData(url: string) {
+  const agent = new https.Agent({
+    rejectUnauthorized: false,
+  })
   const response = await fetch(url, { agent })
   const json = await response.json()
   return json
@@ -30,16 +29,20 @@ export async function makeGame(
   username: string,
   host: string = domain
 ): Promise<any> {
+  const agent = new https.Agent({
+    rejectUnauthorized: false,
+  })
   const url = `${host}/make`
-
   const requestOptions = {
     method: "POST",
     agent: agent,
     body: `username=${username}&format=json`,
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
   }
-
-  return (await fetch(url, requestOptions)).json()
+  const response = await fetch(url, requestOptions)
+  return response.json()
 }
 
 export async function joinGame(
@@ -48,7 +51,9 @@ export async function joinGame(
   host: string = domain
 ): Promise<any> {
   const url = `${host}/join`
-
+  const agent = new https.Agent({
+    rejectUnauthorized: false,
+  })
   const requestOptions = {
     method: "POST",
     agent: agent,

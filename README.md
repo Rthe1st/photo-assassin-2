@@ -5,15 +5,12 @@ This project is an app to make playing [Photo Assassin](https://github.com/Rthe1
 ## Deployment
 
 We deplay to heroku using docker images.
-We should build and push these with github actions CI, but for now do it manually.
 
 https://devcenter.heroku.com/articles/container-registry-and-runtime#testing-an-image-locally
 
 When adding config vars, use real spaces instead of \n. This is important for GCP_PRIVATE_KEY
 
 https://dashboard.heroku.com/apps/photo-assassin/settings
-
-### Deploying manually
 
 ```bash
 sudo docker login --username=$USERNAME registry.heroku.com
@@ -31,22 +28,13 @@ heroku logs -a photo-assassin --tail
 ## Testing the docker image locally
 
 ```bash
-sudo docker build . -t photo-assassin
-sudo docker run -d --rm --name photo-assassin -p 3000:3000 --env-file .env --volume=`pwd`/secret:/home/node/app/secret photo-assassin
-```
-
-To test code changes without rebuilding the image all the time:
-
-```bash
+npm test
+# first run this to get changes to server code
+# the compose file uses volumes so the image doesn't need to be rebuilt
 npm run-script build
-sudo docker run -d --rm --name photo-assassin -p 3000:3000 --env-file .env --volume=`pwd`/secret:/home/node/app/secret --volume=`pwd`/dist:/home/node/app/dist photo-assassin
-```
-
-Kill/clean up container
-
-```bash
-# todo: why does adding -t -i to docker run not let ctl+c kill container?
-sudo docker rm photo-assassin -f
+sudo docker-compose up
+# these need the docker container to be running
+npm run-script integration-test
 ```
 
 ### NVM
@@ -113,29 +101,7 @@ We build for 3 situations, starting from typescript source code and es6 module s
 
 CNAME'd to Cloudflare for forcing https and for caching under photo-assassin.prangten.com
 
-## Run locally
-
-test:
-
-```bash
-npm test
-```
-
-Integration tests require you to spin up a server yourself
-because I can't get globalsetup to work with jest (more notes in the jest config file).
-
-```bash
-# in one terminal
-npm run-script start
-# in another
-npm run-script integration-test
-```
-
-build:
-
-```bash
-npm run prepublish
-```
+## Run locally with robo players
 
 spin up server:
 

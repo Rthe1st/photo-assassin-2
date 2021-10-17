@@ -12,7 +12,7 @@ export async function makeSocket(
   return new Promise<{
     socket: Socket
     msg: SocketEvents.ServerInitializationMsg
-  }>((resolve, reject) => {
+  }>((resolve, _reject) => {
     const socket = socketClient.setup(
       gameId,
       privateId,
@@ -49,10 +49,11 @@ export async function makeSocket(
       () => {
         //todo
       },
-      domain
+      domain,
+      () => {
+        // don't log disconnects
+      }
     )
-
-    setTimeout(reject, 2000)
   })
 }
 
@@ -60,7 +61,7 @@ export function socketCall(emit_fn: any, resolve_fn: any): Promise<any> {
   return new Promise<any>((resolve, reject) => {
     resolve_fn(resolve)
     emit_fn()
-    setTimeout(reject, 100)
+    setTimeout(reject, 2000)
   })
 }
 
@@ -80,7 +81,7 @@ export function stopGame(socket: Socket): Promise<SocketEvents.ServerStartMsg> {
 }
 
 export async function makeGame(domain: string, username: string) {
-  const details = await (
+  const details: any = await (
     await httpHelpers.post(`${domain}/make`, `username=${username}&format=json`)
   ).json()
 
@@ -97,7 +98,7 @@ export async function joinGame(
   gameId: string,
   username: string
 ) {
-  const details = await (
+  const details: any = await (
     await httpHelpers.post(
       `${domain}/join`,
       `code=${gameId}&username=${username}&format=json`
@@ -105,4 +106,28 @@ export async function joinGame(
   ).json()
   const { socket: socket } = await makeSocket(domain, gameId, details.privateId)
   return socket
+}
+
+export async function closeSockets(sockets: Socket[]): Promise<void> {
+  for (const socket of sockets) {
+    socket.close()
+  }
+
+  function sleep(ms: number) {
+    return new Promise((resolve) => setTimeout(resolve, ms))
+  }
+
+  for (;;) {
+    let anyStillConnected = false
+
+    for (const socket of sockets) {
+      anyStillConnected = anyStillConnected || socket.connected
+    }
+
+    if (anyStillConnected) {
+      await sleep(50)
+    } else {
+      return
+    }
+  }
 }

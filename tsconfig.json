@@ -4,7 +4,7 @@
     "transpileOnly": true,
     "moduleTypes": {
       "jest.config.ts": "cjs",
-      "./src/**/jest.config.ts": "cjs",
+      "./**/jest.config.ts": "cjs",
       "webpack.config.ts": "cjs",
     }
   },

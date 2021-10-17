@@ -28,7 +28,7 @@ function devErrorHandler(
   console.log(`path: ${req.path}`)
   console.log(`query string: ${Object.entries(req.query)}`)
   console.error(err.stack)
-  res.status(500).send("Internal server error - dev handler")
+  res.status(500).send("Internal server error - dev handler").end()
 }
 
 export function createServer(
@@ -194,7 +194,10 @@ function make(
     req.body.username.toString()
   )
   if (req.body.format == "json") {
-    res.json({ publicId: publicId, privateId: privateId, gameId: game.code })
+    res
+      .status(200)
+      .json({ publicId: publicId, privateId: privateId, gameId: game.code })
+      .end()
   } else {
     res.redirect(`/game/${game.code}`)
   }

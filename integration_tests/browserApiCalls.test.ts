@@ -2,17 +2,21 @@
 // the browser client code for making HTTP calls
 import * as httpHelpers from "./httpHelpers"
 import * as clientApi from "../src/shared/clientApi"
+import { domain } from "./shared_definitions"
 
 import { jest } from "@jest/globals"
 // needed for messy socket tests that don't clean themselves up well
 jest.setTimeout(8000)
 
-const domain = "https://localhost:3000"
-
-test("clientApi.gameJson", async () => {
-  const gameDetails = await (
+test.skip("clientApi.gameJson", async () => {
+  const gameDetails: any = await (
     await httpHelpers.post(`${domain}/make`, "username=player1&format=json")
   ).json()
+
+  await httpHelpers.post(
+    `${domain}/join`,
+    `code={gameCode}&username=player2&format=json`
+  )
 
   // todo: fix, we need to finish the game in order
   // to trigger an upload of the json

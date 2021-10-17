@@ -13,13 +13,13 @@ export function setup(io: Server) {
   game.namespace = namespace
   // register connection after setting game space to prevent race condition
   // where ioConnect relies on game.namespace
+  // tod: wrap socketConnect in a  try/catch to send err message to client and disconnect them
   namespace.on("connection", (socket) => socketConnect(socket, game, io))
   return game
 }
 
 function socketConnect(socket: Socket, game: Game.Game, io: Server) {
   const gameId = socket.nsp.name.substr("/game/".length)
-
   if (game == undefined) {
     logger.log("verbose", `invalid game ${gameId}`)
     return
@@ -30,14 +30,14 @@ function socketConnect(socket: Socket, game: Game.Game, io: Server) {
       "error",
       `more then one private ID supplied: {socket.handshake.query.privateId}`
     )
-    throw Error("more then one private ID supplied")
+    return
   }
 
   const privateId = <string>socket.handshake.query.privateId
 
   //todo: allow sockets to connect in "view only" mode if they're not players
   const publicId = game.idMapping.get(privateId)
-  if (publicId == undefined) {
+  if (publicId === undefined) {
     logger.log("verbose", `invalid privateId ${privateId}`)
     return
   }

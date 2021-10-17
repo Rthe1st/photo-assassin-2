@@ -30,7 +30,7 @@
     "build-client": "webpack --config webpack.config.ts",
     "build": "npm run build-server && npm run build-client",
     "pretest": "npm run build-server && npm run build-client",
-    "integration-test": "node --experimental-vm-modules --unhandled-rejections=strict node_modules/jest/bin/jest.js --projects ./integration_tests",
+    "integration-test": "node --experimental-vm-modules --unhandled-rejections=strict node_modules/jest/bin/jest.js --projects ./integration_tests --forceExit",
     "test": "node --experimental-vm-modules --unhandled-rejections=strict node_modules/jest/bin/jest.js",
     "upload-source-maps": "sentry-cli releases --org photo-snipe --project photo-snipe files 0.0.1 upload-sourcemaps ./dist/shared ./dist/server"
   },

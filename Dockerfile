@@ -29,4 +29,4 @@ VOLUME [ "/home/node/app/secret","/home/node/app/dist" ]
 
 EXPOSE 3000
 # https://github.com/nodejs/docker-node/blob/main/docs/BestPractices.md#cmd
-CMD [ "node", "--experimental-specifier-resolution=node", "./dist/server/start.js" ]
+CMD [ "node", "--experimental-specifier-resolution=node", "/home/node/app/dist/server/start.js" ]

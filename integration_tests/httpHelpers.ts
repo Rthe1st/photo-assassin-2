@@ -1,16 +1,18 @@
 import * as https from "https"
 import fetch, { RequestInit } from "node-fetch"
 
-const defaultAgent = new https.Agent({
-  rejectUnauthorized: false,
-})
-
 export async function post(
   url: string,
   body: string,
   options: RequestInit = {},
-  agent = defaultAgent
+  agent?: https.Agent
 ) {
+  if (agent === undefined) {
+    agent = new https.Agent({
+      rejectUnauthorized: false,
+    })
+  }
+
   let requestOptions: RequestInit = {
     method: "POST",
     agent: agent,

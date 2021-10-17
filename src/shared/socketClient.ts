@@ -30,6 +30,7 @@ export function setup(
     // otherwise it uses it as a domain
     `${hostname}/game/${gameId}`,
     {
+      forceNew: true,
       query: {
         privateId: privateId,
       },
@@ -41,10 +42,10 @@ export function setup(
       // https://stackoverflow.com/a/41641451/5832565
       transports: ["websocket"],
       // needed for local dev with self-signed cert
+      // todo: hide behind env var
       rejectUnauthorized: false,
     }
   )
-
   socket.on("initialization", initialization)
   socket.on("New user", newUser)
   socket.on("Remove user", removeUser)

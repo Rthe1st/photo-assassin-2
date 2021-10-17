@@ -2,10 +2,8 @@ import { jest } from "@jest/globals"
 // needed for messy socket tests that don't clean themselves up well
 jest.setTimeout(10000)
 import * as socketHelpers from "./socketHelpers"
-
 import * as socketBots from "../src/server/socketBots"
-
-const domain = "https://localhost:3000"
+import { domain, gameCodeFormat } from "./shared_definitions"
 
 test("whole game", async () => {
   let details = await socketBots.makeGame("hostplayer", domain)
@@ -65,13 +63,11 @@ test("whole game", async () => {
     },
   }
   expect(msg).toMatchObject({ gameState: expectedGameState })
-
   const finishedMsg = await socketHelpers.stopGame(player1)
   expect(finishedMsg).toMatchObject({
-    nextCode: expect.stringMatching(/[a-f\d]+-[a-f\d]+-\d/),
+    nextCode: expect.stringMatching(new RegExp(gameCodeFormat)),
     winner: "game stopped",
   })
 
-  player1.close()
-  player2.close()
+  await socketHelpers.closeSockets([player1, player2])
 })

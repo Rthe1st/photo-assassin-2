@@ -5,24 +5,16 @@
 import fetch, { Headers, RequestInit } from "node-fetch"
 import * as https from "https"
 
+import * as socketBots from "../src/server/socketBots"
 import * as socketClient from "../src/shared/socketClient"
 import * as socketHelpers from "./socketHelpers"
 import * as httpHelpers from "./httpHelpers"
-
-import { jest } from "@jest/globals"
-// needed for messy socket tests that don't clean themselves up well
-jest.setTimeout(8000)
-
-const domain = "https://localhost:3000"
-
-const agent = new https.Agent({
-  rejectUnauthorized: false,
-})
+import { domain, gameCodeFormat } from "./shared_definitions"
 
 function checkCookies(headers: Headers) {
   expect(headers.raw()).toMatchObject({
     "set-cookie": expect.arrayContaining([
-      expect.stringMatching(/gameId=[a-f\d]+-[a-f\d]+-\d/),
+      expect.stringMatching(new RegExp(`gameId=${gameCodeFormat}`)),
       expect.stringMatching(/privateId=[a-f\d]{512}-\d/),
       expect.stringMatching(/publicId=\d/),
     ]),
@@ -32,22 +24,31 @@ function checkCookies(headers: Headers) {
 // test /
 
 test("GET /", async () => {
+  const agent = new https.Agent({
+    rejectUnauthorized: false,
+  })
   const response = await fetch(`${domain}/`, { agent })
   expect(response.status).toBe(200)
-  expect(response.body.read().toString()).toContain("<!-- lobby page -->")
+  expect(response.body!.read().toString()).toContain("<!-- lobby page -->")
   expect(response.headers.raw()).not.toHaveProperty("set-cookie")
 })
 
 test("GET / for non-existent game", async () => {
+  const agent = new https.Agent({
+    rejectUnauthorized: false,
+  })
   const response = await fetch(`${domain}/?code=madeupcode`, { agent })
   expect(response.status).toBe(404)
-  expect(response.body.read().toString()).toContain(
+  expect(response.body!.read().toString()).toContain(
     "Can't join - game doesn't exist"
   )
   expect(response.headers.raw()).not.toHaveProperty("set-cookie")
 })
 
 test("GET / for game that already started", async () => {
+  const agent = new https.Agent({
+    rejectUnauthorized: false,
+  })
   const [player1, gameId] = await socketHelpers.makeGame(domain, "player1")
   const player2 = await socketHelpers.joinGame(domain, gameId, "player2")
   //todo: move into some default settings object
@@ -60,12 +61,12 @@ test("GET / for game that already started", async () => {
 
   const response = await fetch(`${domain}/?code=${gameId}`, { agent })
   expect(response.status).toBe(403)
-  expect(response.body.read().toString()).toContain(
+  expect(response.body!.read().toString()).toContain(
     "Can't join - game already in progress"
   )
   expect(response.headers.raw()).not.toHaveProperty("set-cookie")
-  player1.close()
-  player2.close()
+
+  await socketHelpers.closeSockets([player1, player2])
 })
 
 // test /make
@@ -82,12 +83,10 @@ test("POST /make", async () => {
   expect(response.status).toBe(302)
   expect(response.headers.raw()).toMatchObject({
     location: expect.arrayContaining([
-      expect.stringMatching(
-        new RegExp(`${domain}/game/[a-f\\d]{4}-[a-f\\d]{4}-\\d+`)
-      ),
+      expect.stringMatching(new RegExp(`${domain}/game/${gameCodeFormat}`)),
     ]),
     "set-cookie": expect.arrayContaining([
-      expect.stringMatching(/gameId=[a-f\d]+-[a-f\d]+-\d/),
+      expect.stringMatching(RegExp(`gameId=${gameCodeFormat}`)),
       expect.stringMatching(/privateId=[a-f\d]{512}-\d/),
       expect.stringMatching(/publicId=\d/),
     ]),
@@ -110,7 +109,7 @@ test("POST /make JSON", async () => {
   expect(json).toEqual({
     publicId: 0,
     privateId: expect.stringMatching(/[a-f\d]{512}-\d/),
-    gameId: expect.stringMatching(/[a-f\d]+-[a-f\d]+-\d/),
+    gameId: expect.stringMatching(new RegExp(`${gameCodeFormat}`)),
   })
 })
 
@@ -119,7 +118,7 @@ test("POST /make no username", async () => {
 
   expect(response.status).toBe(400)
   expect(response.headers.raw()).not.toHaveProperty("set-cookie")
-  expect(response.body.read().toString()).toContain("No username supplied")
+  expect(response.body!.read().toString()).toContain("No username supplied")
 })
 
 // test error logging
@@ -128,10 +127,13 @@ test("POST /make no username", async () => {
 test("dev error handler", async () => {
   // todo: we should add a mock handle to an normal endpoint (/make)
   // that throws, instead of using this fake endpoint
+  const agent = new https.Agent({
+    rejectUnauthorized: false,
+  })
   const response = await fetch(`${domain}/deliberate-error`, { agent })
 
   expect(response.status).toBe(500)
-  expect(response.body.read().toString()).toContain(
+  expect(response.body!.read().toString()).toContain(
     "Internal server error - dev handler"
   )
 })
@@ -139,7 +141,7 @@ test("dev error handler", async () => {
 // test /join
 
 test("POST /join valid game", async () => {
-  const gameDetails = await (
+  const gameDetails: any = await (
     await httpHelpers.post(`${domain}/make`, "username=player1&format=json")
   ).json()
 
@@ -154,15 +156,13 @@ test("POST /join valid game", async () => {
 
   expect(response.headers.raw()).toMatchObject({
     location: expect.arrayContaining([
-      expect.stringMatching(
-        new RegExp(`${domain}/game/[a-f\\d]{4}-[a-f\\d]{4}-\\d+`)
-      ),
+      expect.stringMatching(new RegExp(`${domain}/game/${gameCodeFormat}`)),
     ]),
   })
 })
 
 test("POST /join json", async () => {
-  const gameDetails = await (
+  const gameDetails: any = await (
     await httpHelpers.post(`${domain}/make`, "username=player1&format=json")
   ).json()
 
@@ -181,7 +181,7 @@ test("POST /join json", async () => {
   expect(json).toEqual({
     publicId: 1,
     privateId: expect.stringMatching(/[a-f\d]{512}-\d/),
-    gameId: expect.stringMatching(/[a-f\d]+-[a-f\d]+-\d/),
+    gameId: expect.stringMatching(new RegExp(`${gameCodeFormat}`)),
   })
 })
 
@@ -189,11 +189,11 @@ test("POST /join no code", async () => {
   const response = await httpHelpers.post(`${domain}/join`, `username=player2`)
   expect(response.status).toBe(403)
 
-  expect(response.body.read().toString()).toContain("No game code supplied")
+  expect(response.body!.read().toString()).toContain("No game code supplied")
 })
 
 test("POST /join no username", async () => {
-  const gameDetails = await (
+  const gameDetails: any = await (
     await httpHelpers.post(`${domain}/make`, "username=player1&format=json")
   ).json()
 
@@ -202,7 +202,7 @@ test("POST /join no username", async () => {
     `code=${gameDetails.gameId}`
   )
   expect(response.status).toBe(403)
-  expect(response.body.read().toString()).toContain("No username supplied")
+  expect(response.body!.read().toString()).toContain("No username supplied")
 })
 
 test("POST /join invalid code", async () => {
@@ -211,14 +211,23 @@ test("POST /join invalid code", async () => {
     `username=player2&code=123`
   )
   expect(response.status).toBe(404)
-  expect(response.body.read().toString()).toContain(
+  expect(response.body!.read().toString()).toContain(
     "Can't join - game doesn't exist"
   )
 })
 
 test("POST /join for game that already started", async () => {
-  const [player1, gameId] = await socketHelpers.makeGame(domain, "player1")
-  const player2 = await socketHelpers.joinGame(domain, gameId, "player2")
+  const details = await socketBots.makeGame("player1", domain)
+  const { socket: player1, msg: _initMessage } = await socketHelpers.makeSocket(
+    domain,
+    details.gameId,
+    details.privateId
+  )
+  const player2 = await socketHelpers.joinGame(
+    domain,
+    details.gameId,
+    "player2"
+  )
   //todo: move into some default settings object
   const gameSettings = {
     gameLength: 60000,
@@ -226,24 +235,26 @@ test("POST /join for game that already started", async () => {
     proposedTargetList: [0, 1],
   }
   socketClient.startGame(player1, gameSettings)
-
   const response = await httpHelpers.post(
     `${domain}/join`,
-    `username=player3&code=${gameId}`
+    `username=player3&code=${details.gameId}`
   )
 
   expect(response.status).toBe(403)
-  expect(response.body.read().toString()).toContain(
+  expect(response.body!.read().toString()).toContain(
     "Can't join - game already in progress"
   )
-  player1.close()
-  player2.close()
+
+  await socketHelpers.closeSockets([player1, player2])
 })
 
 // test /archived
 
 test("GET /archived", async () => {
+  const agent = new https.Agent({
+    rejectUnauthorized: false,
+  })
   const response = await fetch(`${domain}/archived`, { agent })
   expect(response.status).toBe(200)
-  expect(response.body.read().toString()).toContain("<!-- archived page -->")
+  expect(response.body!.read().toString()).toContain("<!-- archived page -->")
 })
