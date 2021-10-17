@@ -8,7 +8,10 @@ export async function makeSocket(
   domain: string,
   gameId: string,
   privateId: string
-) {
+): Promise<{
+  socket: Socket
+  msg: SocketEvents.ServerInitializationMsg
+}> {
   return new Promise<{
     socket: Socket
     msg: SocketEvents.ServerInitializationMsg

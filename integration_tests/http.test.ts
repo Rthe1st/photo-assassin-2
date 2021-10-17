@@ -5,7 +5,7 @@
 import fetch, { Headers, RequestInit } from "node-fetch"
 import * as https from "https"
 
-import * as socketBots from "../src/server/socketBots"
+import * as socketBots from "../src/bots/socketBots"
 import * as socketClient from "../src/shared/socketClient"
 import * as socketHelpers from "./socketHelpers"
 import * as httpHelpers from "./httpHelpers"

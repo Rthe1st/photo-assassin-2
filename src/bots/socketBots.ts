@@ -10,9 +10,9 @@ import * as SharedGame from "../shared/game"
 import * as https from "https"
 import { Socket } from "socket.io-client"
 
-let domain = "https://localhost:3000"
+export let domain = "https://localhost:3000"
 
-export function useProd() {
+export function useProd(): void {
   domain = "https://photo-assassin.prangten.com"
 }
 

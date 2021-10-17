@@ -2,7 +2,7 @@ import { jest } from "@jest/globals"
 // needed for messy socket tests that don't clean themselves up well
 jest.setTimeout(10000)
 import * as socketHelpers from "./socketHelpers"
-import * as socketBots from "../src/server/socketBots"
+import * as socketBots from "../src/bots/socketBots"
 import { domain, gameCodeFormat } from "./shared_definitions"
 
 test("whole game", async () => {

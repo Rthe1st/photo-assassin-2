@@ -88,6 +88,7 @@ module.exports = {
     // Add '.ts' and '.tsx' as resolvable extensions.
     extensions: [".webpack.js", ".web.js", ".ts", ".tsx", ".js"],
     fallback: {
+      buffer: require.resolve("buffer"),
       https: require.resolve("https-browserify"),
       url: require.resolve("url/"),
       http: require.resolve("stream-http"),
@@ -107,6 +108,10 @@ module.exports = {
     ],
   },
   plugins: [
+    // https://github.com/webpack/changelog-v5/issues/10
+    new webpack.ProvidePlugin({
+      Buffer: ["buffer", "Buffer"],
+    }),
     new webpack.DefinePlugin({
       "process.env": JSON.stringify(envs),
     }),

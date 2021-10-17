@@ -106,14 +106,14 @@ CNAME'd to Cloudflare for forcing https and for caching under photo-assassin.pra
 spin up server:
 
 ```bash
-npm start
+sudo docker-compose up
 ```
 
 spin up game with robot players:
 
 ```bash
-# add --prod to run the game on prod instead
-npm start -- --clients listen
+# add --prod to have bots connect to production instance
+npm  run-script bots -- --listen
 ```
 
 Have robot players join a game you've already made:
@@ -121,8 +121,6 @@ Have robot players join a game you've already made:
 ```bash
 npm run-script start -- --game-code you-game-code-here --clients passive
 ```
-
-It'll be running on [localhost](http://localhost:3000/)
 
 ### Phone browser remote debugging
 
