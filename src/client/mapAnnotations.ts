@@ -2,6 +2,8 @@ import * as SharedGame from "../shared/game"
 import * as Game from "./game"
 import * as kalman from "./kalman"
 
+import * as dat from "dat.gui"
+
 interface PlayerSnipe {
   marker: google.maps.Marker
   arrow?: google.maps.Polyline
@@ -15,6 +17,14 @@ export class MapData {
   maxTime: number
   playerColours: string[]
 
+  datGui: dat.GUI
+  settings: {
+    kalman: boolean
+    raw: boolean
+    gpsPoints: boolean
+    targets: boolean
+  }
+
   playerPaths: { [key: number]: google.maps.Polyline }
   rawPlayerPaths: { [key: number]: google.maps.Polyline }
   playerSnipes: { [key: number]: PlayerSnipe[] }
@@ -27,6 +37,18 @@ export class MapData {
     snipeClickHandler: (title: string, imageId: number) => void,
     playerColours: string[]
   ) {
+    this.settings = {
+      kalman: true,
+      raw: true,
+      gpsPoints: true,
+      targets: true,
+    }
+    this.datGui = new dat.GUI()
+    this.datGui.hide()
+    this.datGui.add(this.settings, "kalman")
+    this.datGui.add(this.settings, "raw")
+    this.datGui.add(this.settings, "gpsPoints")
+    this.datGui.add(this.settings, "targets")
     this.gameState = gameState
     this.map = map
 
@@ -94,6 +116,9 @@ export class MapData {
   }
 
   drawPath(playerPublicId: number, minTime: number, maxTime: number) {
+    if (!this.settings.raw) {
+      return
+    }
     if (!(playerPublicId in this.rawPlayerPaths)) {
       this.rawPlayerPaths[playerPublicId] = new google.maps.Polyline({
         path: [],
@@ -102,7 +127,6 @@ export class MapData {
         strokeOpacity: 1.0,
         strokeWeight: 2,
       })
-      this.rawPlayerPaths[playerPublicId].setMap(this.map)
     }
 
     const positions = this.gameState.positions![playerPublicId]
@@ -122,9 +146,13 @@ export class MapData {
     }
 
     this.rawPlayerPaths[playerPublicId].setPath(path)
+    this.rawPlayerPaths[playerPublicId].setMap(this.map)
   }
 
   drawKalmanPath(playerPublicId: number, minTime: number, maxTime: number) {
+    if (!this.settings.kalman) {
+      return
+    }
     if (!(playerPublicId in this.playerPaths)) {
       const lineSymbol = {
         path: "M 0,-1 0,1",
@@ -145,7 +173,6 @@ export class MapData {
         ],
         strokeWeight: 2,
       })
-      this.playerPaths[playerPublicId].setMap(this.map)
     }
 
     const positions = this.gameState.positions![playerPublicId]
@@ -167,13 +194,27 @@ export class MapData {
         lat: estLatitude,
         lng: estLongitude,
       }
-      path.push(latlng)
+
       if (position.timestamp! > maxTime) {
         break
       }
+      const previous = path[path.length - 1]
+      if (previous !== undefined) {
+        // require geometry lib to be loaded
+        // https://stackoverflow.com/a/15226237
+        const dist = google.maps.geometry.spherical.computeDistanceBetween(
+          new google.maps.LatLng(estLatitude, estLongitude),
+          new google.maps.LatLng(previous.lat, previous.lng)
+        )
+        if (dist < 5) {
+          continue
+        }
+      }
+      path.push(latlng)
     }
 
     this.playerPaths[playerPublicId].setPath(path)
+    this.playerPaths[playerPublicId].setMap(this.map)
   }
 
   // this is mostly for debug
@@ -183,6 +224,9 @@ export class MapData {
     minTime: number,
     maxTime: number
   ) {
+    if (!this.settings.gpsPoints) {
+      return
+    }
     const positions = this.gameState.positions![playerPublicId]
 
     if (!(playerPublicId in this.points)) {
@@ -223,6 +267,9 @@ export class MapData {
     playerPublicId: number,
     clickHandler: (title: string, imageId: number) => void
   ) {
+    if (!this.settings.targets) {
+      return
+    }
     const snipes = Game.getSnipeInfos(playerPublicId)
     //todo: plot non-snipe images as well
     if (!(playerPublicId in this.playerSnipes)) {

@@ -38,7 +38,7 @@ export function setupTestLogging(filePrefix: string) {
   // }
 }
 
-export function setUpLogging(filePrefix: string) {
+export function setUpLogging(filePrefix = "general") {
   const config = {
     level: "info",
     format: winston.format.json(),

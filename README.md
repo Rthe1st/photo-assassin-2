@@ -113,13 +113,13 @@ spin up game with robot players:
 
 ```bash
 # add --prod to have bots connect to production instance
-npm  run-script bots -- --listen
+npm run-script bots -- --listen
 ```
 
 Have robot players join a game you've already made:
 
 ```bash
-npm run-script start -- --game-code you-game-code-here --clients passive
+npm run-script bots -- --game-code you-game-code-here --clients passive
 ```
 
 ### Phone browser remote debugging

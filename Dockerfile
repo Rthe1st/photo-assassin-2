@@ -20,12 +20,6 @@ COPY package*.json ./
 USER node
 RUN npm ci --production
 COPY --from=builder /home/node/app/dist ./dist
-# Only used for local dev
-# heroku doesn't even support volumes
-# the first is for self signed https certs
-# some browser APIs (like geolocation) need https to work
-# the second is to test code changes without rebuilding image
-VOLUME [ "/home/node/app/secret","/home/node/app/dist" ]
 
 EXPOSE 3000
 # https://github.com/nodejs/docker-node/blob/main/docs/BestPractices.md#cmd

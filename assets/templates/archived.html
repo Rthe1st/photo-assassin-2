@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="/static/archived.css" />
     <!-- we're not giving google maps a callback because the JS to call back is in another file, and this breaks it
     so we must load the google maps script first (and not async) to make sure it's already loaded before hitting our code-->
-    <script src="https://maps.googleapis.com/maps/api/js?key=<%= key %>"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=<%= key %>&libraries=geometry"></script>
     <!-- for use in api tests -->
     <!-- archived page -->
   </head>
