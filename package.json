@@ -25,6 +25,7 @@
   "type": "module",
   "scripts": {
     "lint": "eslint .",
+    "format": "prettier --write .",
     "check-format": "prettier --check .",
     "start": "node --experimental-specifier-resolution=node ./dist/server/start.js",
     "build-server": "tsc --build ./src/server/tsconfig.json",

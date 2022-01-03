@@ -1,6 +1,5 @@
 import * as SharedGame from "../shared/game"
 import * as api from "../shared/clientApi"
-// import * as kalman from './kalman';
 import { MapData } from "./mapAnnotations"
 import * as Game from "./game"
 

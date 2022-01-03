@@ -5,7 +5,7 @@
     "moduleTypes": {
       "jest.config.ts": "cjs",
       "./**/jest.config.ts": "cjs",
-      "webpack.config.ts": "cjs",
+      "webpack.config.ts": "cjs"
     }
   },
   "compilerOptions": {

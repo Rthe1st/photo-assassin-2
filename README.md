@@ -13,10 +13,12 @@ When adding config vars, use real spaces instead of \n. This is important for GC
 https://dashboard.heroku.com/apps/photo-assassin/settings
 
 ```bash
-sudo docker login --username=$USERNAME registry.heroku.com
+sudo heroku login
+sudo heroku container:login
+sudo docker build . -t photo-assassin
 sudo docker tag photo-assassin registry.heroku.com/photo-assassin/web
 sudo docker push registry.heroku.com/photo-assassin/web
-heroku container:release -a photo-assassin web
+sudo heroku container:release -a photo-assassin web
 ```
 
 ### View logs
