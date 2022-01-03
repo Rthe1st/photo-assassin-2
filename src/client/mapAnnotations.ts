@@ -39,8 +39,8 @@ export class MapData {
   ) {
     this.settings = {
       kalman: true,
-      raw: true,
-      gpsPoints: true,
+      raw: false,
+      gpsPoints: false,
       targets: true,
     }
     this.datGui = new dat.GUI()

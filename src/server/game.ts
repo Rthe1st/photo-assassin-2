@@ -226,7 +226,7 @@ function snipe(
     snipePlayer: sniperPublicId,
     target: snipedId,
     votes: [],
-    imageId: imageId!,
+    imageId,
     targetPosition: targetPosition,
     position: position,
     previousSnipe: game.latestSnipeIndexes[sniperPublicId],

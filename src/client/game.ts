@@ -76,7 +76,7 @@ export function getSnipeInfos(publicId: number) {
 
 export function getPlayerProgress(publicId: number) {
   const got = game.targetsGot![publicId].length
-  const remaining = got + game.targets![publicId].length
+  const remaining = game.targets![publicId].length
   return [got, remaining]
 }
 
