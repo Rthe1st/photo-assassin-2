@@ -290,8 +290,11 @@ export class MapData {
           // middle of the map? interpolation between known positions?
           latlng = { lat: 0, lng: 0 }
         }
+
+        const sniperName = Game.getUsername(playerPublicId)
+
         const target = Game.getUsername(snipeInfo.target)
-        const title = `${playerPublicId} got ${target}`
+        const title = `${sniperName} got ${target}`
         const marker = new google.maps.Marker({
           position: latlng,
           title: title,
