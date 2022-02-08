@@ -10,7 +10,7 @@ const HtmlWebpackPlugin = require("html-webpack-plugin")
 // but I can't work out how to get sentry to actually used them in issues
 const SentryCliPlugin = require("@sentry/webpack-plugin")
 // const SentryWebpackPlugin = require('@sentry/webpack-plugin');
-let envs = dotenv.config().parsed
+let envs = dotenv.config({ path: "./secret/.env.dev" }).parsed
 if (envs == undefined) {
   envs = process.env
 }
