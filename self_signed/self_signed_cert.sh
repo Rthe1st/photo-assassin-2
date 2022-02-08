@@ -1,1 +1,1 @@
-openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout secret/self_signed.key -out secret/self_signed.pem -config ./self_signed/req.cnf -sha256
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout self_signed/privkey.pem -out self_signed/cert.pem -config ./self_signed/req.cnf -sha256

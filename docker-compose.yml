@@ -1,10 +1,13 @@
-version: "3.9"
+version: "3.1"
 services:
   server:
-    build: .
+    image: photo-assassin
     ports:
-      - "3000:3000"
+      - "80:3000"
+      - "443:3000"
     volumes:
-      - ./dist:/home/node/app/dist
-      - ./secret:/home/node/app/secret
+      - /etc/letsencrypt/live/photo-assassin.prangten.com/privkey.pem:/home/node/app/secret/privkey.pem
+      - /etc/letsencrypt/live/photo-assassin.prangten.com/cert.pem:/home/node/app/secret/cert.pem
+      - /etc/letsencrypt/live/photo-assassin.prangten.com/chain.pem:/home/node/app/secret/chain.pem
     env_file: .env
+    restart: on-failure

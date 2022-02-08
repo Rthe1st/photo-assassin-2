@@ -17,6 +17,7 @@ Game.setup()
 import * as socketHandler from "./socketHandler"
 import * as socketInterface from "./socketInterface"
 import { logger } from "./logging"
+import { env } from "process"
 
 function devErrorHandler(
   err: any,
@@ -39,23 +40,19 @@ export function createServer(
   const app = express()
   app.use(express.urlencoded({ extended: true }))
 
-  let httpServer
-  if (process.env.NODE_ENV != "production") {
-    // counterintuitively, we only want https in dev mode
-    // because to use GPS in browser, the client needs an https connection
-    // In prod, this is provided by Cloudflare using flexible TLS
-    // and we can't do TLS from Cloudflare to origin because Heroku only support
-    // TLS for paid dynamos
-    const httpsOptions = {
-      key: fs.readFileSync("./secret/self_signed.key"),
-      cert: fs.readFileSync("./secret/self_signed.pem"),
-    }
-    httpServer = <http.Server>https.createServer(httpsOptions, app)
-  } else {
-    httpServer = http.createServer(app)
+  const httpsOptions: https.ServerOptions = {
+    key: fs.readFileSync("./secret/privkey.pem"),
+    cert: fs.readFileSync("./secret/cert.pem"),
   }
 
-  //io needs to be accessablrwhen we setup game - pass it in
+  // we don't have a chain for self signed certs
+  if (env.NODE_ENV === "production") {
+    httpsOptions.ca = fs.readFileSync("./secret/chain.pem")
+  }
+
+  const httpServer = <http.Server>https.createServer(httpsOptions, app)
+
+  //io needs to be accessible when we setup game - pass it in
   // https://github.com/socketio/socket.io/issues/2276
   const ioServer = new Server(httpServer, {
     cookie: false,

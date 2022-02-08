@@ -1,0 +1,10 @@
+version: "3.1"
+services:
+  server:
+    build: .
+    volumes:
+      - ./dist:/home/node/app/dist
+      - ./self_signed/privkey.pem:/home/node/app/secret/privkey.pem
+      - ./self_signed/cert.pem:/home/node/app/secret/cert.pem
+    # even in dev this has secrets we don't want to share
+    env_file: ./secret/.env.dev
