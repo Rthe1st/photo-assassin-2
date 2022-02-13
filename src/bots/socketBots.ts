@@ -10,7 +10,7 @@ import * as SharedGame from "../shared/game"
 import * as https from "https"
 import { Socket } from "socket.io-client"
 
-export let domain = "https://localhost:3000"
+export let domain = "https://localhost"
 
 export function useProd(): void {
   domain = "https://photo-assassin.prangten.com"
@@ -88,7 +88,7 @@ async function gameSetup(players: Player[], gameId: string | undefined) {
     hostPlayer = players.shift()!
     details = await makeGame(hostPlayer.name)
     gameId = details.gameId
-    console.log(`https://localhost:3000/game/${gameId}`)
+    console.log(`https://localhost/game/${gameId}`)
   }
   const sockets = new Map()
   for (const player of players) {

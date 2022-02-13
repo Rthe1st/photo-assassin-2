@@ -20,7 +20,7 @@ if (process.env.NODE_ENV == "test") {
 }
 
 export function gameStateUrl(code: string): string {
-  return "https://storage-photo-assassin.prangten.com/" + gameStatePath(code)
+  return "/games/" + gameStatePath(code)
 }
 
 export function gameStatePath(code: string): string {

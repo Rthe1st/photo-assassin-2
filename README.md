@@ -41,6 +41,8 @@ npm test
 # first run this to get changes to server code
 # the compose file uses volumes so the image doesn't need to be rebuilt
 npm run-script build
+# you have to make sure ./.env exists, even though it's not used
+# once the files are merged
 sudo docker-compose -f ./docker-compose.yml -f ./docker-compose.dev.yml up
 # these need the docker container to be running
 npm run-script integration-test

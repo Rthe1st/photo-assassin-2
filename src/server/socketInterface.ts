@@ -4,8 +4,6 @@ import * as socketEvents from "../shared/socketEvents"
 import * as socketHandler from "./socketHandler"
 import { Namespace, Server, Socket } from "socket.io"
 
-Game.setup()
-
 export function setup(io: Server) {
   const game = Game.generateGame()
   const namespace = io.of(`/game/${game.code}`)

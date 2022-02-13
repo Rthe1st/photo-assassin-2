@@ -5,7 +5,7 @@ import * as SocketEvents from "../shared/socketEvents"
 import sharp from "sharp"
 import { commonWords } from "./commonWords"
 
-import { ImageStore } from "./imageStore"
+import * as imageStore from "./imageStore"
 
 import socketIo from "socket.io"
 
@@ -14,14 +14,6 @@ import { logger } from "./logging"
 // todo: we should wrap this in a class
 // it'd make it easier to test
 export const games: Map<string, Game> = new Map()
-
-let imageStore: ImageStore
-
-export function setup() {
-  if (imageStore == undefined) {
-    imageStore = new ImageStore()
-  }
-}
 
 const states = Object.freeze({
   FINISHED: "FINISHED",
@@ -121,13 +113,9 @@ export function saveImage(
   // the game state uploaded to goog already has the right URL links
   // this means we don't have to wait for the final snipe image to upload
   // before telling players the game is over
-  game.imageUploadsDone.push(
-    "https://storage-photo-assassin.prangten.com/" +
-      imageStore.getUploadImageUrl(game.code, imageId)
-  )
+  game.imageUploadsDone.push(imageStore.getUploadImageUrl(game.code, imageId))
   game.lowResUploadsDone.push(
-    "https://storage-photo-assassin.prangten.com/" +
-      imageStore.getUploadImageLowResUrl(game.code, imageId)
+    imageStore.getUploadImageLowResUrl(game.code, imageId)
   )
   game.nextImageId += 1
   const asWebp = sharp(image).webp()

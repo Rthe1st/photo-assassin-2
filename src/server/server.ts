@@ -12,8 +12,6 @@ import * as fs from "fs"
 
 import * as Game from "./game"
 
-Game.setup()
-
 import * as socketHandler from "./socketHandler"
 import * as socketInterface from "./socketInterface"
 import { logger } from "./logging"
@@ -77,6 +75,7 @@ export function createServer(
   }
   app.use(cookieParser())
   app.use("/static", express.static(staticDir))
+  app.use("/games", express.static("games"))
 
   staticDir = path.resolve(staticDir) + "/"
 
@@ -255,9 +254,9 @@ function gamePage(
   const game = Game.getGame(req.params.code)
   if (game == undefined) {
     // then we assume its a finished game
-    // that we no longer keep in memory and have push to google cloud
+    // that we no longer keep in memory and save to disk
     // client side code will handle detecting an error
-    // if there is not matching game in the cloud
+    // if there is not matching game on disk
     // todo: make sure cloudflare doesn't cache the game page until the game is over
     // but then caches it aggressively
     // one answer: combine archived and index pages into one

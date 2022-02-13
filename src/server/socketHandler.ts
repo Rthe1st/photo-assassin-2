@@ -4,8 +4,6 @@ import * as socketInterface from "./socketInterface"
 import * as socketEvents from "../shared/socketEvents"
 import { Server, Socket } from "socket.io"
 
-Game.setup()
-
 export function updateSettings(
   msg: socketEvents.ClientUpdateSettings,
   game: Game.Game,
@@ -261,7 +259,7 @@ function finishGame(game: Game.Game, winner: string, io: Server) {
       winner: winner,
       stateUrl: url,
     })
-    // once the state has been uploaded to the cloud
+    // once the state has been saved to disk
     // there's no need for us to keep it
     Game.games.delete(game.code)
   })

@@ -83,7 +83,7 @@ test("POST /make", async () => {
   expect(response.status).toBe(302)
   expect(response.headers.raw()).toMatchObject({
     location: expect.arrayContaining([
-      expect.stringMatching(new RegExp(`${domain}/game/${gameCodeFormat}`)),
+      expect.stringMatching(new RegExp(`/game/${gameCodeFormat}`)),
     ]),
     "set-cookie": expect.arrayContaining([
       expect.stringMatching(RegExp(`gameId=${gameCodeFormat}`)),
@@ -156,7 +156,7 @@ test("POST /join valid game", async () => {
 
   expect(response.headers.raw()).toMatchObject({
     location: expect.arrayContaining([
-      expect.stringMatching(new RegExp(`${domain}/game/${gameCodeFormat}`)),
+      expect.stringMatching(new RegExp(`/game/${gameCodeFormat}`)),
     ]),
   })
 })

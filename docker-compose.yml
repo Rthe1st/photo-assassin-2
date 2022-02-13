@@ -9,5 +9,6 @@ services:
       - /etc/letsencrypt/live/photo-assassin.prangten.com/privkey.pem:/home/node/app/secret/privkey.pem
       - /etc/letsencrypt/live/photo-assassin.prangten.com/cert.pem:/home/node/app/secret/cert.pem
       - /etc/letsencrypt/live/photo-assassin.prangten.com/chain.pem:/home/node/app/secret/chain.pem
+      - ./games:/home/node/app/games
     env_file: .env
     restart: on-failure

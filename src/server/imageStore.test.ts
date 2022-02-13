@@ -1,66 +1,51 @@
-import { ImageStore } from "./imageStore"
+import * as imageStore from "./imageStore"
 import * as game from "../shared/game"
 import * as api from "../shared/clientApi"
 import * as fs from "fs"
-import fetch from "node-fetch"
-import dotenv from "dotenv"
 
-import { jest } from "@jest/globals"
-// needed for messy socket tests that don't clean themselves up well
-jest.setTimeout(8000)
-
-// todo: create a test service account
-// we don't consider mocking gcp as imageStore shouldn't have much logic
-// to test, independent of the GCP connection
-test("upload file and access it", async () => {
-  // for gcp secrets
-  //todo: make seperate test creds
-  dotenv.config()
+test("uploadLowResImage", async () => {
   const file = fs.readFileSync("./src/server/sample_snipe_image.jpeg")
-  const imageStore = new ImageStore()
-  const fileUrl = await imageStore.upload(file, "test/file/path")
-  expect(fileUrl).toBe(
-    "https://storage-photo-assassin.prangten.com/test/file/path"
-  )
+  const gameCode = "my-game-code"
+  const imageId = 0
+  const fileUrl = await imageStore.uploadLowResImage(file, gameCode, imageId)
+  const expectedDiskPath = `games/${gameCode}/low-res/${imageId}.webp`
+  expect(fileUrl).toBe("/" + expectedDiskPath)
+  expect(fileUrl).toBe(imageStore.getUploadImageLowResUrl(gameCode, imageId))
 
-  const fileFromCloud = await fetch(fileUrl)
-    .then((response) => {
-      return response.blob()
-    })
-    .then((blob) => {
-      // casting because fetch seems to have its own blob type
-      // more reason to move to axios?
-      return (blob as Blob).arrayBuffer()
-    })
-    .then((arrayBuffer: ArrayBuffer) => {
-      return Buffer.from(arrayBuffer)
-    })
-
-  expect(fileFromCloud).toStrictEqual(file)
-  // todo: delete the file from google cloud
-  // so the next run doesn't accidentally pass
+  const fromDisk = fs.readFileSync(expectedDiskPath)
+  expect(fromDisk).toStrictEqual(file)
+  fs.unlinkSync(expectedDiskPath)
 })
 
-test("upload game state file and access it", async () => {
-  dotenv.config()
-  const imageStore = new ImageStore()
+test("uploadImage", async () => {
+  const file = fs.readFileSync("./src/server/sample_snipe_image.jpeg")
+  const gameCode = "my-game-code"
+  const imageId = 0
+  const fileUrl = await imageStore.uploadImage(file, gameCode, imageId)
+  const expectedDiskPath = `games/${gameCode}/image/${imageId}.webp`
+  expect(fileUrl).toBe("/" + expectedDiskPath)
+  expect(fileUrl).toBe(imageStore.getUploadImageUrl(gameCode, imageId))
+
+  const fromDisk = fs.readFileSync(expectedDiskPath)
+  expect(fromDisk).toStrictEqual(file)
+  fs.unlinkSync(expectedDiskPath)
+})
+
+test("save game state file and access it", async () => {
   // todo: using a real game here would also
   // let us check that the game serializes correctly
-  // but I think that should be handled in a dedicated test
+  // but that should be handled in a dedicated test
   const fakeGame = { fakeProperty: "fakeValue" } as any
   const code = "upload-game-state-file-and-access-it"
   const fileUrl = await imageStore.uploadGameState(
     fakeGame as game.ClientGame,
     code
   )
+  const expectedDiskPath =
+    "games/upload-game-state-file-and-access-it/state.json"
   expect(fileUrl).toBe(api.gameStateUrl(code))
-  // todo: to make this a truer test, we should purge the cloudflare cache
-  // or, also test against the direct value from google
-  const fileFromCloud = await fetch(fileUrl).then((response) => {
-    return response.json()
-  })
-
-  expect(fileFromCloud).toEqual(fakeGame)
-  // todo: delete the file from google cloud
-  // so the next run doesn't accidentally pass
+  expect(fileUrl).toBe(`/${expectedDiskPath}`)
+  const fromDisk = fs.readFileSync(expectedDiskPath)
+  expect(JSON.parse(fromDisk.toString())).toStrictEqual(fakeGame)
+  fs.unlinkSync(expectedDiskPath)
 })

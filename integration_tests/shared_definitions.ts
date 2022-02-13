@@ -1,2 +1,2 @@
 export const gameCodeFormat = "[a-z]+-[a-z]+-[a-z]+-[a-z]+"
-export const domain = "https://localhost:3000"
+export const domain = "https://localhost"

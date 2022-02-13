@@ -496,7 +496,7 @@ function initialization(msg: socketClient.ServerInitializationMsg) {
       const lowResUrl = game.getImageUrl(message.imageId, true)
       // lowResUrl could still come back undefined
       // if the image has been processed by the server
-      // but the call to upload it to gcloud hasn't finished yet
+      // but the call to write it to disk hasn't completed yet
       processMsg(message, true, lowResUrl)
     } else {
       processMsg(message, true)

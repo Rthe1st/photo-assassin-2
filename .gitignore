@@ -3,4 +3,4 @@ logs/
 .env
 dist/*
 secret/*
-gcp_config/storage-upload-account.json
+games/
