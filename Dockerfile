@@ -21,6 +21,6 @@ USER node
 RUN npm ci --production
 COPY --from=builder /home/node/app/dist ./dist
 
-EXPOSE 3000
+EXPOSE 4330 8000
 # https://github.com/nodejs/docker-node/blob/main/docs/BestPractices.md#cmd
 CMD [ "node", "--experimental-specifier-resolution=node", "/home/node/app/dist/server/start.js" ]

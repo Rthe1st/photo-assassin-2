@@ -145,7 +145,7 @@ sudo ./adb devices`
 - [enable dev options on phone](https://developer.android.com/studio/debug/dev-options)
 - plug phone in usb, aurthise debug, etc
 - Find the device on about:debugging in firefox and connect
-- connect to server using local network IP, like: https://192.168.8.117:3000
+- connect to server using local network IP, like: https://192.168.8.117
 
 ## test structure/philosophy
 

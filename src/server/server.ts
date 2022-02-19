@@ -30,12 +30,25 @@ function devErrorHandler(
   res.status(500).send("Internal server error - dev handler").end()
 }
 
+export function httpRedirect(): void {
+  const app = express()
+  app.use(function (req, res) {
+    if (process.env.NODE_ENV === "production") {
+      return res.redirect("https://prangten.photo-assassin.com" + req.url)
+    } else {
+      return res.redirect("https://" + req.headers.host + req.url)
+    }
+  })
+  http.createServer(app).listen(8000)
+}
+
 export function createServer(
-  port = process.env.PORT || 3000,
+  port = 4330,
   staticDir = "dist/public/",
   useSentry = true
-): http.Server {
+): void {
   const app = express()
+
   app.use(express.urlencoded({ extended: true }))
 
   const httpsOptions: https.ServerOptions = {
@@ -118,8 +131,6 @@ export function createServer(
   setInterval(() => {
     socketHandler.checkGameTiming(Game.games, ioServer)
   }, 1000)
-
-  return httpServer
 }
 
 function root(staticDir: string, req: express.Request, res: express.Response) {
@@ -136,7 +147,7 @@ function root(staticDir: string, req: express.Request, res: express.Response) {
   } else if (game.state != Game.states.NOT_STARTED) {
     // todo: what if user is already in the game?
     // maybe root should leave this case for /join to handle
-    // (same with code doesnt exist as well?)
+    // (same with code doesn't exist as well?)
     logger.log(
       "verbose",
       "/ Attempt to join game " + req.query.code + " that has already started"
