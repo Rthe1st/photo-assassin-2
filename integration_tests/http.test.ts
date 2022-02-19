@@ -29,7 +29,7 @@ test("GET /", async () => {
   })
   const response = await fetch(`${domain}/`, { agent })
   expect(response.status).toBe(200)
-  expect(response.body!.read().toString()).toContain("<!-- lobby page -->")
+  expect(response.text()).resolves.toContain("<!-- lobby page -->")
   expect(response.headers.raw()).not.toHaveProperty("set-cookie")
 })
 
@@ -39,9 +39,7 @@ test("GET / for non-existent game", async () => {
   })
   const response = await fetch(`${domain}/?code=madeupcode`, { agent })
   expect(response.status).toBe(404)
-  expect(response.body!.read().toString()).toContain(
-    "Can't join - game doesn't exist"
-  )
+  expect(response.text()).resolves.toContain("Can't join - game doesn't exist")
   expect(response.headers.raw()).not.toHaveProperty("set-cookie")
 })
 
@@ -61,7 +59,7 @@ test("GET / for game that already started", async () => {
 
   const response = await fetch(`${domain}/?code=${gameId}`, { agent })
   expect(response.status).toBe(403)
-  expect(response.body!.read().toString()).toContain(
+  expect(response.text()).resolves.toContain(
     "Can't join - game already in progress"
   )
   expect(response.headers.raw()).not.toHaveProperty("set-cookie")
@@ -118,7 +116,7 @@ test("POST /make no username", async () => {
 
   expect(response.status).toBe(400)
   expect(response.headers.raw()).not.toHaveProperty("set-cookie")
-  expect(response.body!.read().toString()).toContain("No username supplied")
+  expect(response.text()).resolves.toContain("No username supplied")
 })
 
 // test error logging
@@ -133,7 +131,7 @@ test("dev error handler", async () => {
   const response = await fetch(`${domain}/deliberate-error`, { agent })
 
   expect(response.status).toBe(500)
-  expect(response.body!.read().toString()).toContain(
+  expect(response.text()).resolves.toContain(
     "Internal server error - dev handler"
   )
 })
@@ -189,7 +187,7 @@ test("POST /join no code", async () => {
   const response = await httpHelpers.post(`${domain}/join`, `username=player2`)
   expect(response.status).toBe(403)
 
-  expect(response.body!.read().toString()).toContain("No game code supplied")
+  expect(response.text()).resolves.toContain("No game code supplied")
 })
 
 test("POST /join no username", async () => {
@@ -202,7 +200,7 @@ test("POST /join no username", async () => {
     `code=${gameDetails.gameId}`
   )
   expect(response.status).toBe(403)
-  expect(response.body!.read().toString()).toContain("No username supplied")
+  expect(response.text()).resolves.toContain("No username supplied")
 })
 
 test("POST /join invalid code", async () => {
@@ -211,14 +209,12 @@ test("POST /join invalid code", async () => {
     `username=player2&code=123`
   )
   expect(response.status).toBe(404)
-  expect(response.body!.read().toString()).toContain(
-    "Can't join - game doesn't exist"
-  )
+  expect(response.text()).resolves.toContain("Can't join - game doesn't exist")
 })
 
 test("POST /join for game that already started", async () => {
   const details = await socketBots.makeGame("player1", domain)
-  const { socket: player1, msg: _initMessage } = await socketHelpers.makeSocket(
+  const { socket: player1 } = await socketHelpers.makeSocket(
     domain,
     details.gameId,
     details.privateId
@@ -241,7 +237,7 @@ test("POST /join for game that already started", async () => {
   )
 
   expect(response.status).toBe(403)
-  expect(response.body!.read().toString()).toContain(
+  expect(response.text()).resolves.toContain(
     "Can't join - game already in progress"
   )
 
@@ -256,5 +252,5 @@ test("GET /archived", async () => {
   })
   const response = await fetch(`${domain}/archived`, { agent })
   expect(response.status).toBe(200)
-  expect(response.body!.read().toString()).toContain("<!-- archived page -->")
+  expect(response.text()).resolves.toContain("<!-- archived page -->")
 })
