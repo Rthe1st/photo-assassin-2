@@ -2,6 +2,21 @@ import * as imageStore from "./imageStore"
 import * as game from "../shared/game"
 import * as api from "../shared/clientApi"
 import * as fs from "fs"
+import FakeTimers from "@sinonjs/fake-timers"
+
+test("cleanUp", async () => {
+  const gameDir = "./games/my-code"
+  const gameFile = `${gameDir}/test`
+  fs.mkdirSync(gameDir)
+  fs.writeFileSync(gameFile, "")
+  const clock = FakeTimers.install({ now: Date.now() })
+  await imageStore.cleanUp()
+  expect(fs.existsSync(gameDir)).toBe(true)
+  clock.tick(1000 * 60 * 60 * 24 * 7 + 1)
+  await imageStore.cleanUp()
+  expect(fs.existsSync(gameDir)).toBe(false)
+  clock.uninstall()
+})
 
 test("uploadLowResImage", async () => {
   const file = fs.readFileSync("./src/server/sample_snipe_image.jpeg")
@@ -31,7 +46,7 @@ test("uploadImage", async () => {
   fs.unlinkSync(expectedDiskPath)
 })
 
-test("save game state file and access it", async () => {
+test("uploadGameState", async () => {
   // todo: using a real game here would also
   // let us check that the game serializes correctly
   // but that should be handled in a dedicated test

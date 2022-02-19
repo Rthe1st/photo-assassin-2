@@ -1,8 +1,45 @@
 import * as fs from "fs"
+import * as fsPromises from "fs/promises"
 
 import { ClientGame } from "../shared/game"
 import * as api from "../shared/clientApi"
 import path from "path"
+import { setTimeout } from "timers/promises"
+
+const msPerDay = 1000 * 60 * 60 * 24
+const maxDaysOld = 7
+
+export function cleanUpDaemon() {
+  cleanUp()
+  // guarantees games will be cleaned up after 101% of max days old
+  setTimeout((msPerDay * maxDaysOld) / 100).then(cleanUp)
+}
+
+export async function cleanUp(): Promise<void> {
+  const currentDate = new Date()
+  console.log(`Checking for games to clean up at ${currentDate.toISOString()}`)
+  await fsPromises.readdir(path.resolve("./games")).then((files) => {
+    const fileCleanUps: Promise<void>[] = []
+    for (const file of files) {
+      const filePath = path.resolve(`./games/${file}`)
+      const fileCleanup: Promise<void> = fsPromises
+        .stat(filePath)
+        .then((stats) => {
+          const folderCreationDate = stats.mtime
+          const diffInMs = currentDate.getTime() - folderCreationDate.getTime()
+          const diffInDays = diffInMs / msPerDay
+          if (diffInDays > maxDaysOld) {
+            console.log(
+              `cleaning ${file}, created at ${folderCreationDate.toISOString()}}`
+            )
+            return fsPromises.rm(filePath, { recursive: true })
+          }
+        })
+      fileCleanUps.push(fileCleanup)
+    }
+    return Promise.all(fileCleanUps)
+  })
+}
 
 export function getUploadImageUrl(gameCode: string, id: number): string {
   return `/games/${gameCode}/image/${id}.webp`
