@@ -21,6 +21,10 @@ export async function getData(url: string) {
     rejectUnauthorized: false,
   })
   const response = await fetch(url, { agent })
+  if (response.status !== 200) {
+    throw new Error(await response.text())
+  }
+
   const json = await response.json()
   return json
 }
@@ -42,6 +46,10 @@ export async function makeGame(
     },
   }
   const response = await fetch(url, requestOptions)
+  if (response.status !== 200) {
+    throw new Error(await response.text())
+  }
+
   return response.json()
 }
 
@@ -61,7 +69,13 @@ export async function joinGame(
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
   }
 
-  return (await fetch(url, requestOptions)).json()
+  const response = await fetch(url, requestOptions)
+
+  if (response.status !== 200) {
+    throw new Error(await response.text())
+  }
+
+  return response.json()
 }
 
 interface Player {
