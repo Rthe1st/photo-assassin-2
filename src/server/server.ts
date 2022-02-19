@@ -34,7 +34,7 @@ export function httpRedirect(): void {
   const app = express()
   app.use(function (req, res) {
     if (process.env.NODE_ENV === "production") {
-      return res.redirect("https://prangten.photo-assassin.com" + req.url)
+      return res.redirect("https://photo-assassin.prangten.com" + req.url)
     } else {
       return res.redirect("https://" + req.headers.host + req.url)
     }
