@@ -510,7 +510,10 @@ function initialization(msg: socketClient.ServerInitializationMsg) {
   //the first time, before they move
   gps.setup((position) => {
     socketClient.positionUpdate(socket, position)
-    const googlePosition = { lat: position.latitude!, lng: position.longitude! }
+    const googlePosition = new google.maps.LatLng({
+      lat: position.latitude!,
+      lng: position.longitude!,
+    })
     gameMap.drawPlayer(googlePosition)
     gameMap.center(googlePosition)
   })

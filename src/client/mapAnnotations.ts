@@ -135,7 +135,7 @@ export class MapData {
       if (position.timestamp! < minTime) {
         continue
       }
-      const rawLatlng: google.maps.ReadonlyLatLngLiteral = {
+      const rawLatlng: google.maps.LatLngLiteral = {
         lat: position.latitude!,
         lng: position.longitude!,
       }
@@ -190,7 +190,7 @@ export class MapData {
       )
       const estLongitude = updatedCoord[0]
       const estLatitude = updatedCoord[1]
-      const latlng: google.maps.ReadonlyLatLngLiteral = {
+      const latlng: google.maps.LatLngLiteral = {
         lat: estLatitude,
         lng: estLongitude,
       }
@@ -232,7 +232,7 @@ export class MapData {
     if (!(playerPublicId in this.points)) {
       this.points[playerPublicId] = []
       for (const position of positions) {
-        const rawLatlng: google.maps.ReadonlyLatLngLiteral = {
+        const rawLatlng: google.maps.LatLngLiteral = {
           lat: position.latitude!,
           lng: position.longitude!,
         }
@@ -279,7 +279,7 @@ export class MapData {
           //todo: show them but greyed out or w/e
           continue
         }
-        let latlng: google.maps.ReadonlyLatLngLiteral
+        let latlng: google.maps.LatLngLiteral
         if (snipeInfo.position != undefined) {
           latlng = {
             lat: snipeInfo.position.latitude!,
@@ -310,7 +310,7 @@ export class MapData {
           const lineSymbol = {
             path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
           }
-          const targetLatLng: google.maps.ReadonlyLatLngLiteral = {
+          const targetLatLng: google.maps.LatLngLiteral = {
             lat: snipeInfo.targetPosition.latitude!,
             lng: snipeInfo.targetPosition.longitude!,
           }

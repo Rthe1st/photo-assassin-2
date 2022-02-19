@@ -3,7 +3,7 @@ export class Gmap {
   playerPosition: google.maps.Circle | undefined = undefined
 
   playerPath: google.maps.Polyline | undefined = undefined
-  path: google.maps.ReadonlyLatLngLiteral[] = []
+  path: google.maps.LatLng[] = []
 
   constructor(element: HTMLDivElement) {
     this.map = new google.maps.Map(element, {
@@ -18,11 +18,11 @@ export class Gmap {
     })
   }
 
-  center(rawLatlng: google.maps.ReadonlyLatLngLiteral) {
+  center(rawLatlng: google.maps.LatLng) {
     this.map.setCenter(rawLatlng)
   }
 
-  drawPlayer(rawLatlng: google.maps.ReadonlyLatLngLiteral) {
+  drawPlayer(rawLatlng: google.maps.LatLng) {
     if (this.path.length > 20) {
       this.path.shift()
     }

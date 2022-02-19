@@ -2,6 +2,6 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "target": "es2019",
-    "types": ["googlemaps", "node", "jest"]
+    "types": ["google.maps", "node", "jest"]
   }
 }
