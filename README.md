@@ -33,6 +33,8 @@ Initial server configurations:
       sudo chown debain /etc/letsencrypt/live/photo-assassin.prangten.com/privkey.pem
       sudo chown debain /etc/letsencrypt/live/photo-assassin.prangten.com/chain.pem
       ```
+  - Create a games dir and have it owned by debian (or same user as cert files above)
+    - `chown debian /home/debian/games`
 
 ## Testing the docker image locally
 
@@ -129,7 +131,7 @@ npm run-script bots -- --listen
 Have robot players join a game you've already made:
 
 ```bash
-npm run-script bots -- --game-code you-game-code-here --clients passive
+npm run-script bots -- --game-code story-financial-street-able --clients passive
 ```
 
 ### Phone browser remote debugging
