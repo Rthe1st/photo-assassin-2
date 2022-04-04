@@ -16,6 +16,7 @@ import * as socketHandler from "./socketHandler"
 import * as socketInterface from "./socketInterface"
 import { logger } from "./logging"
 import { env } from "process"
+import { Record, String } from "runtypes"
 
 function devErrorHandler(
   err: any,
@@ -101,7 +102,9 @@ export function createServer(
   // todo: does the caching logic above even make sense?
   app.get("/archived", (_, res) => res.sendFile(staticDir + "archived.html"))
 
-  app.get("/game/:code", (req, res) => gamePage(staticDir, req, res))
+  app.get("/game/:code", (req, res, next) =>
+    gamePage(staticDir, req, res, next)
+  )
   app.get("/game/:code/download", (req, res) =>
     gameDownloadPage(staticDir, req, res)
   )
@@ -134,12 +137,12 @@ export function createServer(
 }
 
 function root(staticDir: string, req: express.Request, res: express.Response) {
-  if (req.query.code == undefined) {
+  if (req.query.code == undefined || typeof req.query.code !== "string") {
     res.sendFile(staticDir + "lobby.html")
     return
   }
 
-  const game = Game.getGame(req.query.code.toString())
+  const game = Game.getGame(req.query.code)
   if (game == undefined) {
     logger.log("verbose", `/ Accessing invalid game: ${req.query.code}`)
     res.status(404)
@@ -256,14 +259,41 @@ function join(staticDir: string, req: express.Request, res: express.Response) {
   }
 }
 
-function gamePage(
+const gameCodeFormat = /^[a-z]+-[a-z]+-[a-z]+-[a-z]+$/
+
+export const gamePageParams = Record({
+  code: String.withConstraint((code: string) => {
+    if (code.match(gameCodeFormat)) {
+      return true
+    } else {
+      return `code does not match format /${gameCodeFormat.source}/`
+    }
+  }),
+})
+
+export function gamePage(
   staticDir: string,
   req: express.Request,
-  res: express.Response
+  res: express.Response,
+  next: express.NextFunction
 ) {
-  logger.log("debug", `Accessing game: ${req.params.code}`)
-  const game = Game.getGame(req.params.code)
+  const result = gamePageParams.validate(req.params)
+  if (!result.success) {
+    res.status(400)
+    res.send(result.details)
+    return
+  }
+
+  const paramValue = result.value
+
+  res.status(200)
+
+  logger.log("debug", `Accessing game: ${paramValue.code}`)
+  const game = Game.getGame(paramValue.code)
   if (game == undefined) {
+    // todo: now we don't use google cloud
+    // we can now just check the hardisk our self
+    // ---------------------------------------------
     // then we assume its a finished game
     // that we no longer keep in memory and save to disk
     // client side code will handle detecting an error
@@ -273,12 +303,12 @@ function gamePage(
     // one answer: combine archived and index pages into one
     // and cache it always
     res.sendFile(staticDir + "archived.html")
-    return
   } else if (!game.idMapping.has(req.cookies["privateId"])) {
     res.redirect(`/?code=${req.params.code}`)
-    return
+  } else {
+    res.sendFile(staticDir + "index.html")
   }
-  res.sendFile(staticDir + "index.html")
+  next()
 }
 
 function gameDownloadPage(

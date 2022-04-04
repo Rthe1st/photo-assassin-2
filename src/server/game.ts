@@ -411,7 +411,7 @@ function badSnipe(game: Game, snipeInfosIndex: number, publicId: number) {
 // maybe rate-limit clients instead
 // todo: consider curating the list of words to use shorter words
 // to save screen width space
-function generateGameCode(uniqueId: number): string {
+export function generateGameCode(uniqueId: number): string {
   const randomWords = []
   for (let wordIndex = 0; wordIndex < 3; wordIndex++) {
     randomWords.push(commonWords[crypto.randomInt(commonWords.length)])
@@ -430,10 +430,7 @@ function generateGame() {
   return game
 }
 
-export function getGame(code?: string) {
-  if (code == undefined) {
-    return undefined
-  }
+export function getGame(code: string): Game | undefined {
   return games.get(code.toLowerCase())
 }
 
