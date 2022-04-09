@@ -111,9 +111,6 @@ export function createServer(
   app.get("/game/:code", (req, res, next) =>
     gamePage(staticDir, req, res, next)
   )
-  app.get("/game/:code/download", (req, res) =>
-    gameDownloadPage(staticDir, req, res)
-  )
   // todo: should these be .use()
   // so we can redirect if someone navigate there by mistake
   app.post("/make", (req, res) => make(staticDir, req, res, ioServer))
@@ -340,15 +337,4 @@ export function gamePage(
     res.sendFile(staticDir + "index.html")
   }
   next()
-}
-
-function gameDownloadPage(
-  staticDir: string,
-  _: express.Request,
-  res: express.Response
-) {
-  //todo: replace $$gamedataplaceholder$$ in archived_for_save.html with the game data json
-  // then grab all the images and put them in a zip file with the html
-  res.sendFile(staticDir + "archived_for_save.html")
-  return
 }

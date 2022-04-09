@@ -135,16 +135,6 @@ module.exports = {
       inject: "head",
       scriptLoading: "defer",
     }),
-    new HtmlWebpackPlugin({
-      template: `./assets/templates/archived_for_save.html`,
-      filename: `archived_for_save.html`,
-      templateParameters: {
-        key: envs["GOOGLE_MAPS_KEY"],
-      },
-      chunks: ["archived"],
-      inject: "head",
-      scriptLoading: "defer",
-    }),
     new CopyPlugin({
       patterns: [
         { from: "./assets/css", to: "." },
