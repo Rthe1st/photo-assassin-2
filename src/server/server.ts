@@ -17,6 +17,8 @@ import * as socketInterface from "./socketInterface"
 import { logger } from "./logging"
 import { env } from "process"
 import { Record, String } from "runtypes"
+import { engine } from "express-handlebars"
+import { returnError } from "./validationErrors"
 
 function devErrorHandler(
   err: any,
@@ -49,6 +51,10 @@ export function createServer(
   useSentry = true
 ): void {
   const app = express()
+
+  app.engine("handlebars", engine())
+  app.set("view engine", "handlebars")
+  app.set("views", "dist/views")
 
   app.use(express.urlencoded({ extended: true }))
 
@@ -261,35 +267,32 @@ function join(staticDir: string, req: express.Request, res: express.Response) {
 
 const gameCodeFormat = /^[a-z]+-[a-z]+-[a-z]+-[a-z]+$/
 
-export const gamePageParams = Record({
-  code: String.withConstraint((code: string) => {
-    if (code.match(gameCodeFormat)) {
-      return true
-    } else {
-      return `code does not match format /${gameCodeFormat.source}/`
-    }
-  }),
-})
-
 export function gamePage(
   staticDir: string,
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
 ) {
-  const result = gamePageParams.validate(req.params)
-  if (!result.success) {
-    res.status(400)
-    res.send(result.details)
+  const codeValidation = String.withConstraint(
+    (code: string) => !!code.match(gameCodeFormat)
+  )
+
+  const validationResult = codeValidation.validate(req.params.code)
+
+  if (!validationResult.success) {
+    returnError(
+      res,
+      `game code '${req.params.code}' is wrong, should be 4 words, for example: 'cat-dog-fish-spoon'`
+    )
     return
   }
 
-  const paramValue = result.value
+  const code = validationResult.value
 
   res.status(200)
 
-  logger.log("debug", `Accessing game: ${paramValue.code}`)
-  const game = Game.getGame(paramValue.code)
+  logger.log("debug", `Accessing game: ${code}`)
+  const game = Game.getGame(code)
   if (game == undefined) {
     // todo: now we don't use google cloud
     // we can now just check the hardisk our self

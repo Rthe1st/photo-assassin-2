@@ -149,6 +149,7 @@ module.exports = {
       patterns: [
         { from: "./assets/css", to: "." },
         { from: "./assets/images", to: "." },
+        { from: "./assets/views", to: "../views" },
       ],
     }),
     new SentryCliPlugin({

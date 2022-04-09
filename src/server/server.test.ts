@@ -6,38 +6,18 @@ import { generateGameCode } from "./game"
 
 logging.setupJestLogging()
 
-test("gamePage invalid code type", async () => {
-  const mockRequest = {
-    params: {
-      code: 123,
-    },
-  } as any as Request
-
-  const send = jest.fn()
-  const mockResponse = {
-    status: jest.fn(),
-    send,
-  } as any
-
-  const mockNext = jest.fn() as any as NextFunction
-
-  gamePage("poop", mockRequest, mockResponse, mockNext)
-  expect(mockNext).toBeCalledTimes(0)
-  expect(mockResponse.status).toBeCalledWith(400)
-  expect(send).toBeCalledWith({ code: "Expected string, but was number" })
-})
-
 test("gamePage invalid code format", async () => {
+  const badlyFormatedCode = "wrong game code format"
   const mockRequest = {
     params: {
-      code: "wrong game code format",
+      code: badlyFormatedCode,
     },
   } as any as Request
 
-  const send = jest.fn()
+  const render = jest.fn()
   const mockResponse = {
     status: jest.fn(),
-    send,
+    render,
   } as any
 
   const mockNext = jest.fn() as any as NextFunction
@@ -45,8 +25,11 @@ test("gamePage invalid code format", async () => {
   gamePage("poop", mockRequest, mockResponse, mockNext)
   expect(mockNext).toBeCalledTimes(0)
   expect(mockResponse.status).toBeCalledWith(400)
-  expect(send).toBeCalledWith({
-    code: "Failed constraint check for string: code does not match format /^[a-z]+-[a-z]+-[a-z]+-[a-z]+$/",
+  expect(render).toBeCalledWith("error", {
+    layout: false,
+    helpers: {
+      details: `game code '${badlyFormatedCode}' is wrong, should be 4 words, for example: 'cat-dog-fish-spoon'`,
+    },
   })
 })
 
