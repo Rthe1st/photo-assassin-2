@@ -16,7 +16,7 @@ import * as socketHandler from "./socketHandler"
 import * as socketInterface from "./socketInterface"
 import { logger } from "./logging"
 import { env } from "process"
-import { Record, String } from "runtypes"
+import { String } from "runtypes"
 import { engine } from "express-handlebars"
 import { returnError } from "./validationErrors"
 
@@ -101,7 +101,7 @@ export function createServer(
 
   // todo: instead of hacking in games with arrow functions
   // have the middlewares fetch games from db or w/e
-  app.get("/", (req, res) => root(staticDir, req, res))
+  app.get("/", (req, res) => root(staticDir, req, res, Game.getGame))
   // for game's we've deleted but client has game data in URL fragment
   // don't server this on game code specific URL
   // so we can cache the page more
@@ -142,27 +142,54 @@ export function createServer(
   }, 1000)
 }
 
-function root(staticDir: string, req: express.Request, res: express.Response) {
-  if (req.query.code == undefined || typeof req.query.code !== "string") {
+export function root(
+  staticDir: string,
+  req: express.Request,
+  res: express.Response,
+  getGame: (code: string) => Game.Game | undefined
+) {
+  const codeValidation = String.withConstraint(
+    (code: string) => !!code.match(gameCodeFormat)
+  ).optional()
+
+  const validationResult = codeValidation.validate(req.query?.code)
+
+  if (!validationResult.success) {
+    res.status(400)
+    returnError(
+      res,
+      `game code '${req.query?.code}' is wrong, should be 4 words, for example: 'cat-dog-fish-spoon'`
+    )
+    return
+  }
+
+  const code = validationResult.value
+
+  if (code == undefined) {
     res.sendFile(staticDir + "lobby.html")
     return
   }
 
-  const game = Game.getGame(req.query.code)
+  const game = getGame(code)
   if (game == undefined) {
-    logger.log("verbose", `/ Accessing invalid game: ${req.query.code}`)
+    logger.log("verbose", `/ Accessing invalid game: ${code}`)
     res.status(404)
-    res.sendFile(`${staticDir}/game_doesnt_exist.html`)
+    returnError(res, `No game exists with the code '${code}'`)
+    return
   } else if (game.state != Game.states.NOT_STARTED) {
     // todo: what if user is already in the game?
     // maybe root should leave this case for /join to handle
     // (same with code doesn't exist as well?)
     logger.log(
       "verbose",
-      "/ Attempt to join game " + req.query.code + " that has already started"
+      "/ Attempt to join game " + code + " that has already started"
     )
     res.status(403)
-    res.sendFile(`${staticDir}/game_in_progress.html`)
+    returnError(
+      res,
+      `You can't join the game '${code}' because it has already started.`
+    )
+    return
   } else {
     res.sendFile(staticDir + "lobby.html")
   }
@@ -280,6 +307,7 @@ export function gamePage(
   const validationResult = codeValidation.validate(req.params.code)
 
   if (!validationResult.success) {
+    res.status(400)
     returnError(
       res,
       `game code '${req.params.code}' is wrong, should be 4 words, for example: 'cat-dog-fish-spoon'`
