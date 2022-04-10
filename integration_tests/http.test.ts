@@ -243,14 +243,3 @@ test("POST /join for game that already started", async () => {
 
   await socketHelpers.closeSockets([player1, player2])
 })
-
-// test /archived
-
-test("GET /archived", async () => {
-  const agent = new https.Agent({
-    rejectUnauthorized: false,
-  })
-  const response = await fetch(`${domain}/archived`, { agent })
-  expect(response.status).toBe(200)
-  expect(response.text()).resolves.toContain("<!-- archived page -->")
-})

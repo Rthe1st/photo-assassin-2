@@ -141,19 +141,6 @@ function setUpPage(gameState: SharedGame.ClientGame, publicId?: number) {
   }
 }
 
-function getDataFromUrlFragment(): Promise<SharedGame.ClientGame> {
-  const a = new Promise<SharedGame.ClientGame>((resolve, reject) => {
-    const data = decodeURIComponent(window.location.hash.substr(1))
-    // todo: we should check it's actually valid after parsing
-    if (data.length == 0) {
-      reject()
-    } else {
-      resolve(<SharedGame.ClientGame>JSON.parse(data))
-    }
-  })
-  return a
-}
-
 async function getDataFromApi(): Promise<SharedGame.ClientGame> {
   const gameId = urlGameId()
   const gameState = api.gameJson(gameId)
@@ -165,46 +152,38 @@ let gameState: SharedGame.ClientGame
 let mapData: MapData
 
 window.onload = function () {
-  // todo: also try load it from a variable
-  // for the case of data embedded in script itself
-  getDataFromUrlFragment()
-    .catch(getDataFromApi)
-    .then(
-      (lgameState: SharedGame.ClientGame) => {
-        gameState = lgameState
-        const archivedLink = `/archived#${JSON.stringify(gameState)}`
-        ;(<HTMLLinkElement>document.getElementById("save-in-fragment")).href =
-          archivedLink
+  getDataFromApi().then(
+    (lgameState: SharedGame.ClientGame) => {
+      gameState = lgameState
+      const publicId = getPublicId()
 
-        const publicId = getPublicId()
+      Game.update(gameState)
 
-        Game.update(gameState)
+      setUpPage(gameState, publicId)
+      map = new google.maps.Map(document.getElementById("map")!, {
+        zoom: 17,
+        mapTypeId: "satellite",
+      })
+      map.setOptions({
+        zoomControl: true,
+        gestureHandling: "greedy",
+        // changing the option doesn't seem to quite be working
+        // disableDefaultUI: false,
+      })
 
-        setUpPage(gameState, publicId)
-        map = new google.maps.Map(document.getElementById("map")!, {
-          zoom: 17,
-          mapTypeId: "satellite",
-        })
-        map.setOptions({
-          zoomControl: true,
-          gestureHandling: "greedy",
-          // changing the option doesn't seem to quite be working
-          // disableDefaultUI: false,
-        })
-
-        mapData = new MapData(gameState, map, showPhoto, playerColours)
-        // observers won't have a public ID
-        if (publicId != undefined) {
-          mapData.center(publicId)
-        } else {
-          mapData.center()
-        }
-      },
-      (_) => {
-        // this looks terribad - change to a local hide/show thing
-        window.location.replace("/static/game_doesnt_exist.html")
+      mapData = new MapData(gameState, map, showPhoto, playerColours)
+      // observers won't have a public ID
+      if (publicId != undefined) {
+        mapData.center(publicId)
+      } else {
+        mapData.center()
       }
-    )
+    },
+    (_) => {
+      // this looks terribad - change to a local hide/show thing
+      window.location.replace("/static/game_doesnt_exist.html")
+    }
+  )
 
   document.getElementById("show-map")!.onclick = function () {
     document.getElementById("info")!.hidden =

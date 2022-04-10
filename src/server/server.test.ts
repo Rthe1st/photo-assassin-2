@@ -1,4 +1,4 @@
-import { NextFunction, Request } from "express"
+import { Request } from "express"
 import { jest } from "@jest/globals"
 import { gamePage, root } from "./server"
 import * as logging from "./logging"
@@ -6,52 +6,75 @@ import { Game, generateGameCode, states } from "./game"
 
 logging.setupJestLogging()
 
-test("gamePage invalid code format", async () => {
-  const badlyFormatedCode = "wrong game code format"
-  const mockRequest = {
-    params: {
-      code: badlyFormatedCode,
-    },
-  } as any as Request
+describe("gamepage", () => {
+  const staticDir = "poop/"
 
-  const render = jest.fn()
-  const mockResponse = {
-    status: jest.fn(),
-    render,
-  } as any
+  const makeMockResponse = () =>
+    ({
+      status: jest.fn(),
+      render: jest.fn(),
+      sendFile: jest.fn(),
+      redirect: jest.fn(),
+    } as any)
 
-  const mockNext = jest.fn() as any as NextFunction
+  const makeMockRequest = (code?: string, privateId?: string) =>
+    ({
+      params: {
+        code,
+      },
+      cookies: { privateId },
+    } as any as Request)
 
-  gamePage("poop", mockRequest, mockResponse, mockNext)
-  expect(mockNext).toBeCalledTimes(0)
-  expect(mockResponse.status).toBeCalledWith(400)
-  expect(render).toBeCalledWith("error", {
-    layout: false,
-    helpers: {
-      details: `game code '${badlyFormatedCode}' is wrong, should be 4 words, for example: 'cat-dog-fish-spoon'`,
-    },
+  test("invalid code format", async () => {
+    const badlyFormatedCode = "wrong game code format"
+    const mockRequest = makeMockRequest(badlyFormatedCode)
+    const mockResponse = makeMockResponse()
+
+    gamePage(staticDir, mockRequest, mockResponse, () => undefined)
+    expect(mockResponse.status).toBeCalledWith(400)
+    expect(mockResponse.render).toBeCalledWith("error", {
+      layout: false,
+      helpers: {
+        details: `game code '${badlyFormatedCode}' is wrong, should be 4 words, for example: 'cat-dog-fish-spoon'`,
+      },
+    })
   })
-})
 
-test("gamePage success", async () => {
-  const mockRequest = {
-    params: {
-      code: generateGameCode(1),
-    },
-  } as any as Request
+  test("game doesn't exist (or is finished but not in memory)", async () => {
+    const mockRequest = makeMockRequest(generateGameCode(1))
+    const mockResponse = makeMockResponse()
 
-  const sendFile = jest.fn()
-  const mockResponse = {
-    status: jest.fn(),
-    sendFile,
-  } as any
+    gamePage(staticDir, mockRequest, mockResponse, () => undefined)
+    expect(mockResponse.sendFile).toBeCalledWith(`${staticDir}archived.html`)
+  })
 
-  const mockNext = jest.fn() as any as NextFunction
+  test("game exists but client is not in it", async () => {
+    const mockRequest = makeMockRequest(generateGameCode(1), "myprivateid")
+    const mockResponse = makeMockResponse()
 
-  gamePage("poop/", mockRequest, mockResponse, mockNext)
-  expect(mockNext).toBeCalledTimes(1)
-  expect(mockResponse.status).toBeCalledWith(200)
-  expect(sendFile).toBeCalledWith("poop/archived.html")
+    gamePage(
+      staticDir,
+      mockRequest,
+      mockResponse,
+      () => ({ idMapping: new Map() } as Game)
+    )
+    expect(mockResponse.redirect).toBeCalledWith(
+      `/?code=${mockRequest.params.code}`
+    )
+  })
+
+  test("game exists and client is in it", async () => {
+    const mockRequest = makeMockRequest(generateGameCode(1), "myprivateid")
+    const mockResponse = makeMockResponse()
+
+    gamePage(
+      staticDir,
+      mockRequest,
+      mockResponse,
+      () => ({ idMapping: new Map([["myprivateid", {}]]) } as Game)
+    )
+    expect(mockResponse.sendFile).toBeCalledWith(`${staticDir}index.html`)
+  })
 })
 
 describe("root", () => {

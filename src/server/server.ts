@@ -102,14 +102,9 @@ export function createServer(
   // todo: instead of hacking in games with arrow functions
   // have the middlewares fetch games from db or w/e
   app.get("/", (req, res) => root(staticDir, req, res, Game.getGame))
-  // for game's we've deleted but client has game data in URL fragment
-  // don't server this on game code specific URL
-  // so we can cache the page more
-  // todo: does the caching logic above even make sense?
-  app.get("/archived", (_, res) => res.sendFile(staticDir + "archived.html"))
 
-  app.get("/game/:code", (req, res, next) =>
-    gamePage(staticDir, req, res, next)
+  app.get("/game/:code", (req, res) =>
+    gamePage(staticDir, req, res, Game.getGame)
   )
   // todo: should these be .use()
   // so we can redirect if someone navigate there by mistake
@@ -295,7 +290,7 @@ export function gamePage(
   staticDir: string,
   req: express.Request,
   res: express.Response,
-  next: express.NextFunction
+  getGame: (code: string) => Game.Game | undefined
 ) {
   const codeValidation = String.withConstraint(
     (code: string) => !!code.match(gameCodeFormat)
@@ -314,10 +309,9 @@ export function gamePage(
 
   const code = validationResult.value
 
-  res.status(200)
-
   logger.log("debug", `Accessing game: ${code}`)
-  const game = Game.getGame(code)
+  const game = getGame(code)
+
   if (game == undefined) {
     // todo: now we don't use google cloud
     // we can now just check the hardisk our self
@@ -336,5 +330,4 @@ export function gamePage(
   } else {
     res.sendFile(staticDir + "index.html")
   }
-  next()
 }
