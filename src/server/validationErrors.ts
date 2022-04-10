@@ -30,7 +30,6 @@ import { Response } from "express"
 // }
 
 export function returnError(res: Response, failureDetails: string) {
-  res.status(400)
   res.render("error", {
     layout: false,
     helpers: {

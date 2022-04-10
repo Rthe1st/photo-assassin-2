@@ -32,6 +32,7 @@ describe("gamepage", () => {
 
     gamePage(staticDir, mockRequest, mockResponse, () => undefined)
     expect(mockResponse.status).toBeCalledWith(400)
+    expect(mockResponse.status).toBeCalledTimes(1)
     expect(mockResponse.render).toBeCalledWith("error", {
       layout: false,
       helpers: {
@@ -102,6 +103,7 @@ describe("root", () => {
 
     root(staticDir, mockRequest, mockResponse, () => ({} as Game))
     expect(mockResponse.status).toBeCalledWith(400)
+    expect(mockResponse.status).toBeCalledTimes(1)
     expect(mockResponse.render).toBeCalledWith("error", {
       layout: false,
       helpers: {
@@ -116,6 +118,7 @@ describe("root", () => {
 
     root(staticDir, mockRequest, mockResponse, () => undefined)
     expect(mockResponse.status).toBeCalledWith(404)
+    expect(mockResponse.status).toBeCalledTimes(1)
     expect(mockResponse.render).toBeCalledWith("error", {
       layout: false,
       helpers: {
@@ -135,6 +138,7 @@ describe("root", () => {
       () => ({ state: states.IN_PLAY } as Game)
     )
     expect(mockResponse.status).toBeCalledWith(403)
+    expect(mockResponse.status).toBeCalledTimes(1)
     expect(mockResponse.render).toBeCalledWith("error", {
       layout: false,
       helpers: {
