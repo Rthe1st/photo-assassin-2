@@ -37,9 +37,11 @@ test("GET / for non-existent game", async () => {
   const agent = new https.Agent({
     rejectUnauthorized: false,
   })
-  const response = await fetch(`${domain}/?code=madeupcode`, { agent })
+  const response = await fetch(`${domain}/?code=a-fake-game-code`, { agent })
   expect(response.status).toBe(404)
-  expect(response.text()).resolves.toContain("Can't join - game doesn't exist")
+  expect(response.text()).resolves.toContain(
+    "No game exists with the code &#x27;a-fake-game-code&#x27;"
+  )
   expect(response.headers.raw()).not.toHaveProperty("set-cookie")
 })
 
@@ -60,7 +62,7 @@ test("GET / for game that already started", async () => {
   const response = await fetch(`${domain}/?code=${gameId}`, { agent })
   expect(response.status).toBe(403)
   expect(response.text()).resolves.toContain(
-    "Can't join - game already in progress"
+    `You can&#x27;t join the game &#x27;${gameId}&#x27; because it has already started.`
   )
   expect(response.headers.raw()).not.toHaveProperty("set-cookie")
 
