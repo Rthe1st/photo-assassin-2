@@ -4,7 +4,6 @@
 
 import fetch, { Headers, RequestInit } from "node-fetch"
 import * as https from "https"
-
 import * as socketBots from "../src/bots/socketBots"
 import * as socketClient from "../src/shared/socketClient"
 import * as socketHelpers from "./socketHelpers"
@@ -20,6 +19,12 @@ function checkCookies(headers: Headers) {
     ]),
   })
 }
+
+test("http redirects to https", async () => {
+  const response = await fetch(`http://localhost/a_url`, { redirect: "manual" })
+  expect(response.status).toBe(302)
+  expect(response.text()).resolves.toContain("https://localhost/a_url")
+})
 
 // test /
 

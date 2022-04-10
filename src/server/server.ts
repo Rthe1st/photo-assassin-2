@@ -36,17 +36,20 @@ function devErrorHandler(
 export function httpRedirect(): void {
   const app = express()
   app.use(function (req, res) {
+    let host
     if (process.env.NODE_ENV === "production") {
-      return res.redirect("https://photo-assassin.prangten.com" + req.url)
+      // we don't want to act as an open redirect in prod
+      host = "photo-assassin.prangten.com"
     } else {
-      return res.redirect("https://" + req.headers.host + req.url)
+      host = req.headers.host
     }
+    res.redirect(`https://${host}${req.url}`)
   })
-  http.createServer(app).listen(8000)
+  http.createServer(app).listen(80)
 }
 
 export function createServer(
-  port = 4330,
+  port = 443,
   staticDir = "dist/public/",
   useSentry = true
 ): void {

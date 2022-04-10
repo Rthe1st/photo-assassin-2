@@ -3,8 +3,8 @@ services:
   server:
     image: photo-assassin
     ports:
-      - "80:8000"
-      - "443:4330"
+      - "80:80"
+      - "443:443"
     volumes:
       - /etc/letsencrypt/live/photo-assassin.prangten.com/privkey.pem:/home/node/app/secret/privkey.pem
       - /etc/letsencrypt/live/photo-assassin.prangten.com/cert.pem:/home/node/app/secret/cert.pem
