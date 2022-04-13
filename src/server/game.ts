@@ -7,9 +7,9 @@ import { commonWords } from "./commonWords"
 
 import * as imageStore from "./imageStore"
 
-import socketIo from "socket.io"
-
 import { logger } from "./logging"
+import { Listener } from "./socketInterface"
+import { addUser } from "./socketHandler"
 
 // todo: we should wrap this in a class
 // it'd make it easier to test
@@ -62,10 +62,10 @@ export interface Game {
   // used to give thumbnail to user
   // (we only expand to full image when they click)
   lowResUploadsDone: (string | undefined)[]
-  // this is set after the game is created, because we need to know the
-  // game code in order to define the namespace
-  // used to communicate with the sockets where we don't have easy access to the namespace
-  namespace: socketIo.Namespace | undefined
+  // this is used by the game object to notify
+  // other code of events
+  // in production this will send websocket events
+  listener?: Listener
 }
 
 function newGame(code: string): Game {
@@ -95,7 +95,8 @@ function newGame(code: string): Game {
     imageUploadsDone: [],
     lowResUploadsDone: [],
     winner: undefined,
-    namespace: undefined,
+    // todo: find a way of defining this at construction time
+    listener: undefined,
   }
 }
 
@@ -161,6 +162,9 @@ function updateSettings(
     countDown: countDown,
     proposedTargetList: proposedTargetList,
   }
+  game.listener!.updateSettings({
+    gameState: gameStateForClient(game),
+  })
 }
 
 function start(game: Game) {
@@ -179,6 +183,8 @@ function start(game: Game) {
   } else {
     game.subState = inPlaySubStates.PLAYING
   }
+  // todo: say who started it
+  game.listener!.start({ gameState: gameStateForClient(game) })
 }
 
 function snipe(
@@ -305,6 +311,14 @@ function addPlayer(
   game.positions.set(publicId, [])
   const proposedTargetList = shuffle(Array.from(game.userList.keys()))
   game.chosenSettings.proposedTargetList = proposedTargetList
+
+  addUser(publicId, game)
+
+  logger.log("verbose", "Adding user to game", {
+    publicId: publicId,
+    gameCode: game.code,
+  })
+
   return { privateId: privateId, publicId: publicId }
 }
 
@@ -319,6 +333,11 @@ function removePlayer(game: Game, publicId: number) {
   game.positions.delete(publicId)
   const proposedTargetList = shuffle(Array.from(game.userList.keys()))
   game.chosenSettings.proposedTargetList = proposedTargetList
+
+  game.listener!.removeUser({
+    publicId,
+    gameState: gameStateForClient(game),
+  })
 }
 
 /*
@@ -421,12 +440,14 @@ export function generateGameCode(uniqueId: number): string {
 
   return randomWords.join("-") + `-${uniqueWord}`
 }
-function generateGame() {
+function generateGame(listener: (code: string, game: Game) => Listener) {
   // todo: when we're running in prod the number of game is likely to go up as well as down, we should probably use a dedicated counter that loops on overflow or something
   const code = generateGameCode(games.size)
   const game = newGame(code)
+  game.listener = listener(code, game)
   logger.log("verbose", "making game", { gameCode: code })
   games.set(game.code, game)
+
   return game
 }
 

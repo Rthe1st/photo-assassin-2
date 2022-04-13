@@ -85,7 +85,7 @@ export function stopGame(socket: Socket): Promise<SocketEvents.ServerStartMsg> {
 
 export async function makeGame(domain: string, username: string) {
   const details: any = await (
-    await httpHelpers.post(`${domain}/make`, `username=${username}&format=json`)
+    await httpHelpers.post(`${domain}/api/make`, `username=${username}`)
   ).json()
 
   const { socket: socket } = await makeSocket(

@@ -1,8 +1,9 @@
 import { Request } from "express"
 import { jest } from "@jest/globals"
-import { gamePage, root } from "./server"
+import { apiMake, gamePage, make, root } from "./server"
 import * as logging from "./logging"
 import { Game, generateGameCode, states } from "./game"
+import { Listener } from "./socketInterface"
 
 logging.setupJestLogging()
 
@@ -166,5 +167,162 @@ describe("root", () => {
 
     root("poop/", mockRequest, mockResponse, () => undefined)
     expect(mockResponse.sendFile).toBeCalledWith(`${staticDir}lobby.html`)
+  })
+})
+
+describe("make", () => {
+  function testListener(): Listener {
+    return {
+      resizeDone: () => undefined,
+      imageUploadDone: () => undefined,
+      updateSettings: () => undefined,
+      removeUser: () => undefined,
+      start: () => undefined,
+      chatMessage: () => undefined,
+      badSnipe: () => undefined,
+      newUser: () => undefined,
+      finished: () => undefined,
+      timeLeft: () => undefined,
+    }
+  }
+
+  const makeMockResponse = () => {
+    const cookies = new Map()
+
+    return {
+      mockRes: {
+        status: jest.fn(),
+        render: jest.fn(),
+        sendFile: jest.fn(),
+        redirect: jest.fn(),
+        cookie: jest.fn((name, value, _settings) => {
+          cookies.set(name, value)
+        }),
+        json: jest.fn(),
+        end: jest.fn(),
+      } as any,
+      cookies,
+    }
+  }
+
+  const makeMockRequest = (username?: string) =>
+    ({
+      body: {
+        username,
+      },
+    } as any as Request)
+
+  it("succeeds", () => {
+    const mockReq = makeMockRequest("myusername")
+    const { mockRes, cookies } = makeMockResponse()
+
+    make(mockReq, mockRes, testListener)
+
+    expect(mockRes.redirect).toBeCalledWith(
+      expect.stringMatching(/\/game\/[a-z]+-[a-z]+-[a-z]+-[a-z]+$/)
+    )
+    expect(mockRes.cookie).toBeCalledWith("gameId", cookies.get("gameId"), {
+      sameSite: "strict",
+    })
+    expect(mockRes.cookie).toBeCalledWith(
+      "privateId",
+      expect.stringMatching(/[a-e\d]+-0/),
+      {
+        sameSite: "strict",
+      }
+    )
+    expect(mockRes.cookie).toBeCalledWith("publicId", 0, {
+      sameSite: "strict",
+    })
+  })
+
+  it("has a username that is too long", () => {
+    const maxUsernameLength = 50
+    const username = "a".repeat(maxUsernameLength + 1)
+    const mockReq = makeMockRequest(username)
+    const { mockRes } = makeMockResponse()
+
+    make(mockReq, mockRes, testListener)
+
+    expect(mockRes.status).toBeCalledWith(400)
+    expect(mockRes.render).toBeCalledWith("error", {
+      layout: false,
+      helpers: {
+        details: `You cannot use '${username}' as a username, it is mandatory and must be less then ${maxUsernameLength} characters long.`,
+      },
+    })
+  })
+
+  it("no username provided", () => {
+    const mockReq = makeMockRequest()
+    const { mockRes } = makeMockResponse()
+
+    make(mockReq, mockRes, testListener)
+
+    expect(mockRes.status).toBeCalledWith(400)
+    expect(mockRes.render).toBeCalledWith("error", {
+      layout: false,
+      helpers: {
+        details: `You cannot use '' as a username, it is mandatory and must be less then 50 characters long.`,
+      },
+    })
+  })
+  describe("api make", () => {
+    it("succeeds", () => {
+      const mockReq = makeMockRequest("myusername")
+      const { mockRes, cookies } = makeMockResponse()
+
+      apiMake(mockReq, mockRes, testListener)
+
+      expect(mockRes.cookie).toBeCalledWith("gameId", cookies.get("gameId"), {
+        sameSite: "strict",
+      })
+      expect(mockRes.cookie).toBeCalledWith(
+        "privateId",
+        expect.stringMatching(/[a-e\d]+-0/),
+        {
+          sameSite: "strict",
+        }
+      )
+      expect(mockRes.cookie).toBeCalledWith("publicId", 0, {
+        sameSite: "strict",
+      })
+
+      expect(mockRes.status).toBeCalledWith(200)
+      expect(mockRes.json).toBeCalledWith({
+        publicId: cookies.get("publicId"),
+        privateId: cookies.get("privateId"),
+        gameId: cookies.get("gameId"),
+      })
+      expect(mockRes.end).toBeCalledTimes(1)
+    })
+
+    it("has a username that is too long", () => {
+      const maxUsernameLength = 50
+      const username = "a".repeat(maxUsernameLength + 1)
+      const mockReq = makeMockRequest(username)
+      const { mockRes } = makeMockResponse()
+
+      apiMake(mockReq, mockRes, testListener)
+
+      expect(mockRes.status).toBeCalledWith(400)
+      expect(mockRes.json).toBeCalledWith(
+        `You cannot use '${username}' as a username, it is mandatory and must be less then ${maxUsernameLength} characters long.`
+      )
+      expect(mockRes.end).toBeCalledTimes(1)
+    })
+
+    it("no username provided", () => {
+      const mockReq = makeMockRequest()
+      const { mockRes } = makeMockResponse()
+
+      apiMake(mockReq, mockRes, testListener)
+
+      expect(mockRes.status).toBeCalledWith(400)
+      expect(mockRes.json).toBeCalledWith(
+        `You cannot use '' as a username, it is mandatory and must be less then 50 characters long.`
+      )
+      expect(mockRes.end).toBeCalledTimes(1)
+    })
   })
 })

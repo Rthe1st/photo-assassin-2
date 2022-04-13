@@ -2,11 +2,28 @@ import * as Game from "./game"
 import * as fs from "fs"
 import * as logging from "./logging"
 import dotenv from "dotenv"
+import { Listener } from "./socketInterface"
+
+function testListener(): Listener {
+  return {
+    resizeDone: () => undefined,
+    imageUploadDone: () => undefined,
+    updateSettings: () => undefined,
+    removeUser: () => undefined,
+    start: () => undefined,
+    chatMessage: () => undefined,
+    badSnipe: () => undefined,
+    newUser: () => undefined,
+    finished: () => undefined,
+    timeLeft: () => undefined,
+  }
+}
 
 test("basic game", async () => {
   dotenv.config()
   logging.setupJestLogging()
   const game = Game.newGame("fake-game-code")
+  game.listener = testListener()
   const { publicId: publicId } = Game.addPlayer(game, "player1")
   Game.removePlayer(game, publicId)
   const { publicId: publicId2 } = Game.addPlayer(game, "player2")

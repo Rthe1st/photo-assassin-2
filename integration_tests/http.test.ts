@@ -98,10 +98,10 @@ test("POST /make", async () => {
   })
 })
 
-test("POST /make JSON", async () => {
+test("POST /api/make JSON", async () => {
   const response = await httpHelpers.post(
-    `${domain}/make`,
-    "username=player1&format=json"
+    `${domain}/api/make`,
+    "username=player"
   )
   expect(response.status).toBe(200)
   // for api requests we should really accept not set cookies
@@ -119,11 +119,13 @@ test("POST /make JSON", async () => {
 })
 
 test("POST /make no username", async () => {
-  const response = await httpHelpers.post(`${domain}/make`, "")
+  const response = await httpHelpers.post(`${domain}/api/make`, "")
 
   expect(response.status).toBe(400)
   expect(response.headers.raw()).not.toHaveProperty("set-cookie")
-  expect(response.text()).resolves.toContain("No username supplied")
+  expect(response.text()).resolves.toEqual(
+    "\"You cannot use '' as a username, it is mandatory and must be less then 50 characters long.\""
+  )
 })
 
 // test error logging
@@ -147,7 +149,7 @@ test("dev error handler", async () => {
 
 test("POST /join valid game", async () => {
   const gameDetails: any = await (
-    await httpHelpers.post(`${domain}/make`, "username=player1&format=json")
+    await httpHelpers.post(`${domain}/api/make`, "username=player1")
   ).json()
 
   const requestOptions: RequestInit = { redirect: "manual" }
@@ -168,7 +170,7 @@ test("POST /join valid game", async () => {
 
 test("POST /join json", async () => {
   const gameDetails: any = await (
-    await httpHelpers.post(`${domain}/make`, "username=player1&format=json")
+    await httpHelpers.post(`${domain}/api/make`, "username=player1")
   ).json()
 
   const requestOptions: RequestInit = { redirect: "manual" }
@@ -199,7 +201,7 @@ test("POST /join no code", async () => {
 
 test("POST /join no username", async () => {
   const gameDetails: any = await (
-    await httpHelpers.post(`${domain}/make`, "username=player1&format=json")
+    await httpHelpers.post(`${domain}/api/make`, "username=player1")
   ).json()
 
   const response = await httpHelpers.post(

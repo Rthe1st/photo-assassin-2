@@ -36,11 +36,11 @@ export async function makeGame(
   const agent = new https.Agent({
     rejectUnauthorized: false,
   })
-  const url = `${host}/make`
+  const url = `${host}/api/make`
   const requestOptions = {
     method: "POST",
     agent: agent,
-    body: `username=${username}&format=json`,
+    body: `username=${username}`,
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
     },

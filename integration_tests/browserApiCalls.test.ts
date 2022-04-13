@@ -10,7 +10,7 @@ jest.setTimeout(8000)
 
 test.skip("clientApi.gameJson", async () => {
   const gameDetails: any = await (
-    await httpHelpers.post(`${domain}/make`, "username=player1&format=json")
+    await httpHelpers.post(`${domain}/api/make`, "username=player1")
   ).json()
 
   await httpHelpers.post(

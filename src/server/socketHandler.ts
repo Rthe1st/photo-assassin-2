@@ -2,12 +2,11 @@ import { logger } from "./logging"
 import * as Game from "./game"
 import * as socketInterface from "./socketInterface"
 import * as socketEvents from "../shared/socketEvents"
-import { Server, Socket } from "socket.io"
+import { Server } from "socket.io"
 
 export function updateSettings(
   msg: socketEvents.ClientUpdateSettings,
-  game: Game.Game,
-  socket: Socket
+  game: Game.Game
 ) {
   if (game.state != Game.states.NOT_STARTED) {
     return
@@ -22,32 +21,23 @@ export function updateSettings(
     gameCode: game.code,
     gameState: game.state,
   })
-  socketInterface.updateSettings(socket, {
-    gameState: Game.gameStateForClient(game),
-  })
 }
 
 export function removeUser(
   msg: socketEvents.ClientRemoveUser,
-  game: Game.Game,
-  socket: Socket
+  game: Game.Game
 ) {
   //todo: kill the socket connection of the removed user
   if (game.state != Game.states.NOT_STARTED) {
     return
   }
   Game.removePlayer(game, msg.publicId)
-  socketInterface.removeUser(socket, {
-    publicId: msg.publicId,
-    gameState: Game.gameStateForClient(game),
-  })
 }
 
 export function start(
   publicId: number,
   msg: socketEvents.ClientUpdateSettings,
-  game: Game.Game,
-  socket: Socket
+  game: Game.Game
 ) {
   if (publicId != 0) {
     return
@@ -67,8 +57,6 @@ export function start(
     gameCode: game.code,
     gameState: game.state,
   })
-  // todo: say who started it
-  socketInterface.start(socket, { gameState: Game.gameStateForClient(game) })
 }
 
 export function stop(game: Game.Game, io: Server) {
@@ -93,7 +81,6 @@ export function positionUpdate(
 export function chatMsg(
   msg: socketEvents.ClientChatMessage,
   game: Game.Game,
-  socket: Socket,
   publicId: number,
   io: Server
 ) {
@@ -149,7 +136,7 @@ export function chatMsg(
     // https://stackoverflow.com/a/41641451/5832565
     res.resizePromise
       .then((imageUrl) => {
-        return socketInterface.resizeDone(socket, {
+        return game.listener!.resizeDone({
           imageId: imageId!,
           url: imageUrl,
         })
@@ -163,7 +150,7 @@ export function chatMsg(
 
     res.imagePromise
       .then((imageUrl) => {
-        return socketInterface.imageUploadDone(socket, {
+        return game.listener!.imageUploadDone({
           imageId: imageId!,
           url: imageUrl,
         })
@@ -217,20 +204,19 @@ export function chatMsg(
 
   game.chatHistory.push(outgoingMsg)
 
-  socketInterface.chatMessage(socket, outgoingMsg)
+  game.listener!.chatMessage(outgoingMsg)
 }
 
 export function badSnipe(
   msg: socketEvents.ClientBadSnipe,
   game: Game.Game,
-  socket: Socket,
   publicId: number
 ) {
   const undoneSnipeIndexes = Game.badSnipe(game, msg.snipeInfosIndex, publicId)
   if (undoneSnipeIndexes) {
     //we need to tell the client which snipes need ot be marked as canceled in the gui
     //undosnipe should probs return that
-    socketInterface.badSnipe(socket, {
+    game.listener!.badSnipe({
       gameState: Game.gameStateForClient(game),
       undoneSnipeIndexes: undoneSnipeIndexes,
     })
@@ -238,14 +224,16 @@ export function badSnipe(
 }
 
 export function addUser(publicId: number, game: Game.Game) {
-  socketInterface.newUser(game.namespace!, {
+  game.listener!.newUser({
     publicId: publicId,
     gameState: Game.gameStateForClient(game),
   })
 }
 
 function finishGame(game: Game.Game, winner: string, io: Server) {
-  const nextGame = socketInterface.setup(io)
+  const nextGame = Game.generateGame((code: string, game: Game.Game) =>
+    socketInterface.socketListener(io, code, game)
+  )
 
   // we wait for the gamestate to get uploaded
   // and only then tell clients the game is over
@@ -254,7 +242,7 @@ function finishGame(game: Game.Game, winner: string, io: Server) {
   // and implement retry logic client side to check
   // when the uploaded state is ready
   Game.finishGame(game, nextGame.code, winner).then((url) => {
-    socketInterface.finished(game.namespace!, {
+    game.listener!.finished({
       nextCode: nextGame.code,
       winner: winner,
       stateUrl: url,
@@ -267,7 +255,6 @@ function finishGame(game: Game.Game, winner: string, io: Server) {
 
 export function checkGameTiming(games: Map<string, Game.Game>, io: Server) {
   for (const [gameId, game] of games.entries()) {
-    const namespace = game.namespace
     const now = Date.now()
     //todo: need a record when we're in count down vs real game
     if (
@@ -309,7 +296,7 @@ export function checkGameTiming(games: Map<string, Game.Game>, io: Server) {
       const forClient: socketEvents.ServerTimeLeftMsg = {
         gameState: Game.gameStateForClient(game),
       }
-      socketInterface.timeLeft(namespace!, forClient)
+      game.listener!.timeLeft(forClient)
     }
   }
 }

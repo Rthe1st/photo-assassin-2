@@ -13,12 +13,12 @@ import * as fs from "fs"
 import * as Game from "./game"
 
 import * as socketHandler from "./socketHandler"
-import * as socketInterface from "./socketInterface"
 import { logger } from "./logging"
 import { env } from "process"
 import { String } from "runtypes"
 import { engine } from "express-handlebars"
 import { returnError } from "./validationErrors"
+import { Listener, socketListener } from "./socketInterface"
 
 function devErrorHandler(
   err: any,
@@ -109,9 +109,16 @@ export function createServer(
   app.get("/game/:code", (req, res) =>
     gamePage(staticDir, req, res, Game.getGame)
   )
-  // todo: should these be .use()
-  // so we can redirect if someone navigate there by mistake
-  app.post("/make", (req, res) => make(staticDir, req, res, ioServer))
+  app.post("/make", (req, res) =>
+    make(req, res, (code: string, game: Game.Game) =>
+      socketListener(ioServer, code, game)
+    )
+  )
+  app.post("/api/make", (req, res) =>
+    apiMake(req, res, (code: string, game: Game.Game) =>
+      socketListener(ioServer, code, game)
+    )
+  )
   app.post("/join", (req, res) => join(staticDir, req, res))
   if (useSentry) {
     // The error handler must be before any other error middleware and after all controllers
@@ -190,54 +197,70 @@ export function root(
   }
 }
 
-function addUserToGame(
-  game: Game.Game,
+function commonMake(
+  req: express.Request,
   res: express.Response,
-  username: string
+  listener: (code: string, game: Game.Game) => Listener
 ) {
-  const { privateId: privateId, publicId: publicId } = Game.addPlayer(
-    game,
-    username
+  const maxLength = 50
+
+  const usernameValidation = String.withConstraint(
+    (username: string) => username.length > 0 && username.length < maxLength
   )
 
-  socketHandler.addUser(publicId, game)
+  const validationResult = usernameValidation.validate(req.body.username)
 
+  if (!validationResult.success) {
+    return {
+      error: `You cannot use '${
+        req.body?.username ?? ""
+      }' as a username, it is mandatory and must be less then ${maxLength} characters long.`,
+    }
+  }
+
+  const username = validationResult.value
+
+  const game = Game.generateGame(listener)
+  const { privateId, publicId } = Game.addPlayer(game, username)
   // todo: set good settings (https only, etc)
   res.cookie("gameId", game.code, { sameSite: "strict" })
   res.cookie("privateId", privateId, { sameSite: "strict" })
   res.cookie("publicId", publicId, { sameSite: "strict" })
-  logger.log("verbose", "Adding user to game", {
-    publicId: publicId,
-    gameCode: game.code,
-  })
-
-  return [privateId, publicId]
+  return {
+    success: { publicId, privateId, gameId: game.code },
+  }
 }
 
-function make(
-  staticDir: string,
+export function apiMake(
   req: express.Request,
   res: express.Response,
-  io: Server
+  listener: (code: string, game: Game.Game) => Listener
 ) {
-  if (!req.body.username) {
+  const result = commonMake(req, res, listener)
+  if (result.error) {
     res.status(400)
-    res.sendFile(`${staticDir}/no_username.html`)
-    return
-  }
-  const game = socketInterface.setup(io)
-  const [privateId, publicId] = addUserToGame(
-    game,
-    res,
-    req.body.username.toString()
-  )
-  if (req.body.format == "json") {
-    res
-      .status(200)
-      .json({ publicId: publicId, privateId: privateId, gameId: game.code })
-      .end()
+    res.json(result.error)
+    res.end()
   } else {
-    res.redirect(`/game/${game.code}`)
+    res.status(200)
+    res.json(result.success)
+    res.end()
+  }
+}
+
+export function make(
+  req: express.Request,
+  res: express.Response,
+  listener: (code: string, game: Game.Game) => Listener
+) {
+  const result = commonMake(req, res, listener)
+
+  if (result.error) {
+    res.status(400)
+    returnError(res, result.error)
+    return
+  } else {
+    res.redirect(`/game/${result.success?.gameId}`)
   }
 }
 
@@ -274,11 +297,14 @@ function join(staticDir: string, req: express.Request, res: express.Response) {
     res.sendFile(`${staticDir}/no_username.html`)
     return
   }
-  const [privateId, publicId] = addUserToGame(
+  const { privateId: privateId, publicId: publicId } = Game.addPlayer(
     game,
-    res,
     req.body.username.toString()
   )
+
+  res.cookie("gameId", game.code, { sameSite: "strict" })
+  res.cookie("privateId", privateId, { sameSite: "strict" })
+  res.cookie("publicId", publicId, { sameSite: "strict" })
 
   if (req.body.format == "json") {
     res.json({ publicId: publicId, privateId: privateId, gameId: game.code })
@@ -287,7 +313,7 @@ function join(staticDir: string, req: express.Request, res: express.Response) {
   }
 }
 
-const gameCodeFormat = /^[a-z]+-[a-z]+-[a-z]+-[a-z]+$/
+export const gameCodeFormat = /^[a-z]+-[a-z]+-[a-z]+-[a-z]+$/
 
 export function gamePage(
   staticDir: string,

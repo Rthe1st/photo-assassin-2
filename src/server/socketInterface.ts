@@ -2,21 +2,9 @@ import { logger } from "./logging"
 import * as Game from "./game"
 import * as socketEvents from "../shared/socketEvents"
 import * as socketHandler from "./socketHandler"
-import { Namespace, Server, Socket } from "socket.io"
+import { Server, Socket } from "socket.io"
 
-export function setup(io: Server) {
-  const game = Game.generateGame()
-  const namespace = io.of(`/game/${game.code}`)
-  // I don't like namespace getting registered on game after game is already made
-  game.namespace = namespace
-  // register connection after setting game space to prevent race condition
-  // where ioConnect relies on game.namespace
-  // tod: wrap socketConnect in a  try/catch to send err message to client and disconnect them
-  namespace.on("connection", (socket) => socketConnect(socket, game, io))
-  return game
-}
-
-function socketConnect(socket: Socket, game: Game.Game, io: Server) {
+export function socketConnect(socket: Socket, game: Game.Game, io: Server) {
   const gameId = socket.nsp.name.substr("/game/".length)
   if (game == undefined) {
     logger.log("verbose", `invalid game ${gameId}`)
@@ -54,15 +42,11 @@ function socketConnect(socket: Socket, game: Game.Game, io: Server) {
   // todo: can we do a switch statement on socket event
   // and cast the event name to an enum, to check we cover all options?
 
-  socket.on("update settings", (msg) =>
-    socketHandler.updateSettings(msg, game, socket)
-  )
+  socket.on("update settings", (msg) => socketHandler.updateSettings(msg, game))
 
-  socket.on("remove user", (msg) => socketHandler.removeUser(msg, game, socket))
+  socket.on("remove user", (msg) => socketHandler.removeUser(msg, game))
 
-  socket.on("start game", (msg) =>
-    socketHandler.start(publicId, msg, game, socket)
-  )
+  socket.on("start game", (msg) => socketHandler.start(publicId, msg, game))
 
   socket.on("stop game", (_) => socketHandler.stop(game, io))
 
@@ -71,68 +55,54 @@ function socketConnect(socket: Socket, game: Game.Game, io: Server) {
   )
 
   socket.on("chat message", (msg) =>
-    socketHandler.chatMsg(msg, game, socket, publicId, io)
+    socketHandler.chatMsg(msg, game, publicId, io)
   )
 
-  socket.on("bad snipe", (msg) =>
-    socketHandler.badSnipe(msg, game, socket, publicId)
-  )
+  socket.on("bad snipe", (msg) => socketHandler.badSnipe(msg, game, publicId))
 
   socket.on("disconnect", function () {
     logger.log("debug", "socket disconnected", { player: publicId })
   })
 }
 
-export function resizeDone(socket: Socket, msg: socketEvents.ServerResizeDone) {
-  socket.nsp.emit("resize done", msg)
+export type Listener = {
+  resizeDone: (msg: socketEvents.ServerResizeDone) => void
+  imageUploadDone: (msg: socketEvents.ServerImageUploadDone) => void
+  updateSettings: (msg: socketEvents.ServerUpdateSettingsMsg) => void
+  removeUser: (msg: socketEvents.RemoveUserMsg) => void
+  start: (msg: socketEvents.ServerStartMsg) => void
+  chatMessage: (msg: socketEvents.ServerChatMessage) => void
+  badSnipe: (msg: socketEvents.ServerBadSnipeMsg) => void
+  newUser: (msg: socketEvents.NewUserMsg) => void
+  finished: (msg: socketEvents.ServerFinishedMsg) => void
+  timeLeft: (msg: socketEvents.ServerTimeLeftMsg) => void
 }
 
-export function imageUploadDone(
-  socket: Socket,
-  msg: socketEvents.ServerImageUploadDone
-) {
-  socket.nsp.emit("image upload done", msg)
-}
-
-export function updateSettings(
-  socket: Socket,
-  msg: socketEvents.ServerUpdateSettingsMsg
-) {
-  socket.nsp.emit("update settings", msg)
-}
-
-export function removeUser(socket: Socket, msg: socketEvents.RemoveUserMsg) {
-  socket.nsp.emit("Remove user", msg)
-}
-
-export function start(socket: Socket, msg: socketEvents.ServerStartMsg) {
-  socket.nsp.emit("start", msg)
-}
-
-export function chatMessage(
-  socket: Socket,
-  msg: socketEvents.ServerChatMessage
-) {
-  socket.nsp.emit("chat message", msg)
-}
-export function badSnipe(socket: Socket, msg: socketEvents.ServerBadSnipeMsg) {
-  socket.nsp.emit("bad snipe", msg)
-}
-
-export function newUser(namespace: Namespace, msg: socketEvents.NewUserMsg) {
-  namespace.emit("New user", msg)
-}
-
-export function finished(
-  namespace: Namespace,
-  msg: socketEvents.ServerFinishedMsg
-) {
-  namespace.emit("game finished", msg)
-}
-
-export function timeLeft(
-  namespace: Namespace,
-  msg: socketEvents.ServerTimeLeftMsg
-) {
-  namespace.emit("timeLeft", msg)
+export function socketListener(
+  io: Server,
+  code: string,
+  game: Game.Game
+): Listener {
+  const namespace = io.of(`/game/${code}`)
+  namespace.on("connection", (socket) => socketConnect(socket, game, io))
+  return {
+    resizeDone: (msg: socketEvents.ServerResizeDone) =>
+      namespace.emit("resize done", msg),
+    imageUploadDone: (msg: socketEvents.ServerImageUploadDone) =>
+      namespace.emit("image upload done", msg),
+    updateSettings: (msg: socketEvents.ServerUpdateSettingsMsg) =>
+      namespace.emit("update settings", msg),
+    removeUser: (msg: socketEvents.RemoveUserMsg) =>
+      namespace.emit("Remove user", msg),
+    start: (msg: socketEvents.ServerStartMsg) => namespace.emit("start", msg),
+    chatMessage: (msg: socketEvents.ServerChatMessage) =>
+      namespace.emit("chat message", msg),
+    badSnipe: (msg: socketEvents.ServerBadSnipeMsg) =>
+      namespace.emit("bad snipe", msg),
+    newUser: (msg: socketEvents.NewUserMsg) => namespace.emit("New user", msg),
+    finished: (msg: socketEvents.ServerFinishedMsg) =>
+      namespace.emit("game finished", msg),
+    timeLeft: (msg: socketEvents.ServerTimeLeftMsg) =>
+      namespace.emit("timeLeft", msg),
+  }
 }
