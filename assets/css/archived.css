@@ -1,4 +1,4 @@
-/*hack so that elments with display:flex can still be hidden
+/*hack so that elements with display:flex can still be hidden
 https://stackoverflow.com/a/48936804*/
 [hidden] {
   display: none !important;
@@ -13,7 +13,7 @@ body {
   height: 100%;
   margin: 0;
   padding: 0;
-  /*todo: does doing this to html AND body actualy make it 2em?*/
+  /*todo: does doing this to html AND body actually make it 2em?*/
   font-size: 1em;
 }
 

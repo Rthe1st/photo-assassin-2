@@ -34,44 +34,6 @@ for (const env of expected_vars) {
   }
 }
 
-const errorPages = [
-  {
-    name: "game_doesnt_exist.html",
-    message: "Can't join - game doesn't exist",
-  },
-  {
-    name: "game_in_progress.html",
-    message: "Can't join - game already in progress",
-  },
-  {
-    name: "no_username.html",
-    message: "No username supplied",
-  },
-  {
-    name: "no_code.html",
-    message: "No game code supplied",
-  },
-]
-
-function generateStaticErrorPages(
-  errorPages: { name: string; message: string }[]
-) {
-  const plugins = []
-
-  for (const errorPage of errorPages) {
-    const plugin = new HtmlWebpackPlugin({
-      template: `./assets/templates/error.html`, // relative path to the HTML files
-      filename: errorPage.name, // output HTML files
-      templateParameters: {
-        error: errorPage.message,
-      },
-      chunks: [],
-    })
-    plugins.push(plugin)
-  }
-  return plugins
-}
-
 module.exports = {
   entry: {
     index: "./src/client/index.ts",
@@ -150,19 +112,17 @@ module.exports = {
       project: "javascript",
       release: "SENTRY_RELEASE",
     }),
-  ]
-    .concat(generateStaticErrorPages(errorPages))
-    .concat(
-      ["lobby"].map((name) => {
-        return new HtmlWebpackPlugin({
-          template: `./assets/templates/${name}.html`, // relative path to the HTML files
-          filename: `${name}.html`, // output HTML files
-          chunks: [`${name}`], // respective JS files
-          inject: "head",
-          // todo: we don't actually want to defer the script that loads the websocket
-          // we want this to run asap
-          scriptLoading: "defer",
-        })
+  ].concat(
+    ["lobby"].map((name) => {
+      return new HtmlWebpackPlugin({
+        template: `./assets/templates/${name}.html`, // relative path to the HTML files
+        filename: `${name}.html`, // output HTML files
+        chunks: [`${name}`], // respective JS files
+        inject: "head",
+        // todo: we don't actually want to defer the script that loads the websocket
+        // we want this to run asap
+        scriptLoading: "defer",
       })
-    ),
+    })
+  ),
 }

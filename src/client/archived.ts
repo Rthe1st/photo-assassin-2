@@ -181,7 +181,11 @@ window.onload = function () {
     },
     (_) => {
       // this looks terribad - change to a local hide/show thing
-      window.location.replace("/static/game_doesnt_exist.html")
+      ;(<HTMLDivElement>document.getElementById("error"))!.hidden = false
+      ;(<HTMLDivElement>document.getElementById("main"))!.hidden = true
+      ;(<HTMLParagraphElement>(
+        document.getElementById("error-message")
+      )).innerText = "Game does not exist"
     }
   )
 
