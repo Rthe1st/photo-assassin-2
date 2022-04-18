@@ -4,9 +4,6 @@
 
 import fetch, { Headers, RequestInit } from "node-fetch"
 import * as https from "https"
-import * as socketBots from "../src/bots/socketBots"
-import * as socketClient from "../src/shared/socketClient"
-import * as socketHelpers from "./socketHelpers"
 import * as httpHelpers from "./httpHelpers"
 import { domain, gameCodeFormat } from "./shared_definitions"
 
@@ -38,7 +35,7 @@ test("GET /", async () => {
   expect(response.headers.raw()).not.toHaveProperty("set-cookie")
 })
 
-test("GET / for non-existent game", async () => {
+test("GET / for error", async () => {
   const agent = new https.Agent({
     rejectUnauthorized: false,
   })
@@ -48,30 +45,6 @@ test("GET / for non-existent game", async () => {
     "No game exists with the code &#x27;a-fake-game-code&#x27;"
   )
   expect(response.headers.raw()).not.toHaveProperty("set-cookie")
-})
-
-test("GET / for game that already started", async () => {
-  const agent = new https.Agent({
-    rejectUnauthorized: false,
-  })
-  const [player1, gameId] = await socketHelpers.makeGame(domain, "player1")
-  const player2 = await socketHelpers.joinGame(domain, gameId, "player2")
-  //todo: move into some default settings object
-  const gameSettings = {
-    gameLength: 60000,
-    countDown: 0,
-    proposedTargetList: [0, 1],
-  }
-  socketClient.startGame(player1, gameSettings)
-
-  const response = await fetch(`${domain}/?code=${gameId}`, { agent })
-  expect(response.status).toBe(403)
-  expect(response.text()).resolves.toContain(
-    `You can&#x27;t join the game &#x27;${gameId}&#x27; because it has already started.`
-  )
-  expect(response.headers.raw()).not.toHaveProperty("set-cookie")
-
-  await socketHelpers.closeSockets([player1, player2])
 })
 
 // test /make
@@ -118,7 +91,7 @@ test("POST /api/make JSON", async () => {
   })
 })
 
-test("POST /make no username", async () => {
+test("POST /make error", async () => {
   const response = await httpHelpers.post(`${domain}/api/make`, "")
 
   expect(response.status).toBe(400)
@@ -175,8 +148,8 @@ test("POST /join json", async () => {
 
   const requestOptions: RequestInit = { redirect: "manual" }
   const response = await httpHelpers.post(
-    `${domain}/join`,
-    `username=player2&code=${gameDetails.gameId}&format=json`,
+    `${domain}/api/join`,
+    `username=player2&code=${gameDetails.gameId}`,
     requestOptions
   )
   expect(response.status).toBe(200)
@@ -192,63 +165,11 @@ test("POST /join json", async () => {
   })
 })
 
-test("POST /join no code", async () => {
+test("POST /join error", async () => {
   const response = await httpHelpers.post(`${domain}/join`, `username=player2`)
-  expect(response.status).toBe(403)
+  expect(response.status).toBe(400)
 
-  expect(response.text()).resolves.toContain("No game code supplied")
-})
-
-test("POST /join no username", async () => {
-  const gameDetails: any = await (
-    await httpHelpers.post(`${domain}/api/make`, "username=player1")
-  ).json()
-
-  const response = await httpHelpers.post(
-    `${domain}/join`,
-    `code=${gameDetails.gameId}`
-  )
-  expect(response.status).toBe(403)
-  expect(response.text()).resolves.toContain("No username supplied")
-})
-
-test("POST /join invalid code", async () => {
-  const response = await httpHelpers.post(
-    `${domain}/join`,
-    `username=player2&code=123`
-  )
-  expect(response.status).toBe(404)
-  expect(response.text()).resolves.toContain("Can't join - game doesn't exist")
-})
-
-test("POST /join for game that already started", async () => {
-  const details = await socketBots.makeGame("player1", domain)
-  const { socket: player1 } = await socketHelpers.makeSocket(
-    domain,
-    details.gameId,
-    details.privateId
-  )
-  const player2 = await socketHelpers.joinGame(
-    domain,
-    details.gameId,
-    "player2"
-  )
-  //todo: move into some default settings object
-  const gameSettings = {
-    gameLength: 60000,
-    countDown: 0,
-    proposedTargetList: [0, 1],
-  }
-  socketClient.startGame(player1, gameSettings)
-  const response = await httpHelpers.post(
-    `${domain}/join`,
-    `username=player3&code=${details.gameId}`
-  )
-
-  expect(response.status).toBe(403)
   expect(response.text()).resolves.toContain(
-    "Can't join - game already in progress"
+    "Expected string, but was undefined"
   )
-
-  await socketHelpers.closeSockets([player1, player2])
 })

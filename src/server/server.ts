@@ -119,7 +119,8 @@ export function createServer(
       socketListener(ioServer, code, game)
     )
   )
-  app.post("/join", (req, res) => join(staticDir, req, res))
+  app.post("/join", (req, res) => join(req, res))
+  app.post("/api/join", (req, res) => apiJoin(req, res))
   if (useSentry) {
     // The error handler must be before any other error middleware and after all controllers
     app.use(Sentry.Handlers.errorHandler())
@@ -205,7 +206,7 @@ function commonMake(
   const maxLength = 50
 
   const usernameValidation = String.withConstraint(
-    (username: string) => username.length > 0 && username.length < maxLength
+    (username: string) => username.length > 0 && username.length <= maxLength
   )
 
   const validationResult = usernameValidation.validate(req.body.username)
@@ -264,53 +265,103 @@ export function make(
   }
 }
 
-function join(staticDir: string, req: express.Request, res: express.Response) {
-  if (req.body.code == undefined) {
-    logger.log("debug", "no code supplied")
-    res.status(403)
-    res.sendFile(`${staticDir}/no_code.html`)
-    return
-  }
-  const game = Game.getGame(req.body.code)
-  if (game == undefined) {
-    logger.log("verbose", `Accessing invalid game: ${req.body.code}`)
-    res.status(404)
-    res.sendFile(`${staticDir}/game_doesnt_exist.html`)
-    return
-  }
-  if (game.state != Game.states.NOT_STARTED) {
-    logger.log(
-      "verbose",
-      "Attempt to join game " + game.code + " that has already started"
-    )
-    res.status(403)
-    res.sendFile(`${staticDir}/game_in_progress.html`)
-    return
-  }
-  logger.log("debug", "adding to game")
-  if (req.body.username == undefined) {
-    logger.log(
-      "verbose",
-      "Attempt to join game " + game.code + " without a username"
-    )
-    res.status(403)
-    res.sendFile(`${staticDir}/no_username.html`)
-    return
-  }
-  const { privateId: privateId, publicId: publicId } = Game.addPlayer(
-    game,
-    req.body.username.toString()
+export function commonJoin(
+  unvalidatedUsername: unknown,
+  unvalidatedCode: unknown
+) {
+  const maxLength = 50
+
+  const usernameValidation = String.withConstraint(
+    (username: string) => username.length > 0 && username.length <= maxLength
   )
 
-  res.cookie("gameId", game.code, { sameSite: "strict" })
-  res.cookie("privateId", privateId, { sameSite: "strict" })
-  res.cookie("publicId", publicId, { sameSite: "strict" })
+  const codeValidation = String.withConstraint((code: string) => {
+    if (!code.match(gameCodeFormat)) {
+      return `'${code}' is wrong, should be 4 words, for example: 'cat-dog-fish-spoon'`
+    } else {
+      return true
+    }
+  })
+    .withConstraint((code: string) => {
+      const game = Game.getGame(code)
+      if (game === undefined) {
+        return `'${code}' does not exist`
+      }
+      return true
+    })
+    .withConstraint((code: string) => {
+      const game = Game.getGame(code)!
+      if (game.state != Game.states.NOT_STARTED) {
+        return `'${code}' has already started`
+      }
+      return true
+    })
 
-  if (req.body.format == "json") {
-    res.json({ publicId: publicId, privateId: privateId, gameId: game.code })
-  } else {
-    res.redirect(`/game/${game.code}`)
+  const usernameValidationResult =
+    usernameValidation.validate(unvalidatedUsername)
+
+  if (!usernameValidationResult.success) {
+    return {
+      error: `username: You cannot use '${
+        unvalidatedUsername ?? ""
+      }' as a username, it is mandatory and must be less then ${maxLength} characters long.`,
+    }
   }
+
+  const username = usernameValidationResult.value
+
+  const codeValidationResult = codeValidation.validate(unvalidatedCode)
+
+  if (!codeValidationResult.success) {
+    return {
+      error: `code: ${codeValidationResult.message}`,
+    }
+  }
+
+  const game = Game.getGame(codeValidationResult.value)!
+
+  const { privateId, publicId } = Game.addPlayer(game, username)
+  return {
+    success: { publicId, privateId, gameId: game.code },
+  }
+}
+
+export function join(req: express.Request, res: express.Response) {
+  const result = commonJoin(req.body.username, req.body.code)
+
+  if (result.error) {
+    //todo: maybe we shoudl captrue more specifc error codes
+    // 404 - game didnt exist
+    // 403, game already started (or 400)
+    // 400 bad username
+    // ?400 bad game id format?
+    res.status(400)
+    returnError(res, result.error)
+    return
+  } else {
+    // todo: set good settings (https only, etc)
+    res.cookie("gameId", result.success!.gameId, { sameSite: "strict" })
+    res.cookie("privateId", result.success!.privateId, { sameSite: "strict" })
+    res.cookie("publicId", result.success!.publicId, { sameSite: "strict" })
+    res.redirect(`/game/${result.success?.gameId}`)
+  }
+}
+
+export function apiJoin(req: express.Request, res: express.Response) {
+  const result = commonJoin(req.body.username, req.body.code)
+
+  if (result.error) {
+    res.status(400)
+    res.json(result.error)
+  } else {
+    res.status(200)
+    // todo: set good settings (https only, etc)
+    res.cookie("gameId", result.success!.gameId, { sameSite: "strict" })
+    res.cookie("privateId", result.success!.privateId, { sameSite: "strict" })
+    res.cookie("publicId", result.success!.publicId, { sameSite: "strict" })
+    res.json(result.success)
+  }
+  res.end()
 }
 
 export const gameCodeFormat = /^[a-z]+-[a-z]+-[a-z]+-[a-z]+$/

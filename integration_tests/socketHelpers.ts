@@ -103,8 +103,8 @@ export async function joinGame(
 ) {
   const details: any = await (
     await httpHelpers.post(
-      `${domain}/join`,
-      `code=${gameId}&username=${username}&format=json`
+      `${domain}/api/join`,
+      `code=${gameId}&username=${username}`
     )
   ).json()
   const { socket: socket } = await makeSocket(domain, gameId, details.privateId)

@@ -14,8 +14,8 @@ test.skip("clientApi.gameJson", async () => {
   ).json()
 
   await httpHelpers.post(
-    `${domain}/join`,
-    `code={gameCode}&username=player2&format=json`
+    `${domain}/api/join`,
+    `code={gameCode}&username=player2`
   )
 
   // todo: fix, we need to finish the game in order

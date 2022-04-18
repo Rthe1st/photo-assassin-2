@@ -58,14 +58,14 @@ export async function joinGame(
   gameId: string,
   host: string = domain
 ): Promise<any> {
-  const url = `${host}/join`
+  const url = `${host}/api/join`
   const agent = new https.Agent({
     rejectUnauthorized: false,
   })
   const requestOptions = {
     method: "POST",
     agent: agent,
-    body: `code=${gameId}&username=${username}&format=json`,
+    body: `code=${gameId}&username=${username}`,
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
   }
 
