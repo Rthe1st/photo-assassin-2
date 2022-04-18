@@ -366,7 +366,7 @@ function updateTimeLeft(sync = true) {
   if (sync) {
     const formatedSubState =
       game.game.subState![0].toUpperCase() +
-      game.game.subState!.substr(1).toLowerCase()
+      game.game.subState!.substring(1).toLowerCase()
     ;(<HTMLParagraphElement>document.getElementById("sub-state")!).innerText =
       formatedSubState
     if (game.game.subState == "COUNTDOWN") {

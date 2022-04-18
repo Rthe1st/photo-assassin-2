@@ -8,7 +8,7 @@ if (process.env.SENTRY_TESTS == "true") {
 function showOnlyJoinContent() {
   const urlParameters: { [key: string]: string } = {}
   location.search
-    .substr(1)
+    .substring(1)
     .split("&")
     .forEach(function (item) {
       const tmp = item.split("=")

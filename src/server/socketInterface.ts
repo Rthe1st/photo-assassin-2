@@ -5,7 +5,7 @@ import * as socketHandler from "./socketHandler"
 import { Server, Socket } from "socket.io"
 
 export function socketConnect(socket: Socket, game: Game.Game, io: Server) {
-  const gameId = socket.nsp.name.substr("/game/".length)
+  const gameId = socket.nsp.name.substring("/game/".length)
   if (game == undefined) {
     logger.log("verbose", `invalid game ${gameId}`)
     return
