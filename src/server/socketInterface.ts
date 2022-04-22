@@ -3,34 +3,33 @@ import * as Game from "./game"
 import * as socketEvents from "../shared/socketEvents"
 import * as socketHandler from "./socketHandler"
 import { Server, Socket } from "socket.io"
+import { Record, String } from "runtypes"
 
+// todo: remove the need for io to be passed in here
 export function socketConnect(socket: Socket, game: Game.Game, io: Server) {
-  const gameId = socket.nsp.name.substring("/game/".length)
-  if (game == undefined) {
-    logger.log("verbose", `invalid game ${gameId}`)
+  const queryValidation = Record({
+    privateId: String.withConstraint((id) =>
+      game.idMapping.has(id) ? true : "id didn't exist"
+    ),
+  })
+
+  const validationResult = queryValidation.validate(socket.handshake.query)
+
+  if (!validationResult.success) {
+    logger.log("error", JSON.stringify(validationResult.details))
+    socket.emit("error", validationResult.details)
+    socket.disconnect()
     return
   }
 
-  if (Array.isArray(socket.handshake.query.privateId)) {
-    logger.log(
-      "error",
-      `more then one private ID supplied: {socket.handshake.query.privateId}`
-    )
-    return
-  }
-
-  const privateId = <string>socket.handshake.query.privateId
+  const privateId = validationResult.value.privateId
 
   //todo: allow sockets to connect in "view only" mode if they're not players
-  const publicId = game.idMapping.get(privateId)
-  if (publicId === undefined) {
-    logger.log("verbose", `invalid privateId ${privateId}`)
-    return
-  }
+  const publicId = game.idMapping.get(privateId)!
 
   logger.log("debug", "Socket connected", {
     publicId: publicId,
-    gameCode: gameId,
+    gameCode: game.code,
   })
 
   const initializationMsg: socketEvents.ServerInitializationMsg = {

@@ -15,7 +15,7 @@ import { Listener } from "./socketInterface"
 
 logging.setupJestLogging()
 
-function testListener(): Listener {
+export function testListener(): Listener {
   return {
     resizeDone: () => undefined,
     imageUploadDone: () => undefined,
