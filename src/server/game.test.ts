@@ -2,22 +2,7 @@ import * as Game from "./game"
 import * as fs from "fs"
 import * as logging from "./logging"
 import dotenv from "dotenv"
-import { Listener } from "./socketInterface"
-
-function testListener(): Listener {
-  return {
-    resizeDone: () => undefined,
-    imageUploadDone: () => undefined,
-    updateSettings: () => undefined,
-    removeUser: () => undefined,
-    start: () => undefined,
-    chatMessage: () => undefined,
-    badSnipe: () => undefined,
-    newUser: () => undefined,
-    finished: () => undefined,
-    timeLeft: () => undefined,
-  }
-}
+import { testListener } from "./server.test"
 
 test("basic game", async () => {
   dotenv.config()

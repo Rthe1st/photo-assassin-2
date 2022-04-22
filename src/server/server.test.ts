@@ -17,6 +17,7 @@ logging.setupJestLogging()
 
 export function testListener(): Listener {
   return {
+    listenerFactory: testListener,
     resizeDone: () => undefined,
     imageUploadDone: () => undefined,
     updateSettings: () => undefined,

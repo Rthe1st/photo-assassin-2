@@ -11,6 +11,7 @@ import { setupJestLogging } from "../server/logging"
 
 function testListener(): Listener {
   return {
+    listenerFactory: testListener,
     resizeDone: () => undefined,
     imageUploadDone: () => undefined,
     updateSettings: () => undefined,

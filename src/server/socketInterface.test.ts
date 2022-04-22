@@ -21,11 +21,9 @@ describe("socketConnect", () => {
   it("accepts valid id", () => {
     const game = generateGame(testListener)
     const { privateId } = addPlayer(game, "user")
-    console.log(game.idMapping)
     const socket: any = makeSocket(privateId)
 
-    const io: any = {}
-    socketConnect(socket, game, io)
+    socketConnect(socket, game)
     expect(socket.emit).toBeCalledWith("initialization", {
       chatHistory: game.chatHistory,
       gameState: gameStateForClient(game),
@@ -36,8 +34,7 @@ describe("socketConnect", () => {
   it("rejects invalid private ids", () => {
     const socket: any = makeSocket()
     const game: any = {}
-    const io: any = {}
-    socketConnect(socket, game, io)
+    socketConnect(socket, game)
     expect(socket.emit).toBeCalledWith(
       "error",
       expect.objectContaining({
@@ -50,8 +47,7 @@ describe("socketConnect", () => {
   it("rejects invalid private ids", () => {
     const socket: any = makeSocket("not a real id")
     const game = generateGame(testListener)
-    const io: any = {}
-    socketConnect(socket, game, io)
+    socketConnect(socket, game)
     expect(socket.emit).toBeCalledWith(
       "error",
       expect.objectContaining({

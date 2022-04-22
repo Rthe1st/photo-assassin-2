@@ -5,8 +5,7 @@ import * as socketHandler from "./socketHandler"
 import { Server, Socket } from "socket.io"
 import { Record, String } from "runtypes"
 
-// todo: remove the need for io to be passed in here
-export function socketConnect(socket: Socket, game: Game.Game, io: Server) {
+export function socketConnect(socket: Socket, game: Game.Game) {
   const queryValidation = Record({
     privateId: String.withConstraint((id) =>
       game.idMapping.has(id) ? true : "id didn't exist"
@@ -47,15 +46,13 @@ export function socketConnect(socket: Socket, game: Game.Game, io: Server) {
 
   socket.on("start game", (msg) => socketHandler.start(publicId, msg, game))
 
-  socket.on("stop game", (_) => socketHandler.stop(game, io))
+  socket.on("stop game", (_) => socketHandler.stop(game))
 
   socket.on("positionUpdate", (msg) =>
     socketHandler.positionUpdate(msg, game, publicId)
   )
 
-  socket.on("chat message", (msg) =>
-    socketHandler.chatMsg(msg, game, publicId, io)
-  )
+  socket.on("chat message", (msg) => socketHandler.chatMsg(msg, game, publicId))
 
   socket.on("bad snipe", (msg) => socketHandler.badSnipe(msg, game, publicId))
 
@@ -65,6 +62,7 @@ export function socketConnect(socket: Socket, game: Game.Game, io: Server) {
 }
 
 export type Listener = {
+  listenerFactory: (code: string, game: Game.Game) => Listener
   resizeDone: (msg: socketEvents.ServerResizeDone) => void
   imageUploadDone: (msg: socketEvents.ServerImageUploadDone) => void
   updateSettings: (msg: socketEvents.ServerUpdateSettingsMsg) => void
@@ -83,8 +81,10 @@ export function socketListener(
   game: Game.Game
 ): Listener {
   const namespace = io.of(`/game/${code}`)
-  namespace.on("connection", (socket) => socketConnect(socket, game, io))
+  namespace.on("connection", (socket) => socketConnect(socket, game))
   return {
+    listenerFactory: (code: string, game: Game.Game) =>
+      socketListener(io, code, game),
     resizeDone: (msg: socketEvents.ServerResizeDone) =>
       namespace.emit("resize done", msg),
     imageUploadDone: (msg: socketEvents.ServerImageUploadDone) =>

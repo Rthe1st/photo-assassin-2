@@ -134,14 +134,14 @@ export function createServer(
 
   httpServer.listen(port)
 
-  // todo: work out an optimime value for this
-  // too frequent and I'm worried it's events will deplay processing
+  // todo: work out an optimal value for this
+  // too frequent and I'm worried it's events will display processing
   // of messages from the client
   // but needs to be low enough for:
   // * telling client the countdown time is over
   // * telling client the game is over
   setInterval(() => {
-    socketHandler.checkGameTiming(Game.games, ioServer)
+    socketHandler.checkGameTiming(Game.games)
   }, 1000)
 }
 

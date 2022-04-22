@@ -1,8 +1,6 @@
 import { logger } from "./logging"
 import * as Game from "./game"
-import * as socketInterface from "./socketInterface"
 import * as socketEvents from "../shared/socketEvents"
-import { Server } from "socket.io"
 
 export function updateSettings(
   msg: socketEvents.ClientUpdateSettings,
@@ -59,9 +57,9 @@ export function start(
   })
 }
 
-export function stop(game: Game.Game, io: Server) {
+export function stop(game: Game.Game) {
   if (game.state == Game.states.IN_PLAY) {
-    finishGame(game, "game stopped", io)
+    finishGame(game, "game stopped")
     logger.log("verbose", "Stopping", {
       gameCode: game.code,
       gameState: game.state,
@@ -81,8 +79,7 @@ export function positionUpdate(
 export function chatMsg(
   msg: socketEvents.ClientChatMessage,
   game: Game.Game,
-  publicId: number,
-  io: Server
+  publicId: number
 ) {
   if (game.state != Game.states.IN_PLAY) {
     logger.log("debug", "chat message while not IN_PLAY")
@@ -178,7 +175,7 @@ export function chatMsg(
       })
       if (gameOver) {
         Game.updatePosition(game, publicId, msg.position!)
-        finishGame(game, publicId.toString(), io)
+        finishGame(game, publicId.toString())
         return
       }
     }
@@ -230,10 +227,8 @@ export function addUser(publicId: number, game: Game.Game) {
   })
 }
 
-function finishGame(game: Game.Game, winner: string, io: Server) {
-  const nextGame = Game.generateGame((code: string, game: Game.Game) =>
-    socketInterface.socketListener(io, code, game)
-  )
+function finishGame(game: Game.Game, winner: string) {
+  const nextGame = Game.generateGame(game.listener!.listenerFactory)
 
   // we wait for the gamestate to get uploaded
   // and only then tell clients the game is over
@@ -253,7 +248,7 @@ function finishGame(game: Game.Game, winner: string, io: Server) {
   })
 }
 
-export function checkGameTiming(games: Map<string, Game.Game>, io: Server) {
+export function checkGameTiming(games: Map<string, Game.Game>) {
   for (const [gameId, game] of games.entries()) {
     const now = Date.now()
     //todo: need a record when we're in count down vs real game
@@ -265,7 +260,7 @@ export function checkGameTiming(games: Map<string, Game.Game>, io: Server) {
         now
     ) {
       game.timeLeft = 0
-      finishGame(game, "time", io)
+      finishGame(game, "time")
       logger.log("verbose", "TimeUp", {
         gameCode: gameId,
         gameState: game.state,
