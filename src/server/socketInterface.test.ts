@@ -2,7 +2,7 @@ import { jest } from "@jest/globals"
 import { addPlayer, gameStateForClient, generateGame } from "./game"
 import { setupJestLogging } from "./logging"
 import { testListener } from "./server.test"
-import { socketConnect } from "./socketInterface"
+import { receiveUpdateSettings, socketConnect } from "./socketInterface"
 
 setupJestLogging()
 
@@ -55,5 +55,64 @@ describe("socketConnect", () => {
       })
     )
     expect(socket.disconnect).toBeCalled
+  })
+})
+
+describe("receiveUpdateSettings", () => {
+  it("errors when msg is missing fields", () => {
+    const socket: any = {
+      emit: jest.fn(),
+    }
+    const game = generateGame(testListener)
+    receiveUpdateSettings(socket, game, {})
+    expect(socket.emit).toBeCalledWith(
+      "error",
+      expect.objectContaining({
+        countDown: "Expected number, but was missing",
+        gameLength: "Expected number, but was missing",
+        proposedTargetList: "Expected number[], but was missing",
+      })
+    )
+  })
+
+  it("errors when msg fields have the wrong type", () => {
+    const socket: any = {
+      emit: jest.fn(),
+    }
+    const game = generateGame(testListener)
+    receiveUpdateSettings(socket, game, {
+      countDown: "not a number",
+      gameLength: "not a number",
+      proposedTargetList: ["not a number"],
+    })
+    expect(socket.emit).toBeCalledWith(
+      "error",
+      expect.objectContaining({
+        countDown: "Expected number, but was string",
+        gameLength: "Expected number, but was string",
+        proposedTargetList: ["Expected number, but was string"],
+      })
+    )
+  })
+
+  it("errors when update settings call fails", () => {
+    const socket: any = {
+      emit: jest.fn(),
+    }
+    const game = generateGame(testListener)
+    receiveUpdateSettings(socket, game, {
+      countDown: -1,
+      gameLength: -1,
+      proposedTargetList: [0],
+    })
+    expect(socket.emit).toBeCalledWith(
+      "error",
+      expect.objectContaining({
+        countDown: "Failed constraint check for is more then 0",
+        gameLength: "Failed constraint check for is more then 0",
+        proposedTargetList:
+          "Failed constraint check for matches number of players in game",
+      })
+    )
   })
 })

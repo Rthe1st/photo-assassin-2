@@ -18,16 +18,16 @@ logging.setupJestLogging()
 export function testListener(): Listener {
   return {
     listenerFactory: testListener,
-    resizeDone: () => undefined,
-    imageUploadDone: () => undefined,
-    updateSettings: () => undefined,
-    removeUser: () => undefined,
-    start: () => undefined,
-    chatMessage: () => undefined,
-    badSnipe: () => undefined,
-    newUser: () => undefined,
-    finished: () => undefined,
-    timeLeft: () => undefined,
+    resizeDone: jest.fn(),
+    imageUploadDone: jest.fn(),
+    updateSettings: jest.fn(),
+    removeUser: jest.fn(),
+    start: jest.fn(),
+    chatMessage: jest.fn(),
+    badSnipe: jest.fn(),
+    newUser: jest.fn(),
+    finished: jest.fn(),
+    timeLeft: jest.fn(),
   }
 }
 

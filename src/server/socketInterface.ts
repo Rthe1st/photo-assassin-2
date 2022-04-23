@@ -3,7 +3,7 @@ import * as Game from "./game"
 import * as socketEvents from "../shared/socketEvents"
 import * as socketHandler from "./socketHandler"
 import { Server, Socket } from "socket.io"
-import { Record, String } from "runtypes"
+import { Record, String, Number, Array } from "runtypes"
 
 export function socketConnect(socket: Socket, game: Game.Game) {
   const queryValidation = Record({
@@ -15,7 +15,6 @@ export function socketConnect(socket: Socket, game: Game.Game) {
   const validationResult = queryValidation.validate(socket.handshake.query)
 
   if (!validationResult.success) {
-    logger.log("error", JSON.stringify(validationResult.details))
     socket.emit("error", validationResult.details)
     socket.disconnect()
     return
@@ -37,10 +36,11 @@ export function socketConnect(socket: Socket, game: Game.Game) {
   }
   socket.emit("initialization", initializationMsg)
 
-  // todo: can we do a switch statement on socket event
-  // and cast the event name to an enum, to check we cover all options?
+  // cast the event name to an enum, to check we cover all options?
 
-  socket.on("update settings", (msg) => socketHandler.updateSettings(msg, game))
+  socket.on("update settings", (msg) =>
+    receiveUpdateSettings(socket, game, msg)
+  )
 
   socket.on("remove user", (msg) => socketHandler.removeUser(msg, game))
 
@@ -59,6 +59,36 @@ export function socketConnect(socket: Socket, game: Game.Game) {
   socket.on("disconnect", function () {
     logger.log("debug", "socket disconnected", { player: publicId })
   })
+}
+
+export function receiveUpdateSettings(
+  socket: Socket,
+  game: Game.Game,
+  msg: unknown
+) {
+  const validation = Record({
+    gameLength: Number,
+    countDown: Number,
+    proposedTargetList: Array(Number),
+  })
+
+  const result = validation.validate(msg)
+
+  if (!result.success) {
+    socket.emit("error", result.details)
+    return
+  }
+
+  const updateResult = Game.updateSettings(
+    game,
+    result.value.gameLength,
+    result.value.countDown,
+    result.value.proposedTargetList
+  )
+
+  if (!updateResult.success) {
+    socket.emit("error", updateResult.details)
+  }
 }
 
 export type Listener = {

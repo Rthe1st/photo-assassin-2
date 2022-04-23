@@ -10,10 +10,15 @@ import * as imageStore from "./imageStore"
 import { logger } from "./logging"
 import { Listener } from "./socketInterface"
 import { addUser } from "./socketHandler"
+import { Record } from "runtypes"
+import * as runtypes from "runtypes"
+import { isInteger } from "mathjs"
 
 // todo: we should wrap this in a class
 // it'd make it easier to test
 export const games: Map<string, Game> = new Map()
+
+const maxGameLength = 60
 
 const states = Object.freeze({
   FINISHED: "FINISHED",
@@ -150,21 +155,75 @@ export function saveImage(
   }
 }
 
-function updateSettings(
+export function updateSettings(
   game: Game,
   gameLength: number,
   countDown: number,
   proposedTargetList: number[]
 ) {
-  // todo: validate
-  game.chosenSettings = {
-    gameLength: gameLength,
-    countDown: countDown,
-    proposedTargetList: proposedTargetList,
-  }
-  game.listener!.updateSettings({
-    gameState: gameStateForClient(game),
+  const validation = Record({
+    gameLength: runtypes.Number.withConstraint((n) => n > 0, {
+      name: "is more then 0",
+    })
+      .withConstraint((n) => isInteger(n), { name: "is integer" })
+      .withConstraint((n) => n <= maxGameLength, {
+        name: `is less then or equal to ${maxGameLength}`,
+      }),
+    countDown: runtypes.Number.withConstraint((n) => n > 0, {
+      name: "is more then 0",
+    })
+      .withConstraint((n) => isInteger(n), { name: "is integer" })
+      .withConstraint((n) => n < gameLength, { name: "less then game length" }),
+    proposedTargetList: runtypes
+      .Array(
+        runtypes.Number.withConstraint((n) => n >= 0, { name: "is 0 or more" })
+          .withConstraint((n) => isInteger(n), { name: "is integer" })
+          .withConstraint((n) => n <= game.idMapping.size, {
+            name: "less then or equal to max player ID",
+          })
+      )
+      .withConstraint((targets) => targets.length == game.idMapping.size, {
+        name: "matches number of players in game",
+      })
+      .withConstraint(
+        (targets) => {
+          const targetsSeenAlready = new Set()
+
+          for (const proposedTarget of targets) {
+            if (targetsSeenAlready.has(proposedTarget)) {
+              return false
+            }
+            targetsSeenAlready.add(proposedTarget)
+          }
+          return true
+        },
+        { name: "no duplicate targets" }
+      ),
+    gameState: runtypes.String.withConstraint(
+      (gs) => gs == states.NOT_STARTED,
+      { name: "game stats is NOT_STARTED" }
+    ),
   })
+
+  const result = validation.validate({
+    gameLength,
+    countDown,
+    proposedTargetList,
+    gameState: game.state,
+  })
+
+  if (result.success) {
+    game.chosenSettings = {
+      gameLength,
+      countDown,
+      proposedTargetList,
+    }
+    game.listener!.updateSettings({
+      gameState: gameStateForClient(game),
+    })
+  }
+
+  return result
 }
 
 function start(game: Game) {
@@ -457,7 +516,6 @@ export function getGame(code: string): Game | undefined {
 
 export {
   newGame,
-  updateSettings,
   states,
   start,
   inPlaySubStates,

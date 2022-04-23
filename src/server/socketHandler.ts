@@ -2,25 +2,6 @@ import { logger } from "./logging"
 import * as Game from "./game"
 import * as socketEvents from "../shared/socketEvents"
 
-export function updateSettings(
-  msg: socketEvents.ClientUpdateSettings,
-  game: Game.Game
-) {
-  if (game.state != Game.states.NOT_STARTED) {
-    return
-  }
-  Game.updateSettings(
-    game,
-    msg.gameLength,
-    msg.countDown,
-    msg.proposedTargetList
-  )
-  logger.log("verbose", "Making targets", {
-    gameCode: game.code,
-    gameState: game.state,
-  })
-}
-
 export function removeUser(
   msg: socketEvents.ClientRemoveUser,
   game: Game.Game

@@ -49,8 +49,143 @@ test("basic game", async () => {
   Game.finishGame(game, "made-up-code", publicId.toString())
 })
 
-// todo: should test that no 2 games can generate the same code
-// test("test game ID", ()=>{
-//     expect(Game.generateGame(1)).toEqual(Game.generateGame(1));
-//     expect(Game.generateGame(1)).not.toEqual(Game.generateGame(2));
-// })
+describe("updateSettings", () => {
+  it("succeeds", () => {
+    const game = Game.generateGame(testListener)
+    Game.addPlayer(game, "a username")
+    const result = Game.updateSettings(game, 2, 1, [0])
+    expect(result.success).toBe(true)
+    expect(game.chosenSettings).toMatchObject({
+      gameLength: 2,
+      countDown: 1,
+      proposedTargetList: [0],
+    })
+    expect(game.listener!.updateSettings).toBeCalledWith({
+      gameState: expect.objectContaining({
+        chosenSettings: {
+          gameLength: 2,
+          countDown: 1,
+          proposedTargetList: [0],
+        },
+      }),
+    })
+  })
+
+  it("countDown is negative", () => {
+    const game = Game.generateGame(testListener)
+    const result = Game.updateSettings(game, 2, -1, [])
+    expect(result).toMatchObject({
+      success: false,
+      details: { countDown: "Failed constraint check for is more then 0" },
+    })
+  })
+
+  it("countDown is as big as game length", () => {
+    const game = Game.generateGame(testListener)
+    const result = Game.updateSettings(game, 2, 2, [])
+    expect(result).toMatchObject({
+      success: false,
+      details: {
+        countDown: "Failed constraint check for less then game length",
+      },
+    })
+  })
+
+  it("countDown is not an integer", () => {
+    const game = Game.generateGame(testListener)
+    const result = Game.updateSettings(game, 2, 0.1, [])
+    expect(result).toMatchObject({
+      success: false,
+      details: {
+        countDown: "Failed constraint check for is integer",
+      },
+    })
+  })
+
+  it("gameLength is negative", () => {
+    const game = Game.generateGame(testListener)
+    const result = Game.updateSettings(game, 1, -1, [])
+    expect(result).toMatchObject({
+      success: false,
+      details: { countDown: "Failed constraint check for is more then 0" },
+    })
+  })
+
+  it("gameLength is not an integer", () => {
+    const game = Game.generateGame(testListener)
+    const result = Game.updateSettings(game, 2.1, 1, [])
+    expect(result).toMatchObject({
+      success: false,
+      details: {
+        gameLength: "Failed constraint check for is integer",
+      },
+    })
+  })
+
+  it("gameLength is too big", () => {
+    const game = Game.generateGame(testListener)
+    const result = Game.updateSettings(game, 61, 1, [])
+    expect(result).toMatchObject({
+      success: false,
+      details: {
+        gameLength: "Failed constraint check for is less then or equal to 60",
+      },
+    })
+  })
+
+  it("has the wrong game state", () => {
+    const game = Game.generateGame(testListener)
+    game.state = Game.states.IN_PLAY
+    const result = Game.updateSettings(game, 61, 1, [])
+    expect(result).toMatchObject({
+      success: false,
+      details: {
+        gameState: "Failed constraint check for game stats is NOT_STARTED",
+      },
+    })
+  })
+
+  it("has wrong proposedTargetList size", () => {
+    const game = Game.generateGame(testListener)
+    const result = Game.updateSettings(game, 61, 1, [1])
+    expect(result).toMatchObject({
+      success: false,
+      details: {
+        proposedTargetList: [
+          "Failed constraint check for less then or equal to max player ID",
+        ],
+      },
+    })
+  })
+
+  it("has duplicate targets in proposedTargetList", () => {
+    const game = Game.generateGame(testListener)
+    Game.addPlayer(game, "username1")
+    Game.addPlayer(game, "username2")
+    const result = Game.updateSettings(game, 2, 1, [1, 1])
+    expect(result).toMatchObject({
+      success: false,
+      details: {
+        proposedTargetList: "Failed constraint check for no duplicate targets",
+      },
+    })
+  })
+
+  it("has bad targets in proposedTargetList", () => {
+    const game = Game.generateGame(testListener)
+    Game.addPlayer(game, "username1")
+    Game.addPlayer(game, "username2")
+    Game.addPlayer(game, "username3")
+    const result = Game.updateSettings(game, 61, 1, [-1, 0.1, 5])
+    expect(result).toMatchObject({
+      success: false,
+      details: {
+        proposedTargetList: [
+          "Failed constraint check for is 0 or more",
+          "Failed constraint check for is integer",
+          "Failed constraint check for less then or equal to max player ID",
+        ],
+      },
+    })
+  })
+})
