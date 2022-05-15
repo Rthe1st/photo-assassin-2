@@ -202,27 +202,28 @@ function commonMake(
   req: express.Request,
   res: express.Response,
   listener: (code: string, game: Game.Game) => Listener
-) {
-  const maxLength = 50
-
-  const usernameValidation = String.withConstraint(
-    (username: string) => username.length > 0 && username.length <= maxLength
-  )
+): {
+  error?: string
+  success?: { gameId: string; privateId: string; publicId: number }
+} {
+  const usernameValidation = String
 
   const validationResult = usernameValidation.validate(req.body.username)
 
   if (!validationResult.success) {
-    return {
-      error: `You cannot use '${
-        req.body?.username ?? ""
-      }' as a username, it is mandatory and must be less then ${maxLength} characters long.`,
-    }
+    return { error: validationResult.message }
   }
 
   const username = validationResult.value
 
   const game = Game.generateGame(listener)
-  const { privateId, publicId } = Game.addPlayer(game, username)
+  const addPlayerResult = Game.addPlayer(game, username)
+  if (addPlayerResult._tag == "Left") {
+    return {
+      error: addPlayerResult.left.message,
+    }
+  }
+  const { privateId, publicId } = addPlayerResult.right
   // todo: set good settings (https only, etc)
   res.cookie("gameId", game.code, { sameSite: "strict" })
   res.cookie("privateId", privateId, { sameSite: "strict" })
@@ -320,7 +321,15 @@ export function commonJoin(
 
   const game = Game.getGame(codeValidationResult.value)!
 
-  const { privateId, publicId } = Game.addPlayer(game, username)
+  const addPlayerResult = Game.addPlayer(game, username)
+
+  if (addPlayerResult._tag == "Left") {
+    return {
+      error: addPlayerResult.left.message,
+    }
+  }
+
+  const { privateId, publicId } = addPlayerResult.right
   return {
     success: { publicId, privateId, gameId: game.code },
   }

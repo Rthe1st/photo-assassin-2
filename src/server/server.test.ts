@@ -198,7 +198,7 @@ describe("root", () => {
 })
 
 describe("make", () => {
-  const makeMockRequest = (username?: string) =>
+  const makeMockRequest = (username?: any) =>
     ({
       body: {
         username,
@@ -229,9 +229,8 @@ describe("make", () => {
     })
   })
 
-  it("has a username that is too long", () => {
-    const maxUsernameLength = 50
-    const username = "a".repeat(maxUsernameLength + 1)
+  it("has a username is wrong type", () => {
+    const username = 1
     const mockReq = makeMockRequest(username)
     const { mockRes } = makeMockResponse()
 
@@ -241,7 +240,7 @@ describe("make", () => {
     expect(mockRes.render).toBeCalledWith("error", {
       layout: false,
       helpers: {
-        details: `You cannot use '${username}' as a username, it is mandatory and must be less then ${maxUsernameLength} characters long.`,
+        details: `Expected string, but was number`,
       },
     })
   })
@@ -256,7 +255,7 @@ describe("make", () => {
     expect(mockRes.render).toBeCalledWith("error", {
       layout: false,
       helpers: {
-        details: `You cannot use '' as a username, it is mandatory and must be less then 50 characters long.`,
+        details: `Expected string, but was undefined`,
       },
     })
   })
@@ -290,18 +289,15 @@ describe("make", () => {
       expect(mockRes.end).toBeCalledTimes(1)
     })
 
-    it("has a username that is too long", () => {
-      const maxUsernameLength = 50
-      const username = "a".repeat(maxUsernameLength + 1)
+    it("provides the wrong username type", () => {
+      const username = 1
       const mockReq = makeMockRequest(username)
       const { mockRes } = makeMockResponse()
 
       apiMake(mockReq, mockRes, testListener)
 
       expect(mockRes.status).toBeCalledWith(400)
-      expect(mockRes.json).toBeCalledWith(
-        `You cannot use '${username}' as a username, it is mandatory and must be less then ${maxUsernameLength} characters long.`
-      )
+      expect(mockRes.json).toBeCalledWith(`Expected string, but was number`)
       expect(mockRes.end).toBeCalledTimes(1)
     })
 
@@ -312,9 +308,7 @@ describe("make", () => {
       apiMake(mockReq, mockRes, testListener)
 
       expect(mockRes.status).toBeCalledWith(400)
-      expect(mockRes.json).toBeCalledWith(
-        `You cannot use '' as a username, it is mandatory and must be less then 50 characters long.`
-      )
+      expect(mockRes.json).toBeCalledWith(`Expected string, but was undefined`)
       expect(mockRes.end).toBeCalledTimes(1)
     })
   })

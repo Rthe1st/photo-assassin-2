@@ -13,6 +13,7 @@ import { addUser } from "./socketHandler"
 import { Record } from "runtypes"
 import * as runtypes from "runtypes"
 import { isInteger } from "mathjs"
+import { Either, left, right } from "fp-ts/lib/Either"
 
 // todo: we should wrap this in a class
 // it'd make it easier to test
@@ -43,7 +44,7 @@ export interface Game {
   // if other players learn your private ID, they can impersonate you
   idMapping: Map<string, number>
   nextId: 0 //includes old users - used to get a historically unique id for a user
-  userList: Map<number, any>
+  userList: Map<number, { username: string }>
   targets: { [key: number]: number[] }
   targetsGot: { [key: number]: number[] }
   positions: Map<number, SharedGame.Position[]>
@@ -261,10 +262,10 @@ function snipe(
   const targetPosition =
     game.positions.get(snipedId)![game.positions.get(snipedId)!.length - 1]
 
-  const usernameWhoDidSniping = game.userList.get(sniperPublicId).username
+  const usernameWhoDidSniping = game.userList.get(sniperPublicId)?.username
   const usernameThatGotSniped = game.userList.get(
     game.targets[sniperPublicId][0]
-  ).username
+  )?.username
   //todo: move botmessage computation to client side
   const botMessage = usernameWhoDidSniping + " sniped " + usernameThatGotSniped
 
@@ -354,11 +355,37 @@ function gameStateForClient(game: Game) {
   return state
 }
 
-// public ID cannot change, username might be changed by user
-function addPlayer(
+export const maxPlayers = 10
+export const maxUsernameLength = 50
+
+export function addPlayer(
   game: Game,
   username: string
-): { privateId: string; publicId: number } {
+): Either<runtypes.Failure | Error, { privateId: string; publicId: number }> {
+  const existingUsernames = new Set(
+    Array.from(game.userList.values()).map((v) => v.username)
+  )
+
+  const usernameValidation = runtypes.String.withConstraint(
+    (username: string) => username.length > 0
+  )
+    .withConstraint((username) => username.length <= maxUsernameLength)
+    .withConstraint((username) => !existingUsernames.has(username))
+
+  const usernameResult = usernameValidation.validate(username)
+
+  if (!usernameResult.success) {
+    return left(
+      new Error(
+        `You cannot use '${username}' as a username, it is mandatory and must be less then ${maxUsernameLength} characters long.`
+      )
+    )
+  }
+
+  if (game.userList.size > maxPlayers) {
+    return left(new Error(`game has ${maxPlayers}, cannot add any more`))
+  }
+
   const randomness = crypto.randomBytes(256).toString("hex")
   const publicId = game.nextId
   // because people can leave the game, we cannot use the current number of players to work out the max id
@@ -378,7 +405,7 @@ function addPlayer(
     gameCode: game.code,
   })
 
-  return { privateId: privateId, publicId: publicId }
+  return right({ privateId: privateId, publicId: publicId })
 }
 
 function removePlayer(game: Game, publicId: number) {
@@ -521,7 +548,6 @@ export {
   inPlaySubStates,
   snipe,
   gameStateForClient,
-  addPlayer,
   removePlayer,
   finishGame,
   updatePosition,

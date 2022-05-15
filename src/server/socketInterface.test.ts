@@ -1,4 +1,5 @@
 import { jest } from "@jest/globals"
+import { unwrapOrThrow } from "../shared/utils"
 import { addPlayer, gameStateForClient, generateGame } from "./game"
 import { setupJestLogging } from "./logging"
 import { testListener } from "./server.test"
@@ -20,7 +21,7 @@ describe("socketConnect", () => {
 
   it("accepts valid id", () => {
     const game = generateGame(testListener)
-    const { privateId } = addPlayer(game, "user")
+    const { privateId } = unwrapOrThrow(addPlayer(game, "user"))
     const socket: any = makeSocket(privateId)
 
     socketConnect(socket, game)

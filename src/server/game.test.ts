@@ -3,17 +3,19 @@ import * as fs from "fs"
 import * as logging from "./logging"
 import dotenv from "dotenv"
 import { testListener } from "./server.test"
+import { unwrapOrThrow } from "../shared/utils"
+import { left } from "fp-ts/lib/Either"
 
 test("basic game", async () => {
   dotenv.config()
   logging.setupJestLogging()
   const game = Game.newGame("fake-game-code")
   game.listener = testListener()
-  const { publicId: publicId } = Game.addPlayer(game, "player1")
+  const { publicId } = unwrapOrThrow(Game.addPlayer(game, "player1"))
   Game.removePlayer(game, publicId)
-  const { publicId: publicId2 } = Game.addPlayer(game, "player2")
-  Game.addPlayer(game, "player3")
-  Game.addPlayer(game, "player4")
+  const { publicId: publicId2 } = unwrapOrThrow(Game.addPlayer(game, "player2"))
+  unwrapOrThrow(Game.addPlayer(game, "player3"))
+  unwrapOrThrow(Game.addPlayer(game, "player4"))
   Game.updateSettings(game, 40, 5, game.chosenSettings!.proposedTargetList)
   Game.start(game)
   const position = {
@@ -52,7 +54,7 @@ test("basic game", async () => {
 describe("updateSettings", () => {
   it("succeeds", () => {
     const game = Game.generateGame(testListener)
-    Game.addPlayer(game, "a username")
+    unwrapOrThrow(Game.addPlayer(game, "a username"))
     const result = Game.updateSettings(game, 2, 1, [0])
     expect(result.success).toBe(true)
     expect(game.chosenSettings).toMatchObject({
@@ -160,8 +162,8 @@ describe("updateSettings", () => {
 
   it("has duplicate targets in proposedTargetList", () => {
     const game = Game.generateGame(testListener)
-    Game.addPlayer(game, "username1")
-    Game.addPlayer(game, "username2")
+    unwrapOrThrow(Game.addPlayer(game, "username1"))
+    unwrapOrThrow(Game.addPlayer(game, "username2"))
     const result = Game.updateSettings(game, 2, 1, [1, 1])
     expect(result).toMatchObject({
       success: false,
@@ -173,9 +175,9 @@ describe("updateSettings", () => {
 
   it("has bad targets in proposedTargetList", () => {
     const game = Game.generateGame(testListener)
-    Game.addPlayer(game, "username1")
-    Game.addPlayer(game, "username2")
-    Game.addPlayer(game, "username3")
+    unwrapOrThrow(Game.addPlayer(game, "username1"))
+    unwrapOrThrow(Game.addPlayer(game, "username2"))
+    unwrapOrThrow(Game.addPlayer(game, "username3"))
     const result = Game.updateSettings(game, 61, 1, [-1, 0.1, 5])
     expect(result).toMatchObject({
       success: false,
@@ -187,5 +189,44 @@ describe("updateSettings", () => {
         ],
       },
     })
+  })
+})
+
+describe("addPlayer", () => {
+  it("errors if too many players", () => {
+    const game = Game.generateGame(testListener)
+    for (
+      let numberOfPlayers = 0;
+      numberOfPlayers <= Game.maxPlayers;
+      numberOfPlayers++
+    ) {
+      unwrapOrThrow(Game.addPlayer(game, `username${numberOfPlayers}`))
+    }
+    expect(Game.addPlayer(game, "usernameOverLimit")).toEqual(
+      left(new Error(`game has 10, cannot add any more`))
+    )
+  })
+
+  it("errors if username is empty", () => {
+    const game = Game.generateGame(testListener)
+    expect(Game.addPlayer(game, "")).toEqual(
+      left(
+        new Error(
+          `You cannot use '' as a username, it is mandatory and must be less then 50 characters long.`
+        )
+      )
+    )
+  })
+
+  it("errors if username is too long", () => {
+    const game = Game.generateGame(testListener)
+    const username = "a".repeat(Game.maxUsernameLength + 1)
+    expect(Game.addPlayer(game, username)).toEqual(
+      left(
+        new Error(
+          `You cannot use '${username}' as a username, it is mandatory and must be less then 50 characters long.`
+        )
+      )
+    )
   })
 })

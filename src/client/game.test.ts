@@ -8,6 +8,7 @@ import {
 } from "../server/game"
 import { Listener } from "../server/socketInterface"
 import { setupJestLogging } from "../server/logging"
+import { unwrapOrThrow } from "../shared/utils"
 
 function testListener(): Listener {
   return {
@@ -32,7 +33,7 @@ test("getPlayerProgress", () => {
   serverGame.listener = testListener()
   start(serverGame)
 
-  const { publicId } = addPlayer(serverGame, "user1")
+  const { publicId } = unwrapOrThrow(addPlayer(serverGame, "user1"))
   addPlayer(serverGame, "user2")
 
   start(serverGame)
