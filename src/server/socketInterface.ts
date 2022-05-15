@@ -5,7 +5,11 @@ import * as socketHandler from "./socketHandler"
 import { Server, Socket } from "socket.io"
 import { Record, String, Number, Array } from "runtypes"
 
-export function socketConnect(socket: Socket, game: Game.Game) {
+export function socketConnect(
+  socket: Socket,
+  game: Game.Game,
+  saveSocketId: (publicId: number, socketId: string) => void
+) {
   const queryValidation = Record({
     privateId: String.withConstraint((id) =>
       game.idMapping.has(id) ? true : "id didn't exist"
@@ -25,6 +29,8 @@ export function socketConnect(socket: Socket, game: Game.Game) {
   //todo: allow sockets to connect in "view only" mode if they're not players
   const publicId = game.idMapping.get(privateId)!
 
+  saveSocketId(publicId, socket.id)
+
   logger.log("debug", "Socket connected", {
     publicId: publicId,
     gameCode: game.code,
@@ -42,7 +48,9 @@ export function socketConnect(socket: Socket, game: Game.Game) {
     receiveUpdateSettings(socket, game, msg)
   )
 
-  socket.on("remove user", (msg) => socketHandler.removeUser(msg, game))
+  socket.on("remove user", (msg) => {
+    removeUser(msg, game, socket)
+  })
 
   socket.on("start game", (msg) => socketHandler.start(publicId, msg, game))
 
@@ -59,6 +67,24 @@ export function socketConnect(socket: Socket, game: Game.Game) {
   socket.on("disconnect", function () {
     logger.log("debug", "socket disconnected", { player: publicId })
   })
+}
+
+export function removeUser(msg: any, game: Game.Game, socket: Socket) {
+  const validation = Record({
+    publicId: Number,
+  })
+
+  const result = validation.validate(msg)
+
+  if (!result.success) {
+    socket.emit("error", result.details)
+    return
+  }
+
+  const res = Game.removePlayer(game, msg.publicId)
+  if (res._tag == "Left") {
+    socket.emit("error", res.left.message)
+  }
 }
 
 export function receiveUpdateSettings(
@@ -110,8 +136,12 @@ export function socketListener(
   code: string,
   game: Game.Game
 ): Listener {
+  const socketIdMappings = new Map()
+
   const namespace = io.of(`/game/${code}`)
-  namespace.on("connection", (socket) => socketConnect(socket, game))
+  namespace.on("connection", (socket) =>
+    socketConnect(socket, game, socketIdMappings.set)
+  )
   return {
     listenerFactory: (code: string, game: Game.Game) =>
       socketListener(io, code, game),
@@ -121,8 +151,12 @@ export function socketListener(
       namespace.emit("image upload done", msg),
     updateSettings: (msg: socketEvents.ServerUpdateSettingsMsg) =>
       namespace.emit("update settings", msg),
-    removeUser: (msg: socketEvents.RemoveUserMsg) =>
-      namespace.emit("Remove user", msg),
+    removeUser: (msg: socketEvents.RemoveUserMsg) => {
+      namespace.emit("Remove user", msg)
+      const socketId = socketIdMappings.get(msg.publicId)
+      namespace.sockets.get(socketId)?.disconnect()
+    },
+
     start: (msg: socketEvents.ServerStartMsg) => namespace.emit("start", msg),
     chatMessage: (msg: socketEvents.ServerChatMessage) =>
       namespace.emit("chat message", msg),

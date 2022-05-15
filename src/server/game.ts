@@ -408,7 +408,18 @@ export function addPlayer(
   return right({ privateId: privateId, publicId: publicId })
 }
 
-function removePlayer(game: Game, publicId: number) {
+function removePlayer(
+  game: Game,
+  publicId: number
+): Either<runtypes.Failure | Error, undefined> {
+  if (game.state != states.NOT_STARTED) {
+    return left(new Error("game already started"))
+  }
+
+  if (!game.userList.has(publicId)) {
+    return left(new Error(`No player with public ID ${publicId}`))
+  }
+
   for (const [privateId, currentPublicId] of game.idMapping.entries()) {
     if (publicId == currentPublicId) {
       game.idMapping.delete(privateId)
@@ -424,6 +435,8 @@ function removePlayer(game: Game, publicId: number) {
     publicId,
     gameState: gameStateForClient(game),
   })
+
+  return right(undefined)
 }
 
 /*

@@ -4,7 +4,7 @@ import * as logging from "./logging"
 import dotenv from "dotenv"
 import { testListener } from "./server.test"
 import { unwrapOrThrow } from "../shared/utils"
-import { left } from "fp-ts/lib/Either"
+import { left, right } from "fp-ts/lib/Either"
 
 test("basic game", async () => {
   dotenv.config()
@@ -228,5 +228,44 @@ describe("addPlayer", () => {
         )
       )
     )
+  })
+})
+
+describe("removePlayer", () => {
+  it("removes the correct player", () => {
+    const game = Game.generateGame(testListener)
+    unwrapOrThrow(Game.addPlayer(game, "player1"))
+    unwrapOrThrow(Game.addPlayer(game, "player2"))
+    const removedPublicId = 0
+    const result = Game.removePlayer(game, removedPublicId)
+    expect(result).toEqual(right(undefined))
+    expect(game.listener?.removeUser).toBeCalledWith({
+      publicId: removedPublicId,
+      gameState: expect.objectContaining({
+        userList: { 1: { username: "player2" } },
+      }),
+    })
+    expect(Array.from(game.userList.entries())).toEqual([
+      [1, { username: "player2" }],
+    ])
+  })
+  it("fails if the game has already started", () => {
+    const game = Game.generateGame(testListener)
+    unwrapOrThrow(Game.addPlayer(game, "player1"))
+    Game.start(game)
+    const result = Game.removePlayer(game, 0)
+    expect(result).toEqual(left(new Error("game already started")))
+    expect(game.listener?.removeUser).toBeCalledTimes(0)
+    expect(game.userList.size).toEqual(1)
+  })
+
+  it("fails if no player has the public ID", () => {
+    const game = Game.generateGame(testListener)
+    const badPublicId = 0
+    const result = Game.removePlayer(game, badPublicId)
+    expect(result).toEqual(
+      left(new Error(`No player with public ID ${badPublicId}`))
+    )
+    expect(game.listener?.removeUser).toBeCalledTimes(0)
   })
 })

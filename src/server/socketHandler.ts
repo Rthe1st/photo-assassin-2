@@ -2,17 +2,6 @@ import { logger } from "./logging"
 import * as Game from "./game"
 import * as socketEvents from "../shared/socketEvents"
 
-export function removeUser(
-  msg: socketEvents.ClientRemoveUser,
-  game: Game.Game
-) {
-  //todo: kill the socket connection of the removed user
-  if (game.state != Game.states.NOT_STARTED) {
-    return
-  }
-  Game.removePlayer(game, msg.publicId)
-}
-
 export function start(
   publicId: number,
   msg: socketEvents.ClientUpdateSettings,
