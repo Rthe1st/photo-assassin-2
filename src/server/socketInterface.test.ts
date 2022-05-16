@@ -71,6 +71,19 @@ describe("socketConnect", () => {
 })
 
 describe("receiveUpdateSettings", () => {
+  it("works with valid settings", () => {
+    const socket: any = {
+      emit: jest.fn(),
+    }
+    const game = generateGame(testListener)
+    receiveUpdateSettings(socket, game, {
+      gameLength: 10,
+      countDown: 5,
+      proposedTargetList: [],
+    })
+    expect(socket.emit).toBeCalledTimes(0)
+  })
+
   it("errors when msg is missing fields", () => {
     const socket: any = {
       emit: jest.fn(),
