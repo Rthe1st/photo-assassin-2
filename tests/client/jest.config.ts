@@ -1,5 +1,5 @@
 module.exports = {
-  testEnvironment: "jest-environment-node",
+  testEnvironment: "jsdom",
   transform: {
     "\\.ts$": "ts-jest",
   },
@@ -8,7 +8,7 @@ module.exports = {
   moduleFileExtensions: ["ts", "js"],
   globals: {
     "ts-jest": {
-      tsconfig: "<rootDir>/tsconfig.json",
+      tsconfig: "<rootDir>/../../tsconfig.json",
       useESM: true,
     },
   },

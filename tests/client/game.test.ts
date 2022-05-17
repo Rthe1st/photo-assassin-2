@@ -1,14 +1,14 @@
-import * as Game from "./game"
+import * as Game from "../../src/client/game"
 import {
   addPlayer,
   gameStateForClient,
   newGame,
   start,
   snipe,
-} from "../server/game"
-import { Listener } from "../server/socketInterface"
-import { setupJestLogging } from "../server/logging"
-import { unwrapOrThrow } from "../shared/utils"
+} from "../../src/client/../server/game"
+import { Listener } from "../../src/client/../server/socketInterface"
+import { setupJestLogging } from "../../src/client/../server/logging"
+import { unwrapOrThrow } from "../../src/client/../shared/utils"
 
 function testListener(): Listener {
   return {

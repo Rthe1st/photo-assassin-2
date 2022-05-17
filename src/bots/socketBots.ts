@@ -155,7 +155,7 @@ function activePlayer(gameId: string, privateId: string, player: Player) {
     },
     (_) => {
       console.log("start")
-      const file = fs.readFileSync("./src/server/sample_snipe_image.jpeg")
+      const file = fs.readFileSync("./tests/server/sample_snipe_image.jpeg")
       const message = {
         text: "gotya",
         image: file,
@@ -185,7 +185,7 @@ function activePlayer(gameId: string, privateId: string, player: Player) {
     (_) => {
       player.position.latitude! += (Math.random() - 0.5) * 0.001
       player.position.longitude! += (Math.random() - 0.5) * 0.001
-      const file = fs.readFileSync("./src/server/sample_snipe_image.jpeg")
+      const file = fs.readFileSync("./tests/server/sample_snipe_image.jpeg")
       const message = {
         text: "gotya",
         image: file,
@@ -289,7 +289,7 @@ function listeningPlayer(
       console.log(name)
       if (command == "snipe") {
         console.log("sniping")
-        const file = fs.readFileSync("./src/server/sample_snipe_image.jpeg")
+        const file = fs.readFileSync("./tests/server/sample_snipe_image.jpeg")
         const message = {
           text: "gotya",
           image: file,
@@ -324,7 +324,7 @@ function listeningPlayer(
         })
       } else if (command == "picture") {
         console.log("pictureing")
-        const file = fs.readFileSync("./src/server/sample_snipe_image.jpeg")
+        const file = fs.readFileSync("./tests/server/sample_snipe_image.jpeg")
         const message = {
           text: "picture",
           image: file,

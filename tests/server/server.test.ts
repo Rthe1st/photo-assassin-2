@@ -8,10 +8,16 @@ import {
   join,
   make,
   root,
-} from "./server"
-import * as logging from "./logging"
-import { Game, generateGame, generateGameCode, start, states } from "./game"
-import { Listener } from "./socketInterface"
+} from "../../src/server/server"
+import * as logging from "../../src/server/logging"
+import {
+  Game,
+  generateGame,
+  generateGameCode,
+  start,
+  states,
+} from "../../src/server/game"
+import { Listener } from "../../src/server/socketInterface"
 
 logging.setupJestLogging()
 

@@ -1,5 +1,5 @@
 import { jest } from "@jest/globals"
-import * as notifications from "./notifications"
+import * as notifications from "../../src/client/notifications"
 jest.useFakeTimers()
 
 const notificationHtml = '<div id="notification" class="notification"></div>'

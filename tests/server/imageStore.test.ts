@@ -1,6 +1,6 @@
-import * as imageStore from "./imageStore"
-import * as game from "../shared/game"
-import * as api from "../shared/clientApi"
+import * as imageStore from "../../src/server/imageStore"
+import * as game from "../../src/shared/game"
+import * as api from "../../src/shared/clientApi"
 import * as fs from "fs"
 import FakeTimers from "@sinonjs/fake-timers"
 
@@ -19,7 +19,7 @@ test("cleanUp", async () => {
 })
 
 test("uploadLowResImage", async () => {
-  const file = fs.readFileSync("./src/server/sample_snipe_image.jpeg")
+  const file = fs.readFileSync("./tests/server/sample_snipe_image.jpeg")
   const gameCode = "my-game-code"
   const imageId = 0
   const fileUrl = await imageStore.uploadLowResImage(file, gameCode, imageId)
@@ -33,7 +33,7 @@ test("uploadLowResImage", async () => {
 })
 
 test("uploadImage", async () => {
-  const file = fs.readFileSync("./src/server/sample_snipe_image.jpeg")
+  const file = fs.readFileSync("./tests/server/sample_snipe_image.jpeg")
   const gameCode = "my-game-code"
   const imageId = 0
   const fileUrl = await imageStore.uploadImage(file, gameCode, imageId)

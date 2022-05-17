@@ -1,13 +1,17 @@
 import { jest } from "@jest/globals"
-import { unwrapOrThrow } from "../shared/utils"
-import { addPlayer, gameStateForClient, generateGame } from "./game"
-import { setupJestLogging } from "./logging"
+import { unwrapOrThrow } from "../../src/shared/utils"
+import {
+  addPlayer,
+  gameStateForClient,
+  generateGame,
+} from "../../src/server/game"
+import { setupJestLogging } from "../../src/server/logging"
 import { testListener } from "./server.test"
 import {
   receiveUpdateSettings,
   removeUser,
   socketConnect,
-} from "./socketInterface"
+} from "../../src/server/socketInterface"
 
 setupJestLogging()
 

@@ -1,9 +1,9 @@
-import * as Game from "./game"
+import * as Game from "../../src/server/game"
 import * as fs from "fs"
-import * as logging from "./logging"
+import * as logging from "../../src/server/logging"
 import dotenv from "dotenv"
 import { testListener } from "./server.test"
-import { unwrapOrThrow } from "../shared/utils"
+import { unwrapOrThrow } from "../../src/shared/utils"
 import { left, right } from "fp-ts/lib/Either"
 
 test("basic game", async () => {
@@ -29,7 +29,7 @@ test("basic game", async () => {
     altitudeAccuracy: null,
   }
   Game.updatePosition(game, publicId2, position)
-  const photo = fs.readFileSync("./src/server/sample_snipe_image.jpeg")
+  const photo = fs.readFileSync("./tests/server/sample_snipe_image.jpeg")
   const {
     imageId: imageId1,
     imagePromise: ip,
