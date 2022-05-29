@@ -52,7 +52,7 @@ export function socketConnect(
     removeUser(msg, game, socket)
   })
 
-  socket.on("start game", (msg) => socketHandler.start(publicId, msg, game))
+  socket.on("start game", () => start(game, socket))
 
   socket.on("stop game", (_) => socketHandler.stop(game))
 
@@ -67,6 +67,14 @@ export function socketConnect(
   socket.on("disconnect", function () {
     logger.log("debug", "socket disconnected", { player: publicId })
   })
+}
+
+export function start(game: Game.Game, socket: Socket) {
+  const startResult = Game.start(game)
+
+  if (startResult._tag == "Left") {
+    socket.emit("error", startResult.left.message)
+  }
 }
 
 export function removeUser(msg: any, game: Game.Game, socket: Socket) {

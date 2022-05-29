@@ -31,12 +31,11 @@ test("getPlayerProgress", () => {
   setupJestLogging()
   const serverGame = newGame("mycode")
   serverGame.listener = testListener()
-  start(serverGame)
 
   const { publicId } = unwrapOrThrow(addPlayer(serverGame, "user1"))
-  addPlayer(serverGame, "user2")
+  unwrapOrThrow(addPlayer(serverGame, "user2"))
 
-  start(serverGame)
+  unwrapOrThrow(start(serverGame))
 
   let gameState = gameStateForClient(serverGame)
   Game.update(gameState)

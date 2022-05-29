@@ -227,7 +227,11 @@ export function updateSettings(
   return result
 }
 
-function start(game: Game) {
+function start(game: Game): Either<Error, void> {
+  if (game.state != states.NOT_STARTED) {
+    return left(new Error(`cannot start a game in state ${game.state}`))
+  }
+
   game.startTime = Date.now()
   const chosenSettings = game.chosenSettings
   for (let i = 0; i < game.chosenSettings.proposedTargetList.length; i++) {
@@ -245,6 +249,8 @@ function start(game: Game) {
   }
   // todo: say who started it
   game.listener!.start({ gameState: gameStateForClient(game) })
+
+  return right(undefined)
 }
 
 function snipe(

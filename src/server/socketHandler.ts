@@ -2,31 +2,6 @@ import { logger } from "./logging"
 import * as Game from "./game"
 import * as socketEvents from "../shared/socketEvents"
 
-export function start(
-  publicId: number,
-  msg: socketEvents.ClientUpdateSettings,
-  game: Game.Game
-) {
-  if (publicId != 0) {
-    return
-  }
-  Game.updateSettings(
-    game,
-    msg.gameLength,
-    msg.countDown,
-    msg.proposedTargetList
-  )
-  logger.log("verbose", "Making targets", {
-    gameCode: game.code,
-    gameState: game.state,
-  })
-  Game.start(game)
-  logger.log("verbose", "Starting", {
-    gameCode: game.code,
-    gameState: game.state,
-  })
-}
-
 export function stop(game: Game.Game) {
   if (game.state == Game.states.IN_PLAY) {
     finishGame(game, "game stopped")

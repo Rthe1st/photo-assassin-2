@@ -82,11 +82,8 @@ export function updateSettings(
   socket.emit("update settings", msg)
 }
 
-export function startGame(
-  socket: Socket,
-  msg: SocketEvents.ClientUpdateSettings
-) {
-  socket.emit("start game", msg)
+export function startGame(socket: Socket) {
+  socket.emit("start game")
 }
 
 export function positionUpdate(

@@ -269,3 +269,31 @@ describe("removePlayer", () => {
     expect(game.listener?.removeUser).toBeCalledTimes(0)
   })
 })
+
+describe("start", () => {
+  it("starts the game", () => {
+    const game = Game.generateGame(testListener)
+    const result = Game.start(game)
+    expect(result).toEqual(right(undefined))
+    expect(game.listener?.start).toBeCalledTimes(1)
+    expect(game.state).toEqual(Game.states.IN_PLAY)
+    expect(game.targets).toBeDefined
+    expect(game.targetsGot).toBeDefined
+  })
+
+  it("fails to start if the game is in the wrong state", () => {
+    const game = Game.generateGame(testListener)
+    const callsFromFirstStart = 1
+    Game.start(game)
+    Game.finishGame(game, "", "")
+    expect(game.listener?.start).toBeCalledTimes(callsFromFirstStart)
+    const result = Game.start(game)
+    expect(result).toEqual(
+      left(new Error(`cannot start a game in state ${game.state}`))
+    )
+    expect(game.listener?.start).toBeCalledTimes(callsFromFirstStart)
+    expect(game.state).toEqual(Game.states.FINISHED)
+    expect(game.targets).toBeUndefined
+    expect(game.targetsGot).toBeUndefined
+  })
+})

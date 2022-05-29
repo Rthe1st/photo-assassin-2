@@ -904,23 +904,8 @@ window.onload = function () {
 
   document.getElementById("start")!.onclick = function (_) {
     if (confirm("Start the game?")) {
-      const gameLength =
-        Number(
-          (<HTMLInputElement>document.getElementById("game-length")).value
-        ) *
-        1000 *
-        60
-      const countDown =
-        Number(
-          (<HTMLInputElement>document.getElementById("count-down")).value
-        ) *
-        1000 *
-        60
-      socketClient.startGame(socket, {
-        gameLength: gameLength,
-        countDown: countDown,
-        proposedTargetList: proposedTargetList,
-      })
+      updateSettings()
+      socketClient.startGame(socket)
     }
   }
 

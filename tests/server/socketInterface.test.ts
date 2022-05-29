@@ -146,7 +146,7 @@ describe("receiveUpdateSettings", () => {
   })
 })
 
-describe("removePlayer", () => {
+describe("removeUser", () => {
   it("no error emitted for valid calls", () => {
     const socket: any = {
       emit: jest.fn(),
