@@ -20,7 +20,7 @@
     "node-fetch": "^3.0.0",
     "random-seed": "^0.3.0",
     "runtypes": "^6.5.1",
-    "sharp": "^0.30.0",
+    "sharp": "^0.30.5",
     "socket.io": "^4.2.0",
     "socket.io-client": "^4.2.0",
     "winston": "^3.3.3"
