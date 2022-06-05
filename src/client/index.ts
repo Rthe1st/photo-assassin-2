@@ -624,6 +624,11 @@ function start(msg: socketClient.ServerStartMsg) {
 }
 
 function finished() {
+  // todo: show game finished
+  // and prevent any more game actions
+}
+
+function gameStateSaved() {
   location.reload()
 }
 
@@ -836,6 +841,7 @@ window.onload = function () {
     chatMessage,
     resizeDone,
     imageUploadDone,
+    gameStateSaved,
     "",
     (reason: any) => {
       notification.notify("disconnected")

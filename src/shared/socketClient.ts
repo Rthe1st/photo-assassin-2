@@ -17,6 +17,7 @@ export function setup(
   chatMessage: (msg: SocketEvents.ServerChatMessage) => void,
   resizeDone: (msg: SocketEvents.ServerResizeDone) => void,
   imageUploadDone: (msg: SocketEvents.ServerImageUploadDone) => void,
+  gameStateSaved: (msg: SocketEvents.ServerSavedGameState) => void,
   // this only needs to be supplied when not in a browser
   // otherwise window.location is used
   hostname = "",
@@ -61,6 +62,7 @@ export function setup(
   socket.on("disconnecting", disconnecting)
   socket.on("resize done", resizeDone)
   socket.on("image upload done", imageUploadDone)
+  socket.on("game state saved", gameStateSaved)
   return socket
 }
 

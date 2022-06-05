@@ -4,6 +4,8 @@ import * as socketEvents from "../shared/socketEvents"
 import * as socketHandler from "./socketHandler"
 import { Server, Socket } from "socket.io"
 import { Record, String, Number, Array } from "runtypes"
+import { uploadGameState } from "./imageStore"
+import { setTimeout } from "timers/promises"
 
 export function socketConnect(
   socket: Socket,
@@ -54,7 +56,7 @@ export function socketConnect(
 
   socket.on("start game", () => start(game, socket))
 
-  socket.on("stop game", (_) => socketHandler.stop(game))
+  socket.on("stop game", () => stop(game, socket))
 
   socket.on("positionUpdate", (msg) =>
     socketHandler.positionUpdate(msg, game, publicId)
@@ -67,6 +69,15 @@ export function socketConnect(
   socket.on("disconnect", function () {
     logger.log("debug", "socket disconnected", { player: publicId })
   })
+}
+
+export async function stop(game: Game.Game, socket: Socket) {
+  // todo: type winner more strictly
+  const winner = "game stopped"
+  const result = Game.finishGame(game, winner)
+  if (result._tag == "Left") {
+    socket.emit("error", result.left.message)
+  }
 }
 
 export function start(game: Game.Game, socket: Socket) {
@@ -171,8 +182,33 @@ export function socketListener(
     badSnipe: (msg: socketEvents.ServerBadSnipeMsg) =>
       namespace.emit("bad snipe", msg),
     newUser: (msg: socketEvents.NewUserMsg) => namespace.emit("New user", msg),
-    finished: (msg: socketEvents.ServerFinishedMsg) =>
-      namespace.emit("game finished", msg),
+    finished: async (msg: socketEvents.ServerFinishedMsg) => {
+      namespace.emit("game finished", msg)
+      // todo: delay the creation of next game untill a user clicks "next game"
+      // by having that (clientside) send a REST req that checks if
+      // a next game code exists for $oldgamecode (from saved state)
+      // if it does - send to join page for that
+      // if it doesn't - create a game and save its code to the old games state
+      const nextGame = Game.generateGame(game.listener!.listenerFactory)
+      game.nextCode = nextGame.code
+      const clientGameState = Game.gameStateForClient(game)
+      await uploadGameState(clientGameState, game.code)
+        .catch(async () => {
+          await setTimeout(1000)
+          return uploadGameState(clientGameState, game.code)
+        })
+        .catch(async () => {
+          await setTimeout(5000)
+          return uploadGameState(clientGameState, game.code)
+        })
+        .catch(async () => {
+          namespace.emit("error", "couldn't save finished game state")
+        })
+        .then((stateUrl) => {
+          Game.games.delete(game.code)
+          namespace.emit("game state saved", { stateUrl })
+        })
+    },
     timeLeft: (msg: socketEvents.ServerTimeLeftMsg) =>
       namespace.emit("timeLeft", msg),
   }

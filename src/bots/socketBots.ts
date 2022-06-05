@@ -211,6 +211,9 @@ function activePlayer(gameId: string, privateId: string, player: Player) {
     () => {
       //todo
     },
+    () => {
+      //todo
+    },
     domain
   )
   return socket
@@ -257,6 +260,9 @@ function passivePlayer(gameId: string, privateId: string, player: Player) {
         altitude: null,
         altitudeAccuracy: null,
       })
+    },
+    () => {
+      //todo
     },
     () => {
       //todo
@@ -437,6 +443,9 @@ function listeningPlayer(
       //todo
     },
     processCommand,
+    () => {
+      //todo
+    },
     () => {
       //todo
     },
@@ -676,6 +685,9 @@ function gpsPlayer(gameId: string, privateId: string, _: Player) {
         socketClient.positionUpdate(socket, position)
       }
       socketClient.stopGame(socket)
+    },
+    () => {
+      //todo
     },
     () => {
       //todo

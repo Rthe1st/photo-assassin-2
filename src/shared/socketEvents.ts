@@ -24,10 +24,12 @@ export interface ServerBadSnipeMsg {
   undoneSnipeIndexes: number[]
 }
 
-export interface ServerFinishedMsg {
-  nextCode: string
-  winner: string
+export interface ServerSavedGameState {
   stateUrl: string
+}
+
+export interface ServerFinishedMsg {
+  winner: string
 }
 
 export interface ServerTimeLeftMsg {

@@ -2,17 +2,6 @@ import { logger } from "./logging"
 import * as Game from "./game"
 import * as socketEvents from "../shared/socketEvents"
 
-export function stop(game: Game.Game) {
-  if (game.state == Game.states.IN_PLAY) {
-    finishGame(game, "game stopped")
-    logger.log("verbose", "Stopping", {
-      gameCode: game.code,
-      gameState: game.state,
-    })
-    // todo: say who stopped it
-  }
-}
-
 export function positionUpdate(
   position: socketEvents.ClientPositionUpdate,
   game: Game.Game,
@@ -120,7 +109,7 @@ export function chatMsg(
       })
       if (gameOver) {
         Game.updatePosition(game, publicId, msg.position!)
-        finishGame(game, publicId.toString())
+        Game.finishGame(game, publicId.toString())
         return
       }
     }
@@ -172,27 +161,6 @@ export function addUser(publicId: number, game: Game.Game) {
   })
 }
 
-function finishGame(game: Game.Game, winner: string) {
-  const nextGame = Game.generateGame(game.listener!.listenerFactory)
-
-  // we wait for the gamestate to get uploaded
-  // and only then tell clients the game is over
-  // so that the state URL is ready for them
-  // todo: alternative, tell them game is over ASAP
-  // and implement retry logic client side to check
-  // when the uploaded state is ready
-  Game.finishGame(game, nextGame.code, winner).then((url) => {
-    game.listener!.finished({
-      nextCode: nextGame.code,
-      winner: winner,
-      stateUrl: url,
-    })
-    // once the state has been saved to disk
-    // there's no need for us to keep it
-    Game.games.delete(game.code)
-  })
-}
-
 export function checkGameTiming(games: Map<string, Game.Game>) {
   for (const [gameId, game] of games.entries()) {
     const now = Date.now()
@@ -205,11 +173,7 @@ export function checkGameTiming(games: Map<string, Game.Game>) {
         now
     ) {
       game.timeLeft = 0
-      finishGame(game, "time")
-      logger.log("verbose", "TimeUp", {
-        gameCode: gameId,
-        gameState: game.state,
-      })
+      Game.finishGame(game, "time")
     } else if (game.state == Game.states.IN_PLAY) {
       const timeLeft =
         game.startTime! +

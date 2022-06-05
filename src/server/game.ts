@@ -447,17 +447,18 @@ function removePlayer(
 
 /*
 winner can be the winning players publicId, 'time' if the clock ran out, or undefined if game was stopped manually
-  */
-async function finishGame(
-  game: Game,
-  nextCode: string,
-  winner: string
-): Promise<string> {
+*/
+function finishGame(game: Game, winner: string): Either<Error, undefined> {
+  if (game.state != states.IN_PLAY) {
+    return left(new Error("game has wrong state"))
+  }
   game.state = states.FINISHED
   game.subState = undefined
   game.winner = winner
-  game.nextCode = nextCode
-  return imageStore.uploadGameState(gameStateForClient(game), game.code)
+  game.listener!.finished({
+    winner,
+  })
+  return right(undefined)
 }
 
 function updatePosition(

@@ -52,6 +52,9 @@ export async function makeSocket(
       () => {
         //todo
       },
+      () => {
+        //todo
+      },
       domain,
       () => {
         // don't log disconnects

@@ -48,7 +48,7 @@ test("basic game", async () => {
   const { imageId: imageId3 } = Game.saveImage(game, photo)
   snipeRes = Game.snipe(game, publicId2, imageId3)
   expect(snipeRes.gameOver).toBeTruthy()
-  Game.finishGame(game, "made-up-code", publicId.toString())
+  Game.finishGame(game, publicId.toString())
 })
 
 describe("updateSettings", () => {
@@ -285,7 +285,7 @@ describe("start", () => {
     const game = Game.generateGame(testListener)
     const callsFromFirstStart = 1
     Game.start(game)
-    Game.finishGame(game, "", "")
+    Game.finishGame(game, "")
     expect(game.listener?.start).toBeCalledTimes(callsFromFirstStart)
     const result = Game.start(game)
     expect(result).toEqual(
@@ -297,3 +297,6 @@ describe("start", () => {
     expect(game.targetsGot).toBeUndefined
   })
 })
+
+// todo
+// describe("stop", () => {})
