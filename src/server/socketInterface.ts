@@ -159,7 +159,7 @@ export function socketListener(
 
   const namespace = io.of(`/game/${code}`)
   namespace.on("connection", (socket) =>
-    socketConnect(socket, game, socketIdMappings.set)
+    socketConnect(socket, game, socketIdMappings.set.bind(socketIdMappings))
   )
   return {
     listenerFactory: (code: string, game: Game.Game) =>
