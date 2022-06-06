@@ -97,7 +97,7 @@ test("POST /make error", async () => {
   expect(response.status).toBe(400)
   expect(response.headers.raw()).not.toHaveProperty("set-cookie")
   expect(response.text()).resolves.toEqual(
-    "\"You cannot use '' as a username, it is mandatory and must be less then 50 characters long.\""
+    '"Expected string, but was undefined"'
   )
 })
 

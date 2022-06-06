@@ -3,7 +3,7 @@ import { jest } from "@jest/globals"
 jest.setTimeout(10000)
 import * as socketHelpers from "./socketHelpers"
 import * as socketBots from "../src/bots/socketBots"
-import { domain, gameCodeFormat } from "./shared_definitions"
+import { domain } from "./shared_definitions"
 
 test("whole game", async () => {
   let details = await socketBots.makeGame("hostplayer", domain)
@@ -12,12 +12,10 @@ test("whole game", async () => {
     details.gameId,
     details.privateId
   )
-
   expect(initMessage).toMatchObject({
     gameState: expect.anything(),
     chatHistory: [],
   })
-
   const gameId = details.gameId
   details = await socketBots.joinGame("passiveplayer", gameId!, domain)
   const { socket: player2, msg: initMessage2 } = await socketHelpers.makeSocket(
@@ -25,34 +23,25 @@ test("whole game", async () => {
     details.gameId,
     details.privateId
   )
-
   expect(initMessage2).toMatchObject({
     gameState: expect.anything(),
     chatHistory: [],
   })
-
   const gameSettings = {
-    gameLength: 60000,
-    countDown: 0,
+    gameLength: 60,
+    countDown: 1,
     proposedTargetList: [0, 1],
   }
-
-  const msg = await socketHelpers.startGame(player1, gameSettings)
+  const msg = await socketHelpers.updateSettings(player1, gameSettings)
   const expectedGameState = {
     chosenSettings: {
-      countDown: 0,
-      gameLength: 60000,
+      countDown: 1,
+      gameLength: 60,
       proposedTargetList: [0, 1],
     },
     latestSnipeIndexes: [],
     snipeInfos: [],
-    state: "IN PLAY",
-    subState: "PLAYING",
-    targets: {
-      "0": [1],
-      "1": [0],
-    },
-    targetsGot: { "0": [], "1": [] },
+    state: "NOT STARTED",
     userList: {
       "0": {
         username: "hostplayer",
@@ -63,11 +52,10 @@ test("whole game", async () => {
     },
   }
   expect(msg).toMatchObject({ gameState: expectedGameState })
+  await socketHelpers.startGame(player1)
   const finishedMsg = await socketHelpers.stopGame(player1)
   expect(finishedMsg).toMatchObject({
-    nextCode: expect.stringMatching(new RegExp(gameCodeFormat)),
     winner: "game stopped",
   })
-
   await socketHelpers.closeSockets([player1, player2])
 })

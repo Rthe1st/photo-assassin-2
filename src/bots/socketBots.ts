@@ -134,11 +134,12 @@ function activePlayer(gameId: string, privateId: string, player: Player) {
     (msg) => {
       console.log("init")
       if (Object.entries(msg.gameState.userList).length > 1) {
-        socketClient.startGame(socket, {
+        socketClient.updateSettings(socket, {
           gameLength: 60000,
           countDown: 0,
           proposedTargetList: msg.gameState.chosenSettings.proposedTargetList,
         })
+        socketClient.startGame(socket)
       }
     },
     () => {
@@ -660,11 +661,12 @@ function gpsPlayer(gameId: string, privateId: string, _: Player) {
       )
       const gameLength =
         gpsData[gpsData.length - 1]["timestamp"] - gpsData[0]["timestamp"]
-      socketClient.startGame(socket, {
+      socketClient.updateSettings(socket, {
         gameLength: gameLength,
         countDown: 0,
         proposedTargetList: msg.gameState.chosenSettings.proposedTargetList,
       })
+      socketClient.startGame(socket)
     },
     () => {
       //todo

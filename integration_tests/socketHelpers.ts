@@ -67,15 +67,25 @@ export function socketCall(emit_fn: any, resolve_fn: any): Promise<any> {
   return new Promise<any>((resolve, reject) => {
     resolve_fn(resolve)
     emit_fn()
-    setTimeout(reject, 2000)
+    setTimeout(() => {
+      reject(new Error("socket call timed out waiting for response"))
+    }, 2000)
   })
 }
 
-export function startGame(
+export function updateSettings(
   socket: Socket,
   msg: SocketEvents.ClientUpdateSettings
+): Promise<SocketEvents.ServerUpdateSettingsMsg> {
+  const emit_fn = () => socketClient.updateSettings(socket, msg)
+  const resolve_fn = (resolve: any) => socket.on("update settings", resolve)
+  return socketCall(emit_fn, resolve_fn)
+}
+
+export function startGame(
+  socket: Socket
 ): Promise<SocketEvents.ServerStartMsg> {
-  const emit_fn = () => socketClient.startGame(socket, msg)
+  const emit_fn = () => socketClient.startGame(socket)
   const resolve_fn = (resolve: any) => socket.on("start", resolve)
   return socketCall(emit_fn, resolve_fn)
 }
