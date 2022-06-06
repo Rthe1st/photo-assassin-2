@@ -298,5 +298,22 @@ describe("start", () => {
   })
 })
 
-// todo
-// describe("stop", () => {})
+describe("finish", () => {
+  it("finishes the game", () => {
+    const game = Game.generateGame(testListener)
+    unwrapOrThrow(Game.start(game))
+    const winner = "arbitrary string"
+    const result = Game.finishGame(game, winner)
+    expect(result).toEqual(right(undefined))
+    expect(game.state).toEqual(Game.states.FINISHED)
+    expect(game.subState).toBe(undefined)
+    expect(game.winner).toEqual(winner)
+    expect(game.listener?.finished).toBeCalledTimes(1)
+  })
+  it(`errors if the game state is not currently ${Game.states.IN_PLAY}`, () => {
+    const game = Game.generateGame(testListener)
+    const result = Game.finishGame(game, "arbitrary string")
+    expect(result).toEqual(left(new Error("game has wrong state")))
+    expect(game.listener?.finished).toBeCalledTimes(0)
+  })
+})
