@@ -2,7 +2,7 @@ import { logger } from "./logging"
 import * as Game from "./game"
 import * as socketEvents from "../shared/socketEvents"
 import * as socketHandler from "./socketHandler"
-import { Server, Socket } from "socket.io"
+import { Namespace, Server, Socket } from "socket.io"
 import { Record, String, Number, Array } from "runtypes"
 import { uploadGameState } from "./imageStore"
 import { setTimeout } from "timers/promises"
@@ -155,7 +155,7 @@ export function socketListener(
   code: string,
   game: Game.Game
 ): Listener {
-  const socketIdMappings = new Map()
+  const socketIdMappings = new Map<number, string>()
 
   const namespace = io.of(`/game/${code}`)
   namespace.on("connection", (socket) =>
@@ -170,12 +170,8 @@ export function socketListener(
       namespace.emit("image upload done", msg),
     updateSettings: (msg: socketEvents.ServerUpdateSettingsMsg) =>
       namespace.emit("update settings", msg),
-    removeUser: (msg: socketEvents.RemoveUserMsg) => {
-      namespace.emit("Remove user", msg)
-      const socketId = socketIdMappings.get(msg.publicId)
-      namespace.sockets.get(socketId)?.disconnect()
-    },
-
+    removeUser: (msg: socketEvents.RemoveUserMsg) =>
+      removeUserCallback(msg, socketIdMappings, code, namespace),
     start: (msg: socketEvents.ServerStartMsg) => namespace.emit("start", msg),
     chatMessage: (msg: socketEvents.ServerChatMessage) =>
       namespace.emit("chat message", msg),
@@ -184,7 +180,7 @@ export function socketListener(
     newUser: (msg: socketEvents.NewUserMsg) => namespace.emit("New user", msg),
     finished: async (msg: socketEvents.ServerFinishedMsg) => {
       namespace.emit("game finished", msg)
-      // todo: delay the creation of next game untill a user clicks "next game"
+      // todo: delay the creation of next game until a user clicks "next game"
       // by having that (clientside) send a REST req that checks if
       // a next game code exists for $oldgamecode (from saved state)
       // if it does - send to join page for that
@@ -212,4 +208,41 @@ export function socketListener(
     timeLeft: (msg: socketEvents.ServerTimeLeftMsg) =>
       namespace.emit("timeLeft", msg),
   }
+}
+
+export function removeUserCallback(
+  msg: socketEvents.RemoveUserMsg,
+  socketIdMappings: Map<number, string>,
+  code: string,
+  namespace: Namespace
+) {
+  const socketId = socketIdMappings.get(msg.publicId)
+  if (!socketId) {
+    logger.log(
+      "error",
+      `${msg.publicId} mapped to an undefined socketId in game ${code}`
+    )
+    namespace.emit(
+      "error",
+      `No socket found for player ${msg.publicId} when removing them`
+    )
+  } else {
+    socketIdMappings.delete(msg.publicId)
+    const socket = namespace.sockets.get(socketId)
+    if (!socket) {
+      logger.log(
+        "error",
+        `socket from mapped to by ${msg.publicId} did not exist in active sockets of game ${code}`
+      )
+      namespace.emit(
+        "error",
+        `socket from mapped to by ${msg.publicId} did not exist in active sockets`
+      )
+    } else {
+      socket.disconnect()
+    }
+  }
+  // we emit this regardless of socket mapping errors above
+  // because the user has already been removed from the game
+  namespace.emit("Remove user", msg)
 }

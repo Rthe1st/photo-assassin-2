@@ -2,16 +2,23 @@ import { jest } from "@jest/globals"
 import { unwrapOrThrow } from "../../src/shared/utils"
 import {
   addPlayer,
+  Game,
   gameStateForClient,
   generateGame,
+  start,
 } from "../../src/server/game"
 import { setupJestLogging } from "../../src/server/logging"
 import { testListener } from "./server.test"
 import {
   receiveUpdateSettings,
   removeUser,
+  removeUserCallback,
   socketConnect,
+  socketListener,
+  stop,
 } from "../../src/server/socketInterface"
+import { Namespace, Server } from "socket.io"
+import { RemoveUserMsg, ServerBadSnipeMsg } from "../../src/shared/socketEvents"
 
 setupJestLogging()
 
@@ -195,6 +202,116 @@ describe("removeUser", () => {
   })
 })
 
-// todo: stop
+describe("stop", () => {
+  it("no error emitted for valid calls", () => {
+    const socket: any = {
+      emit: jest.fn(),
+    }
+    const game = generateGame(testListener)
+    unwrapOrThrow(addPlayer(game, "player1"))
+    unwrapOrThrow(start(game))
 
-// todo: test for game listener callback handler
+    stop(game, socket)
+    expect(socket.emit).toBeCalledTimes(0)
+  })
+
+  it("errors if game logic fails", () => {
+    const socket: any = {
+      emit: jest.fn(),
+    }
+    const game = generateGame(testListener)
+    stop(game, socket)
+    expect(socket.emit).toBeCalledWith("error", "game has wrong state")
+  })
+})
+
+describe("socketListener", () => {
+  it("constructs a listener", () => {
+    const namespace = {
+      emit: jest.fn(),
+      on: jest.fn(),
+    }
+
+    const io = {
+      of: jest.fn(() => namespace),
+    } as unknown as Server
+    const game = jest.fn() as unknown as Game
+    const code = "code"
+    const listener = socketListener(io, code, game)
+    expect(namespace.on).toBeCalledWith("connection", expect.any(Function))
+    expect(io.of).toBeCalledWith(`/game/${code}`)
+    const msg = {} as unknown as ServerBadSnipeMsg
+    listener.badSnipe(msg)
+    expect(namespace.emit).toBeCalledWith("bad snipe", msg)
+  })
+  describe("listenerFactory", () => {
+    it("creates a correct listener", () => {
+      const namespace = {
+        emit: jest.fn(),
+        on: jest.fn(),
+      }
+
+      const io = {
+        of: jest.fn(() => namespace),
+      } as unknown as Server
+
+      const game = jest.fn() as unknown as Game
+      const code = "code"
+
+      const listener = socketListener(io, code, game)
+      const game2 = jest.fn() as unknown as Game
+      const code2 = "code2"
+      listener.listenerFactory(code2, game2)
+      expect(namespace.on).toBeCalledWith("connection", expect.any(Function))
+      expect(io.of).toBeCalledWith(`/game/${code2}`)
+    })
+  })
+})
+
+describe("removeUserCallback", () => {
+  it("disconnects their socket", () => {
+    const mockDisconnect = jest.fn()
+    const socketGetMock = jest.fn(() => {
+      return {
+        disconnect: mockDisconnect,
+      }
+    })
+    const mockNamespace = {
+      emit: jest.fn(),
+      sockets: {
+        get: socketGetMock,
+      },
+    } as unknown as Namespace
+
+    const code = "code"
+
+    const removeUserMsg = { publicId: 0 } as unknown as RemoveUserMsg
+    const socketIdMappings = new Map([[0, "socketId"]])
+    removeUserCallback(removeUserMsg, socketIdMappings, code, mockNamespace)
+    expect(mockNamespace.emit).toBeCalledWith("Remove user", {
+      publicId: 0,
+    })
+    expect(mockNamespace.sockets.get).toBeCalledWith("socketId")
+    expect(mockDisconnect).toBeCalled()
+  })
+  it("fails gracefully if socket mapping not found", () => {
+    const mockNamespace = {
+      emit: jest.fn(),
+    } as unknown as Namespace
+
+    const code = "code"
+
+    const publicId = "0"
+
+    const removeUserMsg = { publicId } as unknown as RemoveUserMsg
+    const socketIdMappings = new Map()
+    removeUserCallback(removeUserMsg, socketIdMappings, code, mockNamespace)
+    expect(mockNamespace.emit).toBeCalledWith(
+      "error",
+      `No socket found for player ${publicId} when removing them`
+    )
+    expect(mockNamespace.emit).toBeCalledWith("Remove user", {
+      publicId,
+    })
+  })
+})
