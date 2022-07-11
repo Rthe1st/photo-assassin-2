@@ -29,9 +29,9 @@ Initial server configurations:
       # 1) you're not running linux
       # 2) Your host user does not have a user ID of 1000 (which is what user node has in the container)
       # https://stackoverflow.com/a/29251160
-      sudo chown debain /etc/letsencrypt/live/photo-assassin.prangten.com/cert.pem
-      sudo chown debain /etc/letsencrypt/live/photo-assassin.prangten.com/privkey.pem
-      sudo chown debain /etc/letsencrypt/live/photo-assassin.prangten.com/chain.pem
+      sudo chown debian /etc/letsencrypt/live/photo-assassin.prangten.com/cert.pem
+      sudo chown debian /etc/letsencrypt/live/photo-assassin.prangten.com/privkey.pem
+      sudo chown debian /etc/letsencrypt/live/photo-assassin.prangten.com/chain.pem
       ```
   - Create a games dir and have it owned by debian (or same user as cert files above)
     - `chown debian /home/debian/games`
